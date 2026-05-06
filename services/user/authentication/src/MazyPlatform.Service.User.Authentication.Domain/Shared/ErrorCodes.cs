@@ -127,6 +127,9 @@ public sealed class ErrorCodes
         {
             /// <summary>Email уже занят подтверждённым аккаунтом.</summary>
             public const string EmailAlreadyInUse = "AUTH.REGISTRATION.EMAIL_ALREADY_IN_USE";
+
+            /// <summary>Email уже используется как MFA email другого аккаунта.</summary>
+            public const string EmailAlreadyUsedAsMfaEmail = "AUTH.REGISTRATION.EMAIL_ALREADY_USED_AS_MFA_EMAIL";
         }
 
         /// <summary>

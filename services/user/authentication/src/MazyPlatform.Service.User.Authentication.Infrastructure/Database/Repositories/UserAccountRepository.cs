@@ -2,6 +2,7 @@ namespace MazyPlatform.Service.User.Authentication.Infrastructure.Database.Repos
 
 using MazyPlatform.Service.User.Authentication.Domain.UserAccounts;
 using MazyPlatform.Service.User.Authentication.Domain.UserAccounts.LinkedProviders;
+using MazyPlatform.Service.User.Authentication.Domain.UserAccounts.Mfa;
 using MazyPlatform.Service.User.Authentication.Domain.UserAccounts.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,22 @@ internal class UserAccountRepository(ApplicationDbContext context) : RepositoryB
     {
         ArgumentNullException.ThrowIfNull(email);
         return await _context.UserAccounts.SingleOrDefaultAsync(x => x.Email == email && x.EmailVerifiedAt == null, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    /// <exception cref="ArgumentNullException">Если <paramref name="email"/> равен <see langword="null"/>.</exception>
+    public async Task<bool> IsMfaEmailInUseAsync(Email email, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(email);
+
+        var payload = new
+        {
+            type = (int)MfaMethodType.Email,
+            email = email.Value,
+        };
+
+        return await _context.MfaMethods
+            .AnyAsync(x => EF.Functions.JsonContains(x.Payload, payload), cancellationToken);
     }
 
     /// <inheritdoc />

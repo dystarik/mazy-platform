@@ -1,6 +1,7 @@
 namespace MazyPlatform.Service.User.Authentication.Domain.Tests.Services;
 
 using MazyPlatform.Service.User.Authentication.Domain.Services;
+using MazyPlatform.Service.User.Authentication.Domain.Shared;
 using MazyPlatform.Service.User.Authentication.Domain.Shared.Hashing;
 using MazyPlatform.Service.User.Authentication.Domain.UserAccounts;
 using MazyPlatform.Service.User.Authentication.Domain.UserAccounts.LinkedProviders;
@@ -69,6 +70,46 @@ public class LoginByExternalProviderServiceTests
         // Assert
         await Assert.That(result.IsSuccess).IsTrue();
         await Assert.That(result.Value!.IsNewAccount).IsTrue();
+    }
+
+    [Test]
+    public async Task ExecuteAsync_Should_ReturnError_When_ProviderEmailIsAlreadyUsedByAccount()
+    {
+        // Arrange
+        var (service, repo) = CreateService();
+        var email = Email.Create("taken@example.com").Value!;
+        var provider = new ExternalProvider(ExternalProviderType.Yandex, email);
+        var account = UserAccount.RegisterByPassword(email, PasswordHash.FromTrusted("hash"), Now);
+
+        repo.GetByExternalProviderAsync(provider, Arg.Any<CancellationToken>()).Returns((UserAccount?)null);
+        repo.GetByEmailAsync(email, Arg.Any<CancellationToken>()).Returns(account);
+
+        // Act
+        var result = await service.ExecuteAsync(provider, CancellationToken.None);
+
+        // Assert
+        await Assert.That(result.IsSuccess).IsFalse();
+        await Assert.That(result.Errors!.First().Code).IsEqualTo(ErrorCodes.Auth.Registration.EmailAlreadyInUse);
+    }
+
+    [Test]
+    public async Task ExecuteAsync_Should_ReturnError_When_ProviderEmailIsUsedAsMfaEmail()
+    {
+        // Arrange
+        var (service, repo) = CreateService();
+        var email = Email.Create("mfa@example.com").Value!;
+        var provider = new ExternalProvider(ExternalProviderType.Yandex, email);
+
+        repo.GetByExternalProviderAsync(provider, Arg.Any<CancellationToken>()).Returns((UserAccount?)null);
+        repo.GetByEmailAsync(email, Arg.Any<CancellationToken>()).Returns((UserAccount?)null);
+        repo.IsMfaEmailInUseAsync(email, Arg.Any<CancellationToken>()).Returns(true);
+
+        // Act
+        var result = await service.ExecuteAsync(provider, CancellationToken.None);
+
+        // Assert
+        await Assert.That(result.IsSuccess).IsFalse();
+        await Assert.That(result.Errors!.First().Code).IsEqualTo(ErrorCodes.Auth.Registration.EmailAlreadyUsedAsMfaEmail);
     }
 
     private static (LoginByExternalProviderService Service, IUserAccountRepository Repo)
