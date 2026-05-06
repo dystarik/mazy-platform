@@ -6,9 +6,18 @@ function Write-Step { param($msg) Write-Host "`n$msg" -ForegroundColor Cyan }
 function Write-Item { param($msg) Write-Host "  $msg" -ForegroundColor Gray }
 function Write-Ok   { param($msg) Write-Host "  ✓ $msg" -ForegroundColor Green }
 function Write-Fail { param($msg) Write-Host $msg -ForegroundColor Red }
+function Get-DevEnvValue {
+    param([string]$name)
+
+    $line = Get-Content $envFile | Where-Object { $_ -match "^\s*$([regex]::Escape($name))\s*=" } | Select-Object -First 1
+    if (-not $line) { return "" }
+
+    return ($line -replace "^\s*$([regex]::Escape($name))\s*=", "").Trim()
+}
 
 $devDir  = Join-Path $PSScriptRoot "..\..\infra\dev"
 $envFile = Join-Path $PSScriptRoot "..\..\infra\dev\.env"
+$webDir  = Join-Path $PSScriptRoot "..\..\apps\web-client"
 
 if (-not (Test-Path $envFile)) {
     Write-Fail "Файл .env не найден: $envFile"
@@ -61,6 +70,8 @@ foreach ($f in $selectedFiles) {
     $files += @("-f", $f)
 }
 
+$runWebClientLocally = $selectedFiles -contains "debug.web-client.yml"
+
 Write-Step "Сборка образов..."
 Set-Location $devDir
 $buildArgs = @("compose") + $files + @("--env-file", $envFile, "build")
@@ -76,3 +87,31 @@ Write-Step "Запуск в фоне..."
 $upArgs = @("compose") + $files + @("--env-file", $envFile, "up", "-d")
 
 & docker @upArgs
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Fail "Ошибка запуска"
+    exit 1
+}
+
+if ($runWebClientLocally) {
+    Write-Step "Запуск web-client локально..."
+
+    if (-not (Test-Path (Join-Path $webDir "node_modules"))) {
+        Write-Item "node_modules не найден, устанавливаю зависимости..."
+        Push-Location $webDir
+        & npm install
+        $npmInstallExitCode = $LASTEXITCODE
+        Pop-Location
+
+        if ($npmInstallExitCode -ne 0) {
+            Write-Fail "Ошибка установки зависимостей web-client"
+            exit 1
+        }
+    }
+
+    Write-Ok "web-client: http://localhost:5173"
+    $env:VITE_API_URL = ""
+    $env:VITE_YANDEX_CLIENT_ID = Get-DevEnvValue "ExternalProviders_Yandex_ClientId"
+    Set-Location $webDir
+    & npm run dev
+}

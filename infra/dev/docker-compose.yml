@@ -351,6 +351,23 @@ services:
     networks:
       - mazy-network
 
+  web-client:
+    build:
+      context: ../../apps/web-client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ""
+        VITE_YANDEX_CLIENT_ID: ${ExternalProviders_Yandex_ClientId:-}
+    restart: unless-stopped
+    ports:
+      - "${WEB_CLIENT_PORT:-5173}:80"
+    depends_on:
+      - gateway
+    logging:
+      driver: "local"
+    networks:
+      - mazy-network
+
 volumes:
   postgres_data:
   rabbitmq_data:

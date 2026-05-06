@@ -41,6 +41,16 @@ npm run dev
 npm run build
 ```
 
+### Run In Dev Docker Compose
+
+From the repository root:
+
+```sh
+docker compose -f infra/dev/docker-compose.yml up --build web-client
+```
+
+The web client is available at http://localhost:5173 by default. API requests go through the container nginx proxy to the compose gateway service.
+
 ### Lint with [ESLint](https://eslint.org/)
 
 ```sh
