@@ -87,6 +87,7 @@
         @edge-click="onEdgeClick"
         @edge-context-menu="onEdgeContextMenu"
         @pane-click="onPaneClick"
+        @pane-context-menu="onPaneContextMenu"
         @update-param="updateParamById"
         @update-node-ui="updateNodeUiById"
         @pick-message="startMessagePick"
@@ -276,7 +277,7 @@ interface SelectionBox {
 }
 
 interface RightSelectionDrag {
-  pointerId: number
+  pointerId: number | null
   startX: number
   startY: number
 }
@@ -403,16 +404,19 @@ function onNodeClick(event: NodeMouseEvent): void {
 
 function onNodeContextMenu(event: NodeMouseEvent): void {
   if (isReadOnly.value) return
-  if (event.event.shiftKey) return
 
   const selected = selectedNodes.value
   const point = getMenuPoint(event.event)
 
   if (selected.length > 1 && selected.some((node) => node.id === event.node.id)) {
+    event.event.preventDefault()
+    event.event.stopPropagation()
     selectedNodeId.value = null
     contextMenu.value = { type: 'selection', ...point }
     return
   }
+
+  if (event.event.shiftKey) return
 
   nodes.value = nodes.value.map((node) => ({ ...node, selected: node.id === event.node.id }))
   selectedNodeId.value = event.node.id
@@ -432,7 +436,7 @@ function onPaneClick(event: MouseEvent): void {
   contextMenu.value = null
 }
 
-function openPaneContextMenu(event: MouseEvent | PointerEvent): void {
+function openPaneContextMenu(event: MouseEvent): void {
   if (isReadOnly.value) return
 
   contextMenu.value = {
@@ -443,6 +447,19 @@ function openPaneContextMenu(event: MouseEvent | PointerEvent): void {
       y: event.clientY,
     }),
   }
+}
+
+function onPaneContextMenu(event: MouseEvent): void {
+  if (isReadOnly.value || event.shiftKey || rightSelectionDrag.value) return
+
+  const target = event.target
+  if (!(target instanceof HTMLElement)) return
+  if (target.closest('.vue-flow__node, .vue-flow__edge, .vue-flow__controls, .editor-menu')) return
+  if (!target.closest('.vue-flow__pane')) return
+
+  event.preventDefault()
+  event.stopPropagation()
+  openPaneContextMenu(event)
 }
 
 function onEdgeClick(event: EdgeMouseEvent): void {
@@ -739,11 +756,35 @@ function onCanvasPointerDownCapture(event: PointerEvent): void {
       handledShiftClickNodeId.value = nodeId
       contextMenu.value = null
     }
+  }
+
+  if (event.button !== 2 || !event.shiftKey) return
+
+  startRightSelection(event, event.pointerId)
+}
+
+function onCanvasMouseDownCapture(event: MouseEvent): void {
+  const target = event.target
+  if (event.button === 2 && event.shiftKey && target instanceof HTMLElement) {
+    const nodeId = getNodeIdFromTarget(target)
+    if (nodeId && isSelectedGroupNode(nodeId)) {
+      event.stopPropagation()
+      return
+    }
+  }
+
+  if (event.button !== 2 || !event.shiftKey) return
+
+  if (!rightSelectionDrag.value) {
+    startRightSelection(event, null)
     return
   }
 
-  if (event.button !== 2 || event.shiftKey) return
+  event.preventDefault()
+  event.stopPropagation()
+}
 
+function startRightSelection(event: MouseEvent | PointerEvent, pointerId: number | null): void {
   const target = event.target
   if (!(target instanceof HTMLElement)) return
 
@@ -763,8 +804,9 @@ function onCanvasPointerDownCapture(event: PointerEvent): void {
   const startX = clamp(event.clientX - bounds.left, 0, bounds.width)
   const startY = clamp(event.clientY - bounds.top, 0, bounds.height)
 
+  stopRightSelectionListeners()
   rightSelectionDrag.value = {
-    pointerId: event.pointerId,
+    pointerId,
     startX,
     startY,
   }
@@ -772,29 +814,16 @@ function onCanvasPointerDownCapture(event: PointerEvent): void {
 
   window.addEventListener('pointermove', onRightSelectionMove)
   window.addEventListener('pointerup', onRightSelectionUp)
-  event.preventDefault()
-  event.stopPropagation()
-}
-
-function onCanvasMouseDownCapture(event: MouseEvent): void {
-  const target = event.target
-  if (event.button === 2 && !event.shiftKey && target instanceof HTMLElement) {
-    const nodeId = getNodeIdFromTarget(target)
-    if (nodeId && isSelectedGroupNode(nodeId)) {
-      event.stopPropagation()
-      return
-    }
-  }
-
-  if (event.button !== 2 || event.shiftKey || !rightSelectionDrag.value) return
-
+  window.addEventListener('mousemove', onRightSelectionMouseMove)
+  window.addEventListener('mouseup', onRightSelectionMouseUp)
+  window.addEventListener('contextmenu', onRightSelectionContextMenu, true)
   event.preventDefault()
   event.stopPropagation()
 }
 
 function onRightSelectionMove(event: PointerEvent): void {
   const drag = rightSelectionDrag.value
-  if (!drag || event.pointerId !== drag.pointerId) return
+  if (!drag || (drag.pointerId !== null && event.pointerId !== drag.pointerId)) return
 
   updateRightSelectionRect(event.clientX, event.clientY)
   event.preventDefault()
@@ -803,14 +832,38 @@ function onRightSelectionMove(event: PointerEvent): void {
 
 function onRightSelectionUp(event: PointerEvent): void {
   const drag = rightSelectionDrag.value
-  if (!drag || event.pointerId !== drag.pointerId) return
+  if (!drag || (drag.pointerId !== null && event.pointerId !== drag.pointerId)) return
 
+  finishRightSelection(event)
+}
+
+function onRightSelectionMouseMove(event: MouseEvent): void {
+  if (!rightSelectionDrag.value) return
+
+  updateRightSelectionRect(event.clientX, event.clientY)
+  event.preventDefault()
+  event.stopPropagation()
+}
+
+function onRightSelectionMouseUp(event: MouseEvent): void {
+  if (!rightSelectionDrag.value || event.button !== 2) return
+
+  finishRightSelection(event)
+}
+
+function onRightSelectionContextMenu(event: MouseEvent): void {
+  if (!rightSelectionDrag.value) return
+
+  event.preventDefault()
+  event.stopPropagation()
+}
+
+function finishRightSelection(event: MouseEvent | PointerEvent): void {
   updateRightSelectionRect(event.clientX, event.clientY)
   const rect = rightSelectionRect.value
   if (rect && rect.width < 4 && rect.height < 4) {
     nodes.value = nodes.value.map((node) => ({ ...node, selected: false }))
     selectedNodeId.value = null
-    openPaneContextMenu(event)
   } else {
     selectNodesByRightSelection()
   }
@@ -880,6 +933,10 @@ function selectNodesByRightSelection(): void {
   selectedNodeId.value = selectedIds.size === 1
     ? [...selectedIds][0] ?? null
     : null
+
+  if (selectedIds.size !== 1) {
+    isInspectorOpen.value = false
+  }
 }
 
 function getCanvasElement(): HTMLElement | null {
@@ -1049,6 +1106,9 @@ function withEdgeRoute(edge: Edge, route: GraphConnectionRoutePoint[]): Edge {
 function stopRightSelectionListeners(): void {
   window.removeEventListener('pointermove', onRightSelectionMove)
   window.removeEventListener('pointerup', onRightSelectionUp)
+  window.removeEventListener('mousemove', onRightSelectionMouseMove)
+  window.removeEventListener('mouseup', onRightSelectionMouseUp)
+  window.removeEventListener('contextmenu', onRightSelectionContextMenu, true)
 }
 
 function clamp(value: number, min: number, max: number): number {
