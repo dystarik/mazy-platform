@@ -50,10 +50,12 @@ export function useSettingsMfaFlow(passwordRefs: PasswordRefs) {
     challenge: MfaChallenge,
   ): void {
     pendingAction.value = action
-    mfaStore.startFromChallenge(
-      challenge,
-      action === 'change-password' ? 'change_password' : 'set_password',
-    )
+    const context = action === 'change-password' ? 'change_password' : 'set_password'
+    if (action === 'set-password') {
+      mfaStore.startAuthenticatedFromChallenge(challenge, context)
+    } else {
+      mfaStore.startFromChallenge(challenge, context)
+    }
     mfaPageState.value = 'mfa-challenge'
     usedFactors.value = []
     mfaCode.value = ''

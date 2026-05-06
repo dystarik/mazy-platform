@@ -36,6 +36,16 @@ export const useMfaStore = defineStore('mfa', () => {
     context.value = mfaContext
   }
 
+  function startAuthenticatedFromChallenge(challenge: MfaChallenge, mfaContext: MfaContext) {
+    mfaSessionId.value = challenge.mfaSessionId!
+    availableFactors.value = challenge.availableFactors ?? []
+    requiredFactorCount.value = challenge.requiredFactorCount ?? 1
+    selectedFactor.value = null
+    step.value = 'select_factor'
+    mode.value = 'authenticated'
+    context.value = mfaContext
+  }
+
   // Инициализация для авторизованного флоу
   async function startAuthenticated(action: MfaSessionAction, mfaContext: MfaContext) {
     const response = await mfaApi.startSession({ action })
@@ -123,6 +133,7 @@ export const useMfaStore = defineStore('mfa', () => {
     mode,
     context,
     startFromChallenge,
+    startAuthenticatedFromChallenge,
     startAuthenticated,
     selectFactor,
     sendEmailCode,
