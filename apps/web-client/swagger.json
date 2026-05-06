@@ -2074,6 +2074,54 @@
         }
       }
     },
+    "/api/v1/projects/{projectId}/scenario/draft/validate": {
+      "post": {
+        "tags": [
+          "ScenarioGraphService"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateScenarioDraftRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateScenarioDraftResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{projectId}/scenario/release": {
       "get": {
         "tags": [
@@ -3555,6 +3603,24 @@
         },
         "additionalProperties": false
       },
+      "ScenarioValidationErrorItem": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "nodeId": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "SendEmailCodeRequest": {
         "type": "object",
         "properties": {
@@ -3792,6 +3858,30 @@
           "updatedAt": {
             "type": "integer",
             "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ValidateScenarioDraftRequest": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ValidateScenarioDraftResponse": {
+        "type": "object",
+        "properties": {
+          "isValid": {
+            "type": "boolean"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScenarioValidationErrorItem"
+            }
           }
         },
         "additionalProperties": false

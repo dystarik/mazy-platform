@@ -26,6 +26,9 @@ internal sealed class ScenarioGraphsServiceProxy(ScenarioGraphService.ScenarioGr
     public override Task<GetScenarioDraftResponse> GetScenarioDraft(GetScenarioDraftRequest request, ServerCallContext context)
         => client.GetScenarioDraftAsync(request, cancellationToken: context.CancellationToken).ResponseAsync;
 
+    public override Task<ValidateScenarioDraftResponse> ValidateScenarioDraft(ValidateScenarioDraftRequest request, ServerCallContext context)
+        => client.ValidateScenarioDraftAsync(request, cancellationToken: context.CancellationToken).ResponseAsync;
+
     public override Task<GetReleasedScenarioResponse> GetReleasedScenario(GetReleasedScenarioRequest request, ServerCallContext context)
         => client.GetReleasedScenarioAsync(request, cancellationToken: context.CancellationToken).ResponseAsync;
 

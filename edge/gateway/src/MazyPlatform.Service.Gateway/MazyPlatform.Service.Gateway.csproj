@@ -12,7 +12,6 @@
         <PackageReference Include="Grpc.AspNetCore.Server.ClientFactory" />
         <PackageReference Include="MazyPlatform.Contracts.Bot.Grpc" />
         <PackageReference Include="MazyPlatform.Contracts.Scenario.Grpc" />
-        <PackageReference Include="MazyPlatform.Contracts.Scenario.Repository.Grpc" />
         <PackageReference Include="MazyPlatform.Contracts.User.Grpc" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
         <PackageReference Include="Microsoft.AspNetCore.Grpc.JsonTranscoding" />

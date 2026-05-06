@@ -3,11 +3,10 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="MazyPlatform.Contracts.Bot.Grpc" Version="0.6.15-preview" />
-    <PackageVersion Include="MazyPlatform.Contracts.Scenario" Version="0.6.15-preview" />
-    <PackageVersion Include="MazyPlatform.Contracts.Scenario.Grpc" Version="0.6.15-preview" />
-    <PackageVersion Include="MazyPlatform.Contracts.Scenario.Repository.Grpc" Version="0.6.4-preview" />
-    <PackageVersion Include="MazyPlatform.Contracts.User" Version="0.6.15-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.Bot.Grpc" Version="0.6.16-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.Scenario" Version="0.6.16-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.Scenario.Grpc" Version="0.6.16-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.User" Version="0.6.16-preview" />
     <PackageVersion Include="MazyPlatform.Scenario" Version="0.3.10-preview" />
     <PackageVersion Include="MazyPlatform.Scenario.Abstractions" Version="0.3.10-preview" />
     <PackageVersion Include="MazyPlatform.Scenario.Telegram" Version="0.3.10-preview" />

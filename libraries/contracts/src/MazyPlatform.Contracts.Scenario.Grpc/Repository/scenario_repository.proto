@@ -37,6 +37,12 @@ service ScenarioGraphService {
             get: "/api/v1/projects/{project_id}/scenario/draft"
         };
     }
+    rpc ValidateScenarioDraft (ValidateScenarioDraftRequest) returns (ValidateScenarioDraftResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/projects/{project_id}/scenario/draft/validate"
+            body: "*"
+        };
+    }
     rpc GetReleasedScenario (GetReleasedScenarioRequest) returns (GetReleasedScenarioResponse) {
         option (google.api.http) = {
             get: "/api/v1/projects/{project_id}/scenario/release"
@@ -105,6 +111,32 @@ message GetScenarioDraftResponse {
     string graph_json = 2;
     // Зарезервировано для совместимости с предыдущей версией API. Всегда равно 0.
     int32 version = 3;
+}
+
+// Запрос на валидацию сохраненного черновика сценария.
+message ValidateScenarioDraftRequest {
+    // Идентификатор проекта.
+    string project_id = 1;
+}
+
+// Ответ с результатом валидации сохраненного черновика сценария.
+message ValidateScenarioDraftResponse {
+    // Признак, что черновик не содержит ошибок валидации.
+    bool is_valid = 1;
+    // Список найденных ошибок валидации.
+    repeated ScenarioValidationErrorItem errors = 2;
+}
+
+// Ошибка валидации сценария.
+message ScenarioValidationErrorItem {
+    // Стабильный машинно-читаемый код ошибки.
+    string code = 1;
+    // Человекочитаемое описание ошибки.
+    string message = 2;
+    // Идентификатор узла, если ошибка относится к конкретному узлу.
+    optional string node_id = 3;
+    // JSON-путь до некорректного значения, если его можно определить.
+    optional string path = 4;
 }
 
 // Запрос на получение опубликованного сценария.
