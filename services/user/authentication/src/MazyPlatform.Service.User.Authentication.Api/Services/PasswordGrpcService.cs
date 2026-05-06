@@ -26,6 +26,23 @@ internal sealed class PasswordGrpcService(ICommandDispatcher commands) : Passwor
         });
     }
 
+    public override async Task<SetPasswordResponse> SetPassword(SetPasswordRequest request, ServerCallContext context)
+    {
+        var command = new SetPasswordCommand(
+            context.GetUserAccountId(),
+            request.NewPassword,
+            request.HasMfaSessionId ? request.MfaSessionId : null);
+        var result = await commands.DispatchAsync<SetPasswordCommand, SetPasswordResult>(command, context.CancellationToken);
+        return result.ToGrpcResponse(r => r.RequiresMfa switch
+        {
+            true => new SetPasswordResponse
+            {
+                Challenge = r.MfaRequiredData.ToProto(),
+            },
+            false => new SetPasswordResponse { Success = new Empty() },
+        });
+    }
+
     public override async Task<ResetPasswordResponse> ResetPassword(ResetPasswordRequest request, ServerCallContext context)
     {
         var command = new ResetPasswordCommand(request.Email);

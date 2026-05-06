@@ -1,0 +1,99 @@
+root = true
+
+# =============================================================================
+# БАЗОВЫЕ НАСТРОЙКИ
+# =============================================================================
+
+[*]
+charset = utf-8
+end_of_line = crlf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# =============================================================================
+# FRONTEND
+# =============================================================================
+
+[apps/web-client/**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts,vue,css,scss,sass,less,styl,json,md,html}]
+end_of_line = lf
+indent_size = 2
+max_line_length = 100
+
+# =============================================================================
+# СГЕНЕРИРОВАННЫЙ КОД
+# =============================================================================
+
+[**/Migrations/*.cs]
+generated_code = true
+
+# =============================================================================
+# C# ФАЙЛЫ
+# =============================================================================
+
+[*.cs]
+
+# -----------------------------------------------------------------------------
+# Using Directives
+# -----------------------------------------------------------------------------
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = true
+csharp_using_directive_placement = inside_namespace:warning
+
+# -----------------------------------------------------------------------------
+# Именование: приватные поля с префиксом "_"
+# -----------------------------------------------------------------------------
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_style.underscore_style.required_prefix = _
+dotnet_naming_style.underscore_style.capitalization = camel_case
+dotnet_naming_rule.private_fields_rule.symbols = private_fields
+dotnet_naming_rule.private_fields_rule.style = underscore_style
+dotnet_naming_rule.private_fields_rule.severity = suggestion
+
+dotnet_diagnostic.SA1309.severity = none       # Отключаем: запрещает "_" в начале
+dotnet_diagnostic.SX1309.severity = warning    # Включаем: требует "_" для private instance
+dotnet_diagnostic.SX1309S.severity = warning   # Включаем: требует "_" для private static
+
+# -----------------------------------------------------------------------------
+# Ограничения сложности методов (Meziantou)
+# -----------------------------------------------------------------------------
+MA0051.maximum_lines_per_method = 75
+MA0052.maximum_statements_per_method = 25
+
+# -----------------------------------------------------------------------------
+# Отключено: устаревшие или неактуальные правила
+# -----------------------------------------------------------------------------
+dotnet_diagnostic.SA1101.severity = none       # this. — не нужно в современном C#
+dotnet_diagnostic.SA1502.severity = none       # Пустые конструкторы в одну строку — разрешаем
+dotnet_diagnostic.SA1503.severity = none       # if/for без { } — разрешаем
+dotnet_diagnostic.SA1633.severity = none       # File header — лицензия в LICENSE файле
+dotnet_diagnostic.MA0004.severity = none       # ConfigureAwait — не нужно в ASP.NET Core
+
+# -----------------------------------------------------------------------------
+# Отключено: XML-документация на русском
+# -----------------------------------------------------------------------------
+dotnet_diagnostic.SA1623.severity = none       # "Gets or sets…" — пишем по-русски
+dotnet_diagnostic.SA1642.severity = none       # "Initializes a new instance…" — пишем по-русски
+
+# -----------------------------------------------------------------------------
+# Отключено: ложные срабатывания (ожидается обновление анализаторов)
+# -----------------------------------------------------------------------------
+dotnet_diagnostic.SA1010.severity = none       # Collection expressions [], ??, ?:, ??= в C# 12
+dotnet_diagnostic.SA1500.severity = none       # Баг StyleCop: не учитывает синтаксис do-while (} while)
+
+# -----------------------------------------------------------------------------
+# TODO: включить позже (документация)
+# -----------------------------------------------------------------------------
+dotnet_diagnostic.SA0001.severity = none       # XML documentation file
+dotnet_diagnostic.SA1600.severity = none       # Elements should be documented
+dotnet_diagnostic.SA1601.severity = none       # Partial elements should be documented
+dotnet_diagnostic.MA0026.severity = none       # Fix TODO/HACK/FIXME comments
+
+# =============================================================================
+# GLOBAL USINGS
+# =============================================================================
+
+[GlobalUsings.cs]
+dotnet_diagnostic.SA1200.severity = none       # using внутри namespace — не применимо

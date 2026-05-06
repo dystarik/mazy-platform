@@ -118,6 +118,7 @@ public sealed class UserAccount : AggregateRoot
         {
             Id = id,
             Email = email,
+            EmailVerifiedAt = now,
             CreatedAt = now,
             MfaSettings = MfaSettings.Create(id, now),
             UserLinkedProviders = UserLinkedProviders.Create(id, now),
@@ -125,6 +126,7 @@ public sealed class UserAccount : AggregateRoot
 
         userAccount.UserLinkedProviders.LinkProvider(provider, now);
         userAccount.AddDomainEvent(new UserAccountRegisteredByExternalProviderDomainEvent(now, userAccount.Id, userAccount.Email, provider.Type));
+        userAccount.AddDomainEvent(new UserAccountEmailVerifiedDomainEvent(now, userAccount.Id, userAccount.Email));
         return userAccount;
     }
 
@@ -257,6 +259,32 @@ public sealed class UserAccount : AggregateRoot
         AddDomainEvent(new UserAccountPasswordChangedDomainEvent(now, Id, Email));
 
         return Result.Success();
+    }
+
+    /// <summary>
+    /// Устанавливает первый локальный пароль пользователя.
+    /// </summary>
+    /// <param name="newPasswordHash">Хэш нового пароля, вычисленный через <see cref="IPasswordHasher"/>.</param>
+    /// <param name="now">Текущая временная метка UTC, передаётся для тестируемости.</param>
+    /// <returns>
+    /// <see cref="Result"/> с успехом, если у аккаунта ещё нет локального пароля;
+    /// сбой с кодом <see cref="ErrorCodes.Auth.UserAccount.PasswordAlreadySet"/>, если пароль уже установлен.
+    /// </returns>
+    /// <remarks>
+    /// Поднимает <see cref="UserAccountPasswordSetDomainEvent"/> при успехе.
+    /// Обновляет <see cref="PasswordSetAt"/> на текущее значение <paramref name="now"/>.
+    /// </remarks>
+    public Result SetPassword(PasswordHash newPasswordHash, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(newPasswordHash);
+
+        if (HasPassword)
+            return Error.Validation(ErrorCodes.Auth.UserAccount.PasswordAlreadySet, "Локальный пароль уже установлен. Используйте смену пароля.");
+
+        PasswordHash = newPasswordHash;
+        PasswordSetAt = now;
+
+        return CompleteMutation(Result.Success(), now, new UserAccountPasswordSetDomainEvent(now, Id, Email));
     }
 
     /// <summary>
