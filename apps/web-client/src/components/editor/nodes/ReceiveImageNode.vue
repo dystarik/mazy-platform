@@ -17,24 +17,28 @@
     <div class="receive-image-node__body">
       <label class="receive-image-node__field nodrag" @mousedown.stop @pointerdown.stop>
         <span class="receive-image-node__label">Сохранить URL</span>
-        <InputText
-          class="receive-image-node__input"
-          :model-value="imageUrlVariable"
-          :readonly="isReadOnly"
-          placeholder="image_url"
-          @update:model-value="value => updateParam('imageUrlVariable', stringValue(value))"
-        />
+        <EditorOverflowTooltip :value="imageUrlVariable" :known-variables="knownVariables" :variable-scope="variableScope">
+          <InputText
+            class="receive-image-node__input"
+            :model-value="imageUrlVariable"
+            :readonly="isReadOnly"
+            placeholder="image_url"
+            @update:model-value="value => updateParam('imageUrlVariable', stringValue(value))"
+          />
+        </EditorOverflowTooltip>
       </label>
 
       <label class="receive-image-node__field nodrag" @mousedown.stop @pointerdown.stop>
         <span class="receive-image-node__label">Сохранить подпись</span>
-        <InputText
-          class="receive-image-node__input"
-          :model-value="captionVariable"
-          :readonly="isReadOnly"
-          placeholder="caption"
-          @update:model-value="value => updateParam('captionVariable', stringValue(value))"
-        />
+        <EditorOverflowTooltip :value="captionVariable" :known-variables="knownVariables" :variable-scope="variableScope">
+          <InputText
+            class="receive-image-node__input"
+            :model-value="captionVariable"
+            :readonly="isReadOnly"
+            placeholder="caption"
+            @update:model-value="value => updateParam('captionVariable', stringValue(value))"
+          />
+        </EditorOverflowTooltip>
       </label>
     </div>
   </BaseNode>
@@ -44,6 +48,8 @@
 import { computed, type CSSProperties } from 'vue'
 import InputText from 'primevue/inputtext'
 import type { NodeParamItem } from '@/types/api'
+import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
+import type { VariableScope } from '@/components/editor/variableHighlight'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import BaseNode from './BaseNode.vue'
 
@@ -58,6 +64,8 @@ const props = defineProps<{
   isPickTarget?: boolean
   isRelated?: boolean
   label: string
+  knownVariables?: string[]
+  variableScope?: VariableScope
 }>()
 
 const emit = defineEmits<{

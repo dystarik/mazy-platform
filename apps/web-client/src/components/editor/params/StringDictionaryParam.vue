@@ -1,23 +1,27 @@
 <template>
   <div class="dict">
     <div v-for="(val, key) in dictValue" :key="String(key)" class="dict__row">
-      <InputText
-        class="dict__input dict__key"
-        :model-value="String(key)"
-        placeholder="ключ"
-        @click.stop
-        @mousedown.stop
-        @change.stop="renameKey(String(key), ($event.target as HTMLInputElement).value)"
-      />
+      <EditorOverflowTooltip :value="String(key)">
+        <InputText
+          class="dict__input dict__key"
+          :model-value="String(key)"
+          placeholder="ключ"
+          @click.stop
+          @mousedown.stop
+          @change.stop="renameKey(String(key), ($event.target as HTMLInputElement).value)"
+        />
+      </EditorOverflowTooltip>
       <span class="dict__arrow">→</span>
-      <InputText
-        class="dict__input dict__val"
-        :model-value="val"
-        placeholder="значение"
-        @click.stop
-        @mousedown.stop
-        @update:model-value="updateVal(String(key), $event ?? '')"
-      />
+      <EditorOverflowTooltip :value="val">
+        <InputText
+          class="dict__input dict__val"
+          :model-value="val"
+          placeholder="значение"
+          @click.stop
+          @mousedown.stop
+          @update:model-value="updateVal(String(key), $event ?? '')"
+        />
+      </EditorOverflowTooltip>
       <Button class="dict__del" label="×" text severity="danger" @click.stop="removeKey(String(key))" />
     </div>
     <Button class="dict__add" label="+ Добавить" text severity="secondary" @click.stop="addKey" />
@@ -29,6 +33,7 @@ import { computed } from 'vue'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import type { NodeParamItem } from '@/types/api'
+import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
 
 const props = defineProps<{ schema: NodeParamItem; value: unknown }>()
 const emit = defineEmits<{ update: [value: Record<string, string>] }>()

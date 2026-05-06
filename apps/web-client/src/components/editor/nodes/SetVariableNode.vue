@@ -20,21 +20,25 @@
       @pointerdown.stop
       @click.stop
     >
-      <InputText
-        class="set-variable-node__input"
-        :model-value="variableName"
-        :readonly="isReadOnly"
-        placeholder="variable"
-        @update:model-value="value => updateParam('variable', stringValue(value))"
-      />
+      <EditorOverflowTooltip :value="variableName" :known-variables="knownVariables" :variable-scope="variableScope">
+        <InputText
+          class="set-variable-node__input"
+          :model-value="variableName"
+          :readonly="isReadOnly"
+          placeholder="variable"
+          @update:model-value="value => updateParam('variable', stringValue(value))"
+        />
+      </EditorOverflowTooltip>
       <span class="set-variable-node__equals">=</span>
-      <InputText
-        class="set-variable-node__input"
-        :model-value="variableValue"
-        :readonly="isReadOnly"
-        placeholder="value"
-        @update:model-value="value => updateParam('value', stringValue(value))"
-      />
+      <EditorOverflowTooltip :value="variableValue" :known-variables="knownVariables" :variable-scope="variableScope">
+        <InputText
+          class="set-variable-node__input"
+          :model-value="variableValue"
+          :readonly="isReadOnly"
+          placeholder="value"
+          @update:model-value="value => updateParam('value', stringValue(value))"
+        />
+      </EditorOverflowTooltip>
     </div>
   </BaseNode>
 </template>
@@ -43,6 +47,8 @@
 import { computed, type CSSProperties } from 'vue'
 import InputText from 'primevue/inputtext'
 import type { NodeParamItem } from '@/types/api'
+import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
+import type { VariableScope } from '@/components/editor/variableHighlight'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import BaseNode from './BaseNode.vue'
 
@@ -57,6 +63,8 @@ const props = defineProps<{
   isPickTarget?: boolean
   isRelated?: boolean
   label: string
+  knownVariables?: string[]
+  variableScope?: VariableScope
 }>()
 
 const emit = defineEmits<{

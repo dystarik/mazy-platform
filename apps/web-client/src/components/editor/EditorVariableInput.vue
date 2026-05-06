@@ -1,30 +1,38 @@
 <template>
   <div class="editor-variable-input">
-    <div
-      class="editor-variable-input__highlight"
-      aria-hidden="true"
-    >
-      <span
-        v-for="segment in highlightSegments"
-        :key="segment.id"
-        :class="`editor-variable-input__segment editor-variable-input__segment--${segment.state}`"
-      >{{ segment.text }}</span>
-    </div>
-    <InputText
-      ref="inputRef"
-      class="editor-variable-input__control"
+    <EditorOverflowTooltip
       :value="modelValue"
-      :readonly="readonly"
-      :disabled="disabled"
-      :placeholder="placeholder"
-      @input="handleInput"
-      @focus="refreshSuggestions"
-      @blur="closeSuggestionsLater"
-      @click="refreshSuggestions"
-      @keyup="handleKeyup"
-      @keydown="handleKeydown"
-      @change="event => emit('change', event)"
-    />
+      :disabled="suggestionsOpen"
+      target-selector=".editor-variable-input__control"
+      :known-variables="knownVariables"
+      :variable-scope="variableScope"
+    >
+      <div
+        class="editor-variable-input__highlight"
+        aria-hidden="true"
+      >
+        <span
+          v-for="segment in highlightSegments"
+          :key="segment.id"
+          :class="`editor-variable-input__segment editor-variable-input__segment--${segment.state}`"
+        >{{ segment.text }}</span>
+      </div>
+      <InputText
+        ref="inputRef"
+        class="editor-variable-input__control"
+        :value="modelValue"
+        :readonly="readonly"
+        :disabled="disabled"
+        :placeholder="placeholder"
+        @input="handleInput"
+        @focus="refreshSuggestions"
+        @blur="closeSuggestionsLater"
+        @click="refreshSuggestions"
+        @keyup="handleKeyup"
+        @keydown="handleKeydown"
+        @change="event => emit('change', event)"
+      />
+    </EditorOverflowTooltip>
     <Teleport to="body">
       <div
         v-if="suggestionsOpen"
@@ -51,6 +59,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, type CSSProperties } from 'vue'
 import InputText from 'primevue/inputtext'
+import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
 import {
   buildVariableHighlightSegments,
   variableSuggestions,

@@ -20,14 +20,16 @@
       @pointerdown.stop
       @click.stop
     >
-      <InputText
-        class="delay-node__input"
-        type="text"
-        inputmode="numeric"
-        :model-value="String(seconds)"
-        :readonly="isReadOnly"
-        @update:model-value="value => updateSeconds(String(value ?? ''))"
-      />
+      <EditorOverflowTooltip :value="String(seconds)">
+        <InputText
+          class="delay-node__input"
+          type="text"
+          inputmode="numeric"
+          :model-value="String(seconds)"
+          :readonly="isReadOnly"
+          @update:model-value="value => updateSeconds(String(value ?? ''))"
+        />
+      </EditorOverflowTooltip>
       <span class="delay-node__suffix">сек.</span>
     </label>
   </BaseNode>
@@ -37,6 +39,7 @@
 import { computed, type CSSProperties } from 'vue'
 import InputText from 'primevue/inputtext'
 import type { NodeParamItem } from '@/types/api'
+import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import BaseNode from './BaseNode.vue'
 

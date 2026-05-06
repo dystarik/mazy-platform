@@ -32,13 +32,15 @@
 
         <label class="http-request-node__url">
           <span class="http-request-node__label">URL</span>
-          <InputText
-            class="http-request-node__input"
-            :model-value="url"
-            :readonly="isReadOnly"
-            placeholder="https://api.example.com"
-            @update:model-value="value => updateParam('url', stringValue(value))"
-          />
+          <EditorOverflowTooltip :value="url" :known-variables="knownVariables" :variable-scope="variableScope">
+            <InputText
+              class="http-request-node__input"
+              :model-value="url"
+              :readonly="isReadOnly"
+              placeholder="https://api.example.com"
+              @update:model-value="value => updateParam('url', stringValue(value))"
+            />
+          </EditorOverflowTooltip>
         </label>
       </div>
 
@@ -67,6 +69,8 @@
           :readonly="isReadOnly"
           :placeholder="bodyPlaceholder"
           :min-rows="2"
+          :known-variables="knownVariables"
+          :variable-scope="variableScope"
           @update:model-value="value => updateParam('body', value)"
         />
       </label>
@@ -92,20 +96,24 @@
           :key="key"
           class="http-request-node__dict-row"
         >
-          <InputText
-            class="http-request-node__dict-input"
-            :model-value="key"
-            :readonly="isReadOnly"
-            placeholder="Header"
-            @change="event => renameHeader(key, (event.target as HTMLInputElement).value)"
-          />
-          <InputText
-            class="http-request-node__dict-input"
-            :model-value="value"
-            :readonly="isReadOnly"
-            placeholder="value"
-            @update:model-value="nextValue => updateHeaderValue(key, stringValue(nextValue))"
-          />
+          <EditorOverflowTooltip :value="key" :known-variables="knownVariables" :variable-scope="variableScope">
+            <InputText
+              class="http-request-node__dict-input"
+              :model-value="key"
+              :readonly="isReadOnly"
+              placeholder="Header"
+              @change="event => renameHeader(key, (event.target as HTMLInputElement).value)"
+            />
+          </EditorOverflowTooltip>
+          <EditorOverflowTooltip :value="value" :known-variables="knownVariables" :variable-scope="variableScope">
+            <InputText
+              class="http-request-node__dict-input"
+              :model-value="value"
+              :readonly="isReadOnly"
+              placeholder="value"
+              @update:model-value="nextValue => updateHeaderValue(key, stringValue(nextValue))"
+            />
+          </EditorOverflowTooltip>
           <Button
             v-if="!isReadOnly"
             class="http-request-node__icon-button"
@@ -123,13 +131,15 @@
         @pointerdown.stop
       >
         <span class="http-request-node__label">Сохранить ответ</span>
-        <InputText
-          class="http-request-node__input"
-          :model-value="responseBodyVariable"
-          :readonly="isReadOnly"
-          placeholder="response_body"
-          @update:model-value="value => updateParam('responseBodyVariable', stringValue(value))"
-        />
+        <EditorOverflowTooltip :value="responseBodyVariable" :known-variables="knownVariables" :variable-scope="variableScope">
+          <InputText
+            class="http-request-node__input"
+            :model-value="responseBodyVariable"
+            :readonly="isReadOnly"
+            placeholder="response_body"
+            @update:model-value="value => updateParam('responseBodyVariable', stringValue(value))"
+          />
+        </EditorOverflowTooltip>
       </label>
 
       <label
@@ -138,13 +148,15 @@
         @pointerdown.stop
       >
         <span class="http-request-node__label">Сохранить статус</span>
-        <InputText
-          class="http-request-node__input"
-          :model-value="responseStatusVariable"
-          :readonly="isReadOnly"
-          placeholder="Не сохранять"
-          @update:model-value="value => updateParam('responseStatusVariable', stringValue(value))"
-        />
+        <EditorOverflowTooltip :value="responseStatusVariable" :known-variables="knownVariables" :variable-scope="variableScope">
+          <InputText
+            class="http-request-node__input"
+            :model-value="responseStatusVariable"
+            :readonly="isReadOnly"
+            placeholder="Не сохранять"
+            @update:model-value="value => updateParam('responseStatusVariable', stringValue(value))"
+          />
+        </EditorOverflowTooltip>
       </label>
     </div>
   </BaseNode>
@@ -157,6 +169,8 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import type { NodeParamItem } from '@/types/api'
 import EditorGridTextarea from '@/components/editor/EditorGridTextarea.vue'
+import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
+import type { VariableScope } from '@/components/editor/variableHighlight'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import BaseNode from './BaseNode.vue'
 
@@ -174,6 +188,8 @@ const props = defineProps<{
   isPickTarget?: boolean
   isRelated?: boolean
   label: string
+  knownVariables?: string[]
+  variableScope?: VariableScope
 }>()
 
 const emit = defineEmits<{

@@ -3,33 +3,41 @@
     class="editor-grid-textarea"
     :style="{ height: `${height}px` }"
   >
-    <div
-      class="editor-grid-textarea__highlight"
-      :style="{ height: `${height}px` }"
-      aria-hidden="true"
-    >
-      <span
-        v-for="segment in highlightSegments"
-        :key="segment.id"
-        :class="`editor-grid-textarea__segment editor-grid-textarea__segment--${segment.state}`"
-      >{{ segment.text }}</span>
-    </div>
-    <Textarea
-      ref="textareaRef"
-      class="editor-grid-textarea__control"
-      rows="1"
+    <EditorOverflowTooltip
       :value="modelValue"
-      :readonly="readonly"
-      :disabled="disabled"
-      :placeholder="placeholder"
-      :style="{ height: `${height}px` }"
-      @input="handleInput"
-      @focus="refreshSuggestions"
-      @blur="closeSuggestionsLater"
-      @click="refreshSuggestions"
-      @keyup="handleKeyup"
-      @keydown="handleKeydown"
-    />
+      :disabled="suggestionsOpen"
+      target-selector=".editor-grid-textarea__control"
+      :known-variables="knownVariables"
+      :variable-scope="variableScope"
+    >
+      <div
+        class="editor-grid-textarea__highlight"
+        :style="{ height: `${height}px` }"
+        aria-hidden="true"
+      >
+        <span
+          v-for="segment in highlightSegments"
+          :key="segment.id"
+          :class="`editor-grid-textarea__segment editor-grid-textarea__segment--${segment.state}`"
+        >{{ segment.text }}</span>
+      </div>
+      <Textarea
+        ref="textareaRef"
+        class="editor-grid-textarea__control"
+        rows="1"
+        :value="modelValue"
+        :readonly="readonly"
+        :disabled="disabled"
+        :placeholder="placeholder"
+        :style="{ height: `${height}px` }"
+        @input="handleInput"
+        @focus="refreshSuggestions"
+        @blur="closeSuggestionsLater"
+        @click="refreshSuggestions"
+        @keyup="handleKeyup"
+        @keydown="handleKeydown"
+      />
+    </EditorOverflowTooltip>
     <Teleport to="body">
       <div
         v-if="suggestionsOpen"
@@ -64,6 +72,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch, type CSSProperties } from 'vue'
 import Textarea from 'primevue/textarea'
+import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
 import {
   buildVariableHighlightSegments,
   variableSuggestions,

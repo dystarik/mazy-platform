@@ -17,13 +17,15 @@
     <div class="receive-message-node__body">
       <label class="receive-message-node__field nodrag" @mousedown.stop @pointerdown.stop>
         <span class="receive-message-node__label">Сохранить текст</span>
-        <InputText
-          class="receive-message-node__input"
-          :model-value="messageTextVariable"
-          :readonly="isReadOnly"
-          placeholder="message_text"
-          @update:model-value="value => updateParam('messageTextVariable', stringValue(value))"
-        />
+        <EditorOverflowTooltip :value="messageTextVariable" :known-variables="knownVariables" :variable-scope="variableScope">
+          <InputText
+            class="receive-message-node__input"
+            :model-value="messageTextVariable"
+            :readonly="isReadOnly"
+            placeholder="message_text"
+            @update:model-value="value => updateParam('messageTextVariable', stringValue(value))"
+          />
+        </EditorOverflowTooltip>
       </label>
 
       <label class="receive-message-node__field nodrag" @mousedown.stop @pointerdown.stop>
@@ -61,13 +63,15 @@
         @pointerdown.stop
       >
         <span class="receive-message-node__label">Паттерн</span>
-        <InputText
-          class="receive-message-node__input"
-          :model-value="validationPattern"
-          :readonly="isReadOnly"
-          placeholder="^.+$"
-          @update:model-value="value => updateValidationParam('pattern', stringValue(value))"
-        />
+        <EditorOverflowTooltip :value="validationPattern" :known-variables="knownVariables" :variable-scope="variableScope">
+          <InputText
+            class="receive-message-node__input"
+            :model-value="validationPattern"
+            :readonly="isReadOnly"
+            placeholder="^.+$"
+            @update:model-value="value => updateValidationParam('pattern', stringValue(value))"
+          />
+        </EditorOverflowTooltip>
       </label>
 
       <div
@@ -78,23 +82,27 @@
       >
         <label class="receive-message-node__field">
           <span class="receive-message-node__label">Мин.</span>
-          <InputText
-            class="receive-message-node__input"
-            :model-value="validationMin"
-            :readonly="isReadOnly"
-            placeholder="0"
-            @update:model-value="value => updateValidationParam('min', stringValue(value))"
-          />
+          <EditorOverflowTooltip :value="validationMin" :known-variables="knownVariables" :variable-scope="variableScope">
+            <InputText
+              class="receive-message-node__input"
+              :model-value="validationMin"
+              :readonly="isReadOnly"
+              placeholder="0"
+              @update:model-value="value => updateValidationParam('min', stringValue(value))"
+            />
+          </EditorOverflowTooltip>
         </label>
         <label class="receive-message-node__field">
           <span class="receive-message-node__label">Макс.</span>
-          <InputText
-            class="receive-message-node__input"
-            :model-value="validationMax"
-            :readonly="isReadOnly"
-            placeholder="100"
-            @update:model-value="value => updateValidationParam('max', stringValue(value))"
-          />
+          <EditorOverflowTooltip :value="validationMax" :known-variables="knownVariables" :variable-scope="variableScope">
+            <InputText
+              class="receive-message-node__input"
+              :model-value="validationMax"
+              :readonly="isReadOnly"
+              placeholder="100"
+              @update:model-value="value => updateValidationParam('max', stringValue(value))"
+            />
+          </EditorOverflowTooltip>
         </label>
       </div>
 
@@ -127,6 +135,7 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import type { NodeParamItem } from '@/types/api'
 import EditorGridTextarea from '@/components/editor/EditorGridTextarea.vue'
+import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
 import type { VariableScope } from '@/components/editor/variableHighlight'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import BaseNode from './BaseNode.vue'
