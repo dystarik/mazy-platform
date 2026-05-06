@@ -3336,6 +3336,18 @@
             "items": {
               "type": "string"
             }
+          },
+          "maxRows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxItemsPerRow": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxItemsTotal": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false

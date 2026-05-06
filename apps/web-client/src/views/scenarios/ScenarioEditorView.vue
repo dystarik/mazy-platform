@@ -162,6 +162,7 @@ import type {
   RuntimeScenario,
   ScenarioRoutePoint,
 } from '@/components/editor/scenario-adapters/editorScenario.types'
+import { getObjectMatrixLimitViolation } from '@/components/editor/buttonMatrixLimits'
 import type { VariableScope } from '@/components/editor/variableHighlight'
 
 const route = useRoute()
@@ -2492,7 +2493,98 @@ function validateScenarioBeforeSerialization(): boolean {
     return false
   }
 
+  const limitError = findObjectMatrixLimitErrorInFlowNodes(root.nodes)
+  if (limitError) {
+    setEditorStatus('error', limitError, 6000)
+    return false
+  }
+
   return true
+}
+
+function findObjectMatrixLimitErrorInFlowNodes(sourceNodes: EditorFlowNode[]): string | null {
+  for (const node of sourceNodes) {
+    const error = findObjectMatrixLimitErrorInParams(node.data.type, node.data.params)
+    if (error) return error
+
+    if (node.data.type === GROUP_NODE_TYPE) {
+      const subgraph = readEditorSubgraph(node.data.params.subgraph)
+      if (!subgraph) continue
+
+      const subgraphError = findObjectMatrixLimitErrorInRuntimeNodes(subgraph.nodes)
+      if (subgraphError) return subgraphError
+    }
+  }
+
+  return null
+}
+
+function findObjectMatrixLimitErrorInRuntimeNodes(sourceNodes: RuntimeNode[]): string | null {
+  for (const node of sourceNodes) {
+    const params = isRecord(node.params) ? node.params : {}
+    const error = findObjectMatrixLimitErrorInParams(node.type, params)
+    if (error) return error
+
+    if (node.type === GROUP_NODE_TYPE) {
+      const subgraph = readEditorSubgraph(params.subgraph)
+      if (!subgraph) continue
+
+      const subgraphError = findObjectMatrixLimitErrorInRuntimeNodes(subgraph.nodes)
+      if (subgraphError) return subgraphError
+    }
+  }
+
+  return null
+}
+
+function findObjectMatrixLimitErrorInParams(
+  nodeType: string,
+  params: Record<string, unknown>,
+): string | null {
+  const schema = getUiParams(catalog.value, nodeType)
+  if (!schema.length) return null
+
+  return findObjectMatrixLimitErrorInSchema(schema, params, getNodeLabel(nodeType))
+}
+
+function findObjectMatrixLimitErrorInSchema(
+  schema: NodeParamItem[],
+  params: Record<string, unknown>,
+  nodeLabel: string,
+  parentPath = '',
+): string | null {
+  for (const param of schema) {
+    if (!param.key) continue
+
+    const value = params[param.key]
+    const normalizedType = normalizeNodeParamType(param.type)
+    const path = parentPath ? `${parentPath}.${param.key}` : param.key
+
+    if (normalizedType === 'objectmatrix' && Array.isArray(value)) {
+      const rows = value.filter((row): row is unknown[] => Array.isArray(row))
+      const message = getObjectMatrixLimitViolation(rows, param, param.key === 'buttons' ? 'кнопок' : 'элементов')
+      if (message) return `Узел «${nodeLabel}», параметр «${path}»: ${message}`
+      continue
+    }
+
+    if (normalizedType === 'object' && isRecord(value) && param.fields?.length) {
+      const error = findObjectMatrixLimitErrorInSchema(param.fields, value, nodeLabel, path)
+      if (error) return error
+      continue
+    }
+
+    if (normalizedType === 'objectlist' && Array.isArray(value) && param.fields?.length) {
+      for (let index = 0; index < value.length; index += 1) {
+        const item = value[index]
+        if (!isRecord(item)) continue
+
+        const error = findObjectMatrixLimitErrorInSchema(param.fields, item, nodeLabel, `${path}[${index}]`)
+        if (error) return error
+      }
+    }
+  }
+
+  return null
 }
 
 function findGroupWithInvalidGotoTarget(sourceNodes: EditorFlowNode[]): string | null {

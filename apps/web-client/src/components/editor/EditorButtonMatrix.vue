@@ -9,6 +9,7 @@
       class="button-matrix__first-add nodrag"
       type="button"
       label="Добавить кнопку"
+      :disabled="!canAddNewRow"
       @mousedown.stop
       @pointerdown.stop
       @click.stop="addRow"
@@ -27,6 +28,7 @@
           type="button"
           label="+"
           title="Добавить кнопку в этот ряд"
+          :disabled="!canAddButtonToRow(rowIndex)"
           @mousedown.stop
           @pointerdown.stop
           @click.stop="addButtonToRow(rowIndex)"
@@ -89,10 +91,13 @@
       class="button-matrix__add-row nodrag"
       type="button"
       label="+ Новый ряд"
+      :disabled="!canAddNewRow"
       @mousedown.stop
       @pointerdown.stop
       @click.stop="addRow"
     />
+
+    <p v-if="limitMessage" class="button-matrix__limit">{{ limitMessage }}</p>
   </div>
 </template>
 
@@ -102,6 +107,11 @@ import { Handle, Position } from '@vue-flow/core'
 import Button from 'primevue/button'
 import Select from 'primevue/select'
 import type { NodeParamItem } from '@/types/api'
+import {
+  canAddObjectMatrixItem,
+  canAddObjectMatrixRow,
+  getObjectMatrixLimitMessage,
+} from '@/components/editor/buttonMatrixLimits'
 import {
   flattenButtonBranchingRows,
   readButtonBranchingButtonRows,
@@ -130,6 +140,8 @@ const buttons = computed(() => flattenButtonBranchingRows(rows.value))
 const title = computed(() => props.title ?? props.schema.description ?? 'Кнопки')
 const labelField = computed(() => props.schema.fields?.find(field => field.key === 'label') ?? null)
 const labelPlaceholder = computed(() => labelField.value?.description ?? 'Текст кнопки')
+const canAddNewRow = computed(() => canAddObjectMatrixRow(rows.value, props.schema, 1))
+const limitMessage = computed(() => getObjectMatrixLimitMessage(rows.value, props.schema, 'кнопок'))
 const styleOptions = [
   { value: 'primary', label: 'Осн.' },
   { value: 'success', label: 'Усп.' },
@@ -137,7 +149,7 @@ const styleOptions = [
 ]
 
 function addRow(): void {
-  if (props.readonly) return
+  if (props.readonly || !canAddNewRow.value) return
   const index = buttons.value.length
   emit('update:modelValue', [
     ...rows.value,
@@ -146,7 +158,7 @@ function addRow(): void {
 }
 
 function addButtonToRow(rowIndex: number): void {
-  if (props.readonly) return
+  if (props.readonly || !canAddButtonToRow(rowIndex)) return
   const next = cloneRows()
   const row = next[rowIndex]
   if (!row) return
@@ -154,6 +166,10 @@ function addButtonToRow(rowIndex: number): void {
   const index = buttons.value.length
   row.push({ label: `Кнопка ${index + 1}`, payload: createButtonPayload(index) })
   emit('update:modelValue', next)
+}
+
+function canAddButtonToRow(rowIndex: number): boolean {
+  return canAddObjectMatrixItem(rows.value, rowIndex, props.schema)
 }
 
 function removeButton(rowIndex: number, buttonIndex: number): void {
@@ -511,6 +527,21 @@ function stringValue(value: unknown): string {
 .button-matrix__row-add:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
+}
+
+.button-matrix__first-add:disabled,
+.button-matrix__add-row:disabled,
+.button-matrix__row-add:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.button-matrix__limit {
+  margin: 6px 0 0;
+  color: var(--color-danger);
+  font-size: 10px;
+  line-height: 14px;
+  text-align: left;
 }
 
 .button-matrix__handle {

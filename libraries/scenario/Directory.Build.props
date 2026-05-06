@@ -9,7 +9,7 @@
 
     <PropertyGroup Condition="!$(MSBuildProjectName.Contains('.Tests'))">
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <Version>0.3.9-preview</Version>
+        <Version>0.3.10-preview</Version>
         <Authors>Mazy-platform</Authors>
         <RepositoryUrl>https://github.com/mazy-platform/scenario</RepositoryUrl>
     </PropertyGroup>

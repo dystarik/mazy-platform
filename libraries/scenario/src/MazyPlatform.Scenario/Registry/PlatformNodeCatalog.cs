@@ -2,6 +2,7 @@ namespace MazyPlatform.Scenario.Registry;
 
 using MazyPlatform.Scenario.Abstractions.Nodes;
 using MazyPlatform.Scenario.Platforms;
+using MazyPlatform.Scenario.Validation;
 
 /// <summary>
 /// Каталог узлов с фильтрацией по платформе.
@@ -15,5 +16,7 @@ public sealed class PlatformNodeCatalog(IEnumerable<INodeSchemaProvider> schemaP
         [.. PlatformDescriptorFilter
             .Filter(_schemaProviders, platformKey)
             .OrderBy(provider => provider.Type, StringComparer.Ordinal)
-            .Select(provider => new NodeMeta(provider.Type, provider.Schema))];
+            .Select(provider => new NodeMeta(
+                provider.Type,
+                PlatformButtonLimitResolver.Apply(provider.Type, provider.Schema, platformKey)))];
 }

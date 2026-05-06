@@ -13,6 +13,9 @@ namespace MazyPlatform.Scenario.Abstractions.Nodes;
 /// <param name="Fields">Схема вложенных полей для Object/ObjectList/ObjectMatrix.</param>
 /// <param name="EnumValues">Допустимые значения для Enum.</param>
 /// <param name="AllowEmptyCollection">Разрешать пустой ObjectList/ObjectMatrix.</param>
+/// <param name="MaxRows">Максимальное количество строк для ObjectMatrix.</param>
+/// <param name="MaxItemsPerRow">Максимальное количество элементов в строке для ObjectMatrix.</param>
+/// <param name="MaxItemsTotal">Максимальное общее количество элементов для ObjectMatrix.</param>
 public sealed record NodeParamSchema(
     string Key,
     NodeParamType Type,
@@ -20,4 +23,7 @@ public sealed record NodeParamSchema(
     string? Description = null,
     IReadOnlyList<NodeParamSchema>? Fields = null,
     IReadOnlyList<string>? EnumValues = null,
-    bool AllowEmptyCollection = false);
+    bool AllowEmptyCollection = false,
+    int? MaxRows = null,
+    int? MaxItemsPerRow = null,
+    int? MaxItemsTotal = null);

@@ -2920,6 +2920,12 @@ export interface components {
             description?: string;
             fields?: components["schemas"]["NodeParamItem"][];
             enumValues?: string[];
+            /** Format: int32 */
+            maxRows?: number;
+            /** Format: int32 */
+            maxItemsPerRow?: number;
+            /** Format: int32 */
+            maxItemsTotal?: number;
         };
         /** @enum {string} */
         NodeParamType: "NODE_PARAM_TYPE_UNSPECIFIED" | "NODE_PARAM_TYPE_STRING" | "NODE_PARAM_TYPE_INT" | "NODE_PARAM_TYPE_BOOL" | "NODE_PARAM_TYPE_STRING_DICTIONARY" | "NODE_PARAM_TYPE_STRING_LIST" | "NODE_PARAM_TYPE_OBJECT" | "NODE_PARAM_TYPE_ENUM" | "NODE_PARAM_TYPE_OBJECT_LIST" | "NODE_PARAM_TYPE_OBJECT_MATRIX";

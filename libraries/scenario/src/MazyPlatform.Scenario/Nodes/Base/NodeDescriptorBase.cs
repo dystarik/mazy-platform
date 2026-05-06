@@ -3,6 +3,7 @@ namespace MazyPlatform.Scenario.Nodes.Base;
 using System.Text.Json;
 
 using MazyPlatform.Scenario.Abstractions.Nodes;
+using MazyPlatform.Scenario.Validation;
 
 /// <summary>
 /// Базовый класс дескриптора узла.
@@ -123,23 +124,24 @@ public abstract class NodeDescriptorBase : INodeDescriptor
 
         if (param.Type == NodeParamType.ObjectMatrix)
         {
-            ValidateObjectMatrix(nodeId, value, param.Fields!, path, param.AllowEmptyCollection, errors);
+            ValidateObjectMatrix(nodeId, value, param, path, errors);
         }
     }
 
     private static void ValidateObjectMatrix(
         Guid nodeId,
         JsonElement value,
-        IReadOnlyList<NodeParamSchema> fields,
+        NodeParamSchema param,
         string path,
-        bool allowEmptyCollection,
         List<string> errors)
     {
-        if (value.GetArrayLength() == 0 && !allowEmptyCollection)
+        if (value.GetArrayLength() == 0 && !param.AllowEmptyCollection)
         {
             errors.Add($"Узел {nodeId}: параметр \"{path}\" не должен быть пустым.");
             return;
         }
+
+        NodeParamLimitValidator.ValidateObjectMatrixLimits(nodeId, value, param, path, errors);
 
         var rowIndex = 0;
         foreach (var row in value.EnumerateArray())
@@ -169,7 +171,7 @@ public abstract class NodeDescriptorBase : INodeDescriptor
                 ValidateValue(
                     nodeId,
                     item,
-                    new NodeParamSchema(itemPath, NodeParamType.Object, IsRequired: true, Fields: fields),
+                    new NodeParamSchema(itemPath, NodeParamType.Object, IsRequired: true, Fields: param.Fields),
                     itemPath,
                     errors);
 

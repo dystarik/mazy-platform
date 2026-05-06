@@ -20,6 +20,18 @@ public class NodeDescriptorBaseObjectMatrixTests
         new("buttons", NodeParamType.ObjectMatrix, IsRequired: true, Fields: ButtonFields),
     ];
 
+    private static readonly IReadOnlyList<NodeParamSchema> LimitedMatrixSchema =
+    [
+        new(
+            "buttons",
+            NodeParamType.ObjectMatrix,
+            IsRequired: true,
+            Fields: ButtonFields,
+            MaxRows: 2,
+            MaxItemsPerRow: 2,
+            MaxItemsTotal: 4),
+    ];
+
     [Test]
     public async Task Validate_WithValidGrid_ReturnsNoErrors()
     {
@@ -156,6 +168,72 @@ public class NodeDescriptorBaseObjectMatrixTests
         await Assert.That(errors.Count).IsEqualTo(1);
         await Assert.That(errors[0]).Contains("\"buttons[1]\"");
         await Assert.That(errors[0]).Contains("не должен быть пустым");
+    }
+
+    [Test]
+    public async Task Validate_WithTooManyRows_ReturnsRowsLimitError()
+    {
+        var descriptor = new TestMatrixDescriptor(LimitedMatrixSchema);
+        var parameters = ParseJson("""
+            {
+              "buttons": [
+                [{"label":"a","payload":"x"}],
+                [{"label":"b","payload":"y"}],
+                [{"label":"c","payload":"z"}]
+              ]
+            }
+            """);
+
+        var errors = descriptor.Validate(Guid.NewGuid(), parameters);
+
+        await Assert.That(errors.Count).IsEqualTo(1);
+        await Assert.That(errors[0]).Contains("\"buttons\"");
+        await Assert.That(errors[0]).Contains("слишком много рядов");
+        await Assert.That(errors[0]).Contains("не больше 2");
+    }
+
+    [Test]
+    public async Task Validate_WithTooManyItemsInRow_ReturnsRowLimitError()
+    {
+        var descriptor = new TestMatrixDescriptor(LimitedMatrixSchema);
+        var parameters = ParseJson("""
+            {
+              "buttons": [
+                [
+                  {"label":"a","payload":"x"},
+                  {"label":"b","payload":"y"},
+                  {"label":"c","payload":"z"}
+                ]
+              ]
+            }
+            """);
+
+        var errors = descriptor.Validate(Guid.NewGuid(), parameters);
+
+        await Assert.That(errors.Count).IsEqualTo(1);
+        await Assert.That(errors[0]).Contains("\"buttons[0]\"");
+        await Assert.That(errors[0]).Contains("слишком много элементов");
+        await Assert.That(errors[0]).Contains("не больше 2");
+    }
+
+    [Test]
+    public async Task Validate_WithTooManyItemsTotal_ReturnsTotalLimitError()
+    {
+        var descriptor = new TestMatrixDescriptor(LimitedMatrixSchema);
+        var parameters = ParseJson("""
+            {
+              "buttons": [
+                [{"label":"a","payload":"x"}, {"label":"b","payload":"y"}],
+                [{"label":"c","payload":"z"}, {"label":"d","payload":"w"}, {"label":"e","payload":"v"}]
+              ]
+            }
+            """);
+
+        var errors = descriptor.Validate(Guid.NewGuid(), parameters);
+
+        await Assert.That(errors.Count).IsEqualTo(2);
+        await Assert.That(errors.Any(static error => error.Contains("\"buttons\"") && error.Contains("не больше 4"))).IsTrue();
+        await Assert.That(errors.Any(static error => error.Contains("\"buttons[1]\"") && error.Contains("не больше 2"))).IsTrue();
     }
 
     [Test]
