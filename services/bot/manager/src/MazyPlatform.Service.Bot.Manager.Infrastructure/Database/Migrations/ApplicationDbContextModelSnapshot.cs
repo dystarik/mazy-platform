@@ -55,6 +55,12 @@ namespace MazyPlatform.Service.Bot.Manager.Infrastructure.Database.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("scenario_version");
 
+                    b.Property<int>("ScenarioVersionUpdateMode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("scenario_version_update_mode");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer")
                         .HasColumnName("status");

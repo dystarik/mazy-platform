@@ -12,10 +12,16 @@ using MazyPlatform.SharedKernel.Api.Extensions;
 using MazyPlatform.SharedKernel.Application.Abstractions.Commands;
 using MazyPlatform.SharedKernel.Application.Abstractions.Queries;
 
+using DomainScenarioVersionUpdateMode = MazyPlatform.Service.Bot.Manager.Domain.BotInstances.ValueObjects.ScenarioVersionUpdateMode;
+
 internal sealed class BotGrpcService(ICommandDispatcher commandDispatcher, IQueryDispatcher queryDispatcher) : BotService.BotServiceBase
 {
     public override async Task<CreateBotResponse> CreateBot(CreateBotRequest request, ServerCallContext context)
     {
+        var scenarioVersionUpdateMode = request.HasScenarioVersionUpdateMode
+            ? request.ScenarioVersionUpdateMode.ToDomainOrDefault()
+            : DomainScenarioVersionUpdateMode.Auto;
+
         var command = new CreateBotCommand(
             context.GetUserAccountId(),
             request.ProjectId,
@@ -23,7 +29,8 @@ internal sealed class BotGrpcService(ICommandDispatcher commandDispatcher, IQuer
             request.PlatformType.ToDomain(),
             request.AccessToken,
             request.HasCommunityId ? request.CommunityId : null,
-            request.ScenarioVersion);
+            request.ScenarioVersion,
+            scenarioVersionUpdateMode);
 
         var result = await commandDispatcher.DispatchAsync<CreateBotCommand, CreateBotResult>(command, context.CancellationToken);
         return result.ToGrpcResponse(r => new CreateBotResponse { BotInstanceId = r.BotInstanceId.ToString() });
@@ -31,12 +38,17 @@ internal sealed class BotGrpcService(ICommandDispatcher commandDispatcher, IQuer
 
     public override async Task<CreateBotResponse> CreateBotWithoutProject(CreateBotWithoutProjectRequest request, ServerCallContext context)
     {
+        var scenarioVersionUpdateMode = request.HasScenarioVersionUpdateMode
+            ? request.ScenarioVersionUpdateMode.ToDomainOrDefault()
+            : DomainScenarioVersionUpdateMode.Auto;
+
         var command = new CreateBotWithoutProjectCommand(
             context.GetUserAccountId(),
             request.Name,
             request.PlatformType.ToDomain(),
             request.AccessToken,
-            request.HasCommunityId ? request.CommunityId : null);
+            request.HasCommunityId ? request.CommunityId : null,
+            scenarioVersionUpdateMode);
 
         var result = await commandDispatcher.DispatchAsync<CreateBotWithoutProjectCommand, CreateBotResult>(command, context.CancellationToken);
         return result.ToGrpcResponse(r => new CreateBotResponse { BotInstanceId = r.BotInstanceId.ToString() });
@@ -56,6 +68,7 @@ internal sealed class BotGrpcService(ICommandDispatcher commandDispatcher, IQuer
                 PlatformType = r.PlatformType.ToProto(),
                 MaskedAccessToken = r.MaskedAccessToken,
                 Status = r.Status.ToProto(),
+                ScenarioVersionUpdateMode = r.ScenarioVersionUpdateMode.ToProto(),
             };
 
             if (r.ProjectId.HasValue)
@@ -88,6 +101,7 @@ internal sealed class BotGrpcService(ICommandDispatcher commandDispatcher, IQuer
                     PlatformType = item.PlatformType.ToProto(),
                     MaskedAccessToken = item.MaskedAccessToken,
                     Status = item.Status.ToProto(),
+                    ScenarioVersionUpdateMode = item.ScenarioVersionUpdateMode.ToProto(),
                 };
 
                 if (item.CommunityId is not null)
@@ -120,6 +134,7 @@ internal sealed class BotGrpcService(ICommandDispatcher commandDispatcher, IQuer
                     PlatformType = item.PlatformType.ToProto(),
                     MaskedAccessToken = item.MaskedAccessToken,
                     Status = item.Status.ToProto(),
+                    ScenarioVersionUpdateMode = item.ScenarioVersionUpdateMode.ToProto(),
                 };
 
                 if (item.CommunityId is not null)
@@ -140,11 +155,16 @@ internal sealed class BotGrpcService(ICommandDispatcher commandDispatcher, IQuer
 
     public override async Task<Empty> BindBotToProject(BindBotToProjectRequest request, ServerCallContext context)
     {
+        var scenarioVersionUpdateMode = request.HasScenarioVersionUpdateMode
+            ? request.ScenarioVersionUpdateMode.ToDomainOrDefault()
+            : DomainScenarioVersionUpdateMode.Auto;
+
         var command = new BindBotToProjectCommand(
             request.BotInstanceId,
             context.GetUserAccountId(),
             request.ProjectId,
-            request.ScenarioVersion);
+            request.ScenarioVersion,
+            scenarioVersionUpdateMode);
 
         var result = await commandDispatcher.DispatchAsync(command, context.CancellationToken);
         return result.ToGrpcResponse();
@@ -189,6 +209,17 @@ internal sealed class BotGrpcService(ICommandDispatcher commandDispatcher, IQuer
             request.BotInstanceId,
             context.GetUserAccountId(),
             request.NewScenarioVersion);
+
+        var result = await commandDispatcher.DispatchAsync(command, context.CancellationToken);
+        return result.ToGrpcResponse();
+    }
+
+    public override async Task<Empty> ChangeBotScenarioVersionUpdateMode(ChangeBotScenarioVersionUpdateModeRequest request, ServerCallContext context)
+    {
+        var command = new ChangeBotScenarioVersionUpdateModeCommand(
+            request.BotInstanceId,
+            context.GetUserAccountId(),
+            request.ScenarioVersionUpdateMode.ToDomainOrDefault());
 
         var result = await commandDispatcher.DispatchAsync(command, context.CancellationToken);
         return result.ToGrpcResponse();

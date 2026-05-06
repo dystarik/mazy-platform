@@ -48,6 +48,11 @@ internal sealed class CreateBotValidator : AbstractValidator<CreateBotCommand>
             .WithErrorCode(ErrorCodes.Validation.Invalid)
             .WithMessage("ScenarioVersion должен быть больше нуля.");
 
+        RuleFor(x => x.ScenarioVersionUpdateMode)
+            .IsInEnum()
+            .WithErrorCode(ErrorCodes.Validation.Invalid)
+            .WithMessage("Указан неверный режим обновления версии сценария.");
+
         When(x => x.PlatformType == PlatformType.Vk, () =>
         {
             RuleFor(x => x.CommunityId)

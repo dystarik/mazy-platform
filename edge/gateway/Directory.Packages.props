@@ -5,10 +5,10 @@
   <ItemGroup>
     <PackageVersion Include="Google.Api.CommonProtos" Version="2.17.0" />
     <PackageVersion Include="Grpc.AspNetCore.Server.ClientFactory" Version="2.80.0" />
-    <PackageVersion Include="MazyPlatform.Contracts.Bot.Grpc" Version="0.6.13-preview" />
-    <PackageVersion Include="MazyPlatform.Contracts.Scenario.Grpc" Version="0.6.13-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.Bot.Grpc" Version="0.6.14-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.Scenario.Grpc" Version="0.6.14-preview" />
     <PackageVersion Include="MazyPlatform.Contracts.Scenario.Repository.Grpc" Version="0.6.6-preview" />
-    <PackageVersion Include="MazyPlatform.Contracts.User.Grpc" Version="0.6.13-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.User.Grpc" Version="0.6.14-preview" />
     <PackageVersion Include="Meziantou.Analyzer" Version="3.0.61" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
     <PackageVersion Include="Microsoft.AspNetCore.Grpc.JsonTranscoding" Version="10.0.7" />

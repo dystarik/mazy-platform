@@ -11,5 +11,6 @@ public sealed record GetBotsByProjectResult(IReadOnlyList<GetBotsByProjectResult
         string MaskedAccessToken,
         string? CommunityId,
         int? ScenarioVersion,
-        BotStatus Status);
+        BotStatus Status,
+        ScenarioVersionUpdateMode ScenarioVersionUpdateMode);
 }

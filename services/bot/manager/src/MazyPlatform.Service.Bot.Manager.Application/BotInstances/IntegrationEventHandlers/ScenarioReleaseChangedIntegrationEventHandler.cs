@@ -28,8 +28,8 @@ internal sealed partial class ScenarioReleaseChangedIntegrationEventHandler(
             if (bot.ProjectId is null)
                 continue;
 
-            var result = bot.ChangeScenarioVersion(@event.CurrentVersion, now);
-            if (result.IsSuccess)
+            var result = bot.ApplyScenarioRelease(@event.CurrentVersion, now);
+            if (result.IsSuccess && result.Value)
                 changedCount++;
         }
 

@@ -39,7 +39,8 @@ internal sealed class CreateBotHandler(
             command.Name,
             credentialsResult.Value,
             command.ScenarioVersion,
-            now);
+            now,
+            command.ScenarioVersionUpdateMode);
 
         repository.Add(botInstance);
         await unitOfWork.SaveChangesAsync(cancellationToken);

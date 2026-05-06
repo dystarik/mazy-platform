@@ -33,6 +33,10 @@ internal sealed class BotInstanceConfiguration(IBotTokenEncryptor tokenEncryptor
 
         builder.Property(x => x.Name).HasColumnName("name").HasMaxLength(256).IsRequired();
         builder.Property(x => x.ScenarioVersion).HasColumnName("scenario_version").IsRequired(false);
+        builder.Property(x => x.ScenarioVersionUpdateMode)
+            .HasColumnName("scenario_version_update_mode")
+            .HasDefaultValue(ScenarioVersionUpdateMode.Auto)
+            .IsRequired();
         builder.Property(x => x.Status).HasColumnName("status").IsRequired();
 
         builder.Property(x => x.Credentials)

@@ -8,4 +8,5 @@ public sealed record CreateBotWithoutProjectCommand(
     string Name,
     PlatformType PlatformType,
     string AccessToken,
-    string? CommunityId) : ICommand<CreateBotResult>;
+    string? CommunityId,
+    ScenarioVersionUpdateMode ScenarioVersionUpdateMode) : ICommand<CreateBotResult>;

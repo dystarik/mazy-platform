@@ -15,6 +15,7 @@ public static class ErrorCodes
         public const string AlreadyBound = "bot.already_bound";
         public const string CannotChangeVersionWhenUnbound = "bot.cannot_change_version_when_unbound";
         public const string AlreadyUnbound = "bot.already_unbound";
+        public const string InvalidScenarioVersionUpdateMode = "bot.invalid_scenario_version_update_mode";
     }
 
     public static class Validation

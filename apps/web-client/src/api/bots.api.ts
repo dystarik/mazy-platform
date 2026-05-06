@@ -9,6 +9,7 @@ import type {
   GetBotsByUserIdResponse,
   UpdateBotTokenRequest,
   ChangeBotScenarioVersionRequest,
+  ChangeBotScenarioVersionUpdateModeRequest,
 } from '@/types/api'
 
 /**
@@ -27,6 +28,7 @@ import type {
  *   POST   /api/v1/bots/{id}/deactivate                 — деактивировать
  *   PUT    /api/v1/bots/{id}/token                      — обновить токен/community
  *   PUT    /api/v1/bots/{id}/scenario-version           — переключить версию сценария
+ *   PUT    /api/v1/bots/{id}/scenario-version-update-mode — переключить режим обновления версии сценария
  */
 export const botsApi = {
   list(): Promise<GetBotsByUserIdResponse> {
@@ -79,6 +81,15 @@ export const botsApi = {
   ): Promise<void> {
     return apiClient
       .put(`/api/v1/bots/${botInstanceId}/scenario-version`, data)
+      .then(r => r.data)
+  },
+
+  changeScenarioVersionUpdateMode(
+    botInstanceId: string,
+    data: ChangeBotScenarioVersionUpdateModeRequest,
+  ): Promise<void> {
+    return apiClient
+      .put(`/api/v1/bots/${botInstanceId}/scenario-version-update-mode`, data)
       .then(r => r.data)
   },
 }

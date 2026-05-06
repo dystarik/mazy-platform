@@ -33,7 +33,11 @@ internal sealed partial class BindBotToProjectHandler(
         if (validationResult.IsFailure)
             return validationResult.Errors;
 
-        var bindResult = botInstance.BindToProject(projectId, command.ScenarioVersion, timeProvider.GetUtcNow());
+        var bindResult = botInstance.BindToProject(
+            projectId,
+            command.ScenarioVersion,
+            timeProvider.GetUtcNow(),
+            command.ScenarioVersionUpdateMode);
         if (bindResult.IsFailure)
             return bindResult.Errors;
 

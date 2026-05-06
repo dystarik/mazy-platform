@@ -1,11 +1,8 @@
 namespace MazyPlatform.Service.Bot.Manager.Application.BotInstances.Commands;
 
 using MazyPlatform.Service.Bot.Manager.Domain.BotInstances.ValueObjects;
-using MazyPlatform.SharedKernel.Application.Abstractions.Commands;
 
-public sealed record BindBotToProjectCommand(
+public sealed record ChangeBotScenarioVersionUpdateModeCommand(
     string BotInstanceId,
     string OwnerAccountId,
-    string ProjectId,
-    int ScenarioVersion,
     ScenarioVersionUpdateMode ScenarioVersionUpdateMode) : ICommand;

@@ -24,6 +24,16 @@ enum BotStatus {
     BOT_STATUS_ACTIVE = 2;
 }
 
+// Режим обновления версии сценария, назначенной боту.
+enum BotScenarioVersionUpdateMode {
+    // Не указано. В запросах трактуется как AUTO для обратной совместимости.
+    BOT_SCENARIO_VERSION_UPDATE_MODE_UNSPECIFIED = 0;
+    // Автоматически переключать бота на новую опубликованную версию сценария.
+    BOT_SCENARIO_VERSION_UPDATE_MODE_AUTO = 1;
+    // Оставлять бота на текущей версии до ручного переключения.
+    BOT_SCENARIO_VERSION_UPDATE_MODE_MANUAL = 2;
+}
+
 // Полиморфные credentials бота.
 // Конкретный набор полей зависит от платформы.
 message BotCredentials {

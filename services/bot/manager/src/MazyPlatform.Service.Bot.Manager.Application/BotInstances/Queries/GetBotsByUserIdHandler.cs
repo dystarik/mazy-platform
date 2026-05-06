@@ -26,7 +26,8 @@ internal sealed class GetBotsByUserIdHandler(IReadOnlyApplicationDbContext dbCon
                 TokenMasker.Mask(b.Credentials.AccessToken),
                 b.Credentials is VkBotCredentials vk ? vk.CommunityId : null,
                 b.ScenarioVersion,
-                b.Status));
+                b.Status,
+                b.ScenarioVersionUpdateMode));
 
         return new GetBotsByUserIdResult(items);
     }
