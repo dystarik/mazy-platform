@@ -4,6 +4,7 @@ import type {
   GetReleasedScenarioResponse,
   GetScenarioByVersionResponse,
   UpdateScenarioDraftRequest,
+  ValidateScenarioDraftResponse,
   GetVersionHistoryResponse,
 } from '@/types/api'
 
@@ -21,6 +22,7 @@ import type {
  *   GET    /api/v1/projects/{id}/scenario/versions             — история версий
  *   GET    /api/v1/projects/{id}/scenario/versions/{version}   — конкретная версия (просмотр архива)
  *   DELETE /api/v1/projects/{id}/scenario/versions/{version}   — удалить версию из истории
+ *   POST   /api/v1/projects/{id}/scenario/draft/validate       — проверить черновик
  *   POST   /api/v1/projects/{id}/scenario/promote              — draft → новая release-версия
  *   POST   /api/v1/projects/{id}/scenario/rollback             — откатиться на targetVersion
  */
@@ -32,6 +34,12 @@ export const scenarioApi = {
 
   saveDraft(projectId: string, data: UpdateScenarioDraftRequest): Promise<void> {
     return apiClient.put(`/api/v1/projects/${projectId}/scenario/draft`, data).then(r => r.data)
+  },
+
+  validateDraft(projectId: string): Promise<ValidateScenarioDraftResponse> {
+    return apiClient
+      .post(`/api/v1/projects/${projectId}/scenario/draft/validate`, { projectId })
+      .then(r => r.data)
   },
 
   // ── Release ─────────────────────────────────────────────────────────────────

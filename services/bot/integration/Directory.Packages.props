@@ -4,8 +4,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Grpc.Net.ClientFactory" Version="2.80.0" />
-    <PackageVersion Include="MazyPlatform.Contracts.Bot" Version="0.6.15-preview" />
-    <PackageVersion Include="MazyPlatform.Contracts.Bot.Grpc" Version="0.6.15-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.Bot" Version="0.6.16-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.Bot.Grpc" Version="0.6.16-preview" />
     <PackageVersion Include="Meziantou.Analyzer" Version="3.0.61" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.7" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.7" />

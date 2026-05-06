@@ -8,6 +8,7 @@
       :save-status="saveStatus"
       :status-message="statusMessage"
       :saving="saving"
+      :checking-draft="checkingDraft"
       :nodes-count="nodes.length"
       :can-undo="canUndo"
       :can-redo="canRedo"
@@ -21,6 +22,7 @@
       @redo="redoGraphChange"
       @exit-group="exitActiveGroup"
       @edit-copy="enableReleaseCopyEditing"
+      @validate-draft="validateDraft"
       @save="saveDraft"
     />
 
@@ -35,6 +37,14 @@
         <p v-if="formatScenarioNodeErrorMeta(error)" class="editor__scenario-error-meta">
           {{ formatScenarioNodeErrorMeta(error) }}
         </p>
+        <button
+          v-if="canSelectScenarioNodeError(error)"
+          class="editor__scenario-error-action"
+          type="button"
+          @click="selectScenarioNodeError(error)"
+        >
+          Перейти к узлу
+        </button>
       </div>
     </div>
 
@@ -118,7 +128,7 @@ import {
 } from '@vue-flow/core'
 import { scenarioApi, nodesApi, entitySchemasApi, projectsApi } from '@/api'
 import { parseScenarioError, type ScenarioNodeHeaderError } from '@/composables/useScenarioApiError'
-import type { NodeCatalogItem, NodeParamItem, PlatformType } from '@/types/api'
+import type { NodeCatalogItem, NodeParamItem, PlatformType, ScenarioValidationErrorItem } from '@/types/api'
 import type { GetEntitySchemaResponse } from '@/types/api/entity-schemas.types'
 import type { ELK, ElkExtendedEdge, ElkNode, ElkPoint, ElkPort } from 'elkjs/lib/elk.bundled'
 import EditorContextMenu from '@/components/editor/EditorContextMenu.vue'
@@ -689,7 +699,8 @@ function parseScenarioVersion(value: string): number | null {
 
 // ── Сохранение ────────────────────────────────────────────────────────────────
 const saving = ref(false)
-const saveStatus = ref<'idle' | 'saved' | 'imported' | 'exported' | 'error'>('idle')
+const checkingDraft = ref(false)
+const saveStatus = ref<'idle' | 'saved' | 'imported' | 'exported' | 'validated' | 'error'>('idle')
 const statusMessage = ref('')
 const scenarioNodeErrors = ref<ScenarioNodeHeaderError[]>([])
 let statusResetTimer: ReturnType<typeof setTimeout> | null = null
@@ -1528,10 +1539,32 @@ function formatScenarioNodeErrorMeta(error: ScenarioNodeHeaderError): string {
   ].filter(Boolean).join(' · ')
 }
 
-async function saveDraft(): Promise<void> {
-  if (isReadOnly.value) return
+function canSelectScenarioNodeError(error: ScenarioNodeHeaderError): boolean {
+  return Boolean(error.nodeId && nodes.value.some(node => node.id === error.nodeId))
+}
+
+function selectScenarioNodeError(error: ScenarioNodeHeaderError): void {
+  if (!error.nodeId || !canSelectScenarioNodeError(error)) return
+
+  selectNode(error.nodeId)
+  contextMenu.value = null
+}
+
+function mapScenarioValidationErrors(errors: ScenarioValidationErrorItem[] | undefined): ScenarioNodeHeaderError[] {
+  return (errors ?? [])
+    .map(error => ({
+      code: error.code ?? '',
+      message: error.message || error.code || 'Ошибка сценария',
+      nodeId: error.nodeId || undefined,
+      path: error.path || undefined,
+    }))
+    .filter(error => error.message)
+}
+
+async function saveDraft(): Promise<boolean> {
+  if (isReadOnly.value) return false
   scenarioNodeErrors.value = []
-  if (!validateScenarioBeforeSerialization()) return
+  if (!validateScenarioBeforeSerialization()) return false
 
   saving.value = true
   setEditorStatus('idle')
@@ -1539,12 +1572,47 @@ async function saveDraft(): Promise<void> {
     await scenarioApi.saveDraft(projectId.value, { projectId: projectId.value, graphJson: buildGraphJson() })
     scenarioNodeErrors.value = []
     setEditorStatus('saved')
+    return true
   } catch (error) {
     const parsedError = parseScenarioError(error)
     scenarioNodeErrors.value = parsedError.nodeErrors
     setEditorStatus('error', parsedError.nodeErrors.length ? 'Есть ошибки в сценарии' : (parsedError.messages[0] ?? 'Ошибка сохранения'), 0)
+    return false
   } finally {
     saving.value = false
+  }
+}
+
+async function validateDraft(): Promise<void> {
+  if (isReadOnly.value || checkingDraft.value || saving.value) return
+
+  const saved = await saveDraft()
+  if (!saved) return
+
+  checkingDraft.value = true
+  setEditorStatus('idle')
+
+  try {
+    const result = await scenarioApi.validateDraft(projectId.value)
+    const errors = mapScenarioValidationErrors(result.errors)
+    const validationErrors = errors.length > 0 || result.isValid !== false
+      ? errors
+      : [{ code: '', message: 'Сценарий содержит ошибки валидации' }]
+
+    scenarioNodeErrors.value = validationErrors
+
+    if ((result.isValid ?? validationErrors.length === 0) && validationErrors.length === 0) {
+      setEditorStatus('validated', 'Ошибок не найдено')
+      return
+    }
+
+    setEditorStatus('error', 'Есть ошибки в сценарии', 0)
+  } catch (error) {
+    const parsedError = parseScenarioError(error)
+    scenarioNodeErrors.value = parsedError.nodeErrors
+    setEditorStatus('error', parsedError.nodeErrors.length ? 'Есть ошибки в сценарии' : (parsedError.messages[0] ?? 'Ошибка проверки'), 0)
+  } finally {
+    checkingDraft.value = false
   }
 }
 
@@ -4105,6 +4173,22 @@ function stringRecordValue(record: Record<string, unknown>, key: string): string
   margin-top: 4px;
   color: var(--color-text-secondary);
   font-size: 12px;
+}
+
+.editor__scenario-error-action {
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.editor__scenario-error-action:hover {
+  text-decoration: underline;
 }
 
 /* ── Тело ── */

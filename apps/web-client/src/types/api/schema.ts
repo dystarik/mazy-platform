@@ -2252,6 +2252,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{projectId}/scenario/draft/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ValidateScenarioDraftRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ValidateScenarioDraftResponse"];
+                    };
+                };
+                /** @description Error */
+                default: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Status"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectId}/scenario/release": {
         parameters: {
             query?: never;
@@ -2993,6 +3043,12 @@ export interface components {
             /** Format: int32 */
             targetVersion?: number;
         };
+        ScenarioValidationErrorItem: {
+            code?: string;
+            message?: string;
+            nodeId?: string;
+            path?: string;
+        };
         SendEmailCodeRequest: {
             mfaSessionId?: string;
         };
@@ -3074,6 +3130,13 @@ export interface components {
             createdAt?: number;
             /** Format: int64 */
             updatedAt?: number;
+        };
+        ValidateScenarioDraftRequest: {
+            projectId?: string;
+        };
+        ValidateScenarioDraftResponse: {
+            isValid?: boolean;
+            errors?: components["schemas"]["ScenarioValidationErrorItem"][];
         };
         Value: {
             nullValue?: components["schemas"]["NullValue"];

@@ -75,6 +75,12 @@
         </svg>
         {{ statusMessage || 'JSON скачан' }}
       </span>
+      <span v-else-if="saveStatus === 'validated'" class="editor__save-status editor__save-status--ok">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+        {{ statusMessage || 'Ошибок не найдено' }}
+      </span>
       <span v-else-if="saveStatus === 'error'" class="editor__save-status editor__save-status--err">
         {{ statusMessage || 'Ошибка сохранения' }}
       </span>
@@ -128,10 +134,20 @@
       </Button>
       <Button
         v-if="!isReadOnly"
+        class="btn-secondary editor__toolbar-btn"
+        type="button"
+        :loading="checkingDraft"
+        :disabled="saving || checkingDraft"
+        @click="$emit('validateDraft')"
+      >
+        <span>{{ checkingDraft ? 'Проверяю...' : 'Проверить' }}</span>
+      </Button>
+      <Button
+        v-if="!isReadOnly"
         class="btn-primary editor__save-btn"
         type="button"
         :loading="saving"
-        :disabled="saving"
+        :disabled="saving || checkingDraft"
         @click="$emit('save')"
       >
         <span>{{ saving ? 'Сохраняю...' : 'Сохранить' }}</span>
@@ -148,9 +164,10 @@ defineProps<{
   projectId: string
   isReadOnly: boolean
   scenarioModeLabel: string
-  saveStatus: 'idle' | 'saved' | 'imported' | 'exported' | 'error'
+  saveStatus: 'idle' | 'saved' | 'imported' | 'exported' | 'validated' | 'error'
   statusMessage: string
   saving: boolean
+  checkingDraft: boolean
   nodesCount: number
   canUndo: boolean
   canRedo: boolean
@@ -167,6 +184,7 @@ defineEmits<{
   redo: []
   exitGroup: []
   editCopy: []
+  validateDraft: []
   save: []
 }>()
 

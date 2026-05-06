@@ -4,11 +4,11 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
-    <PackageVersion Include="MazyPlatform.Contracts.Bot" Version="0.6.15-preview" />
-    <PackageVersion Include="MazyPlatform.Contracts.Bot.Grpc" Version="0.6.15-preview" />
-    <PackageVersion Include="MazyPlatform.Contracts.Scenario" Version="0.6.15-preview" />
-    <PackageVersion Include="MazyPlatform.Contracts.Scenario.Grpc" Version="0.6.15-preview" />
-    <PackageVersion Include="MazyPlatform.Contracts.User" Version="0.6.15-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.Bot" Version="0.6.16-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.Bot.Grpc" Version="0.6.16-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.Scenario" Version="0.6.16-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.Scenario.Grpc" Version="0.6.16-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.User" Version="0.6.16-preview" />
     <PackageVersion Include="Grpc.AspNetCore" Version="2.80.0" />
     <PackageVersion Include="MazyPlatform.SharedKernel.Api" Version="0.6.3-preview" />
     <PackageVersion Include="MazyPlatform.SharedKernel.Application" Version="0.6.3-preview" />

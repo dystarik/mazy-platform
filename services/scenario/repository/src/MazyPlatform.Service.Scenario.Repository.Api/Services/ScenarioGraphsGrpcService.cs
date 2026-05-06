@@ -58,6 +58,38 @@ internal sealed class ScenarioGraphsGrpcService(ICommandDispatcher commands, IQu
         });
     }
 
+    public override async Task<ValidateScenarioDraftResponse> ValidateScenarioDraft(ValidateScenarioDraftRequest request, ServerCallContext context)
+    {
+        var query = new ValidateScenarioDraftQuery(request.ProjectId, context.GetUserAccountId());
+        var result = await queries.DispatchAsync<ValidateScenarioDraftQuery, ValidateScenarioDraftResult>(query, context.CancellationToken);
+        return result.ToGrpcResponse(r =>
+        {
+            var response = new ValidateScenarioDraftResponse
+            {
+                IsValid = r.IsValid,
+            };
+
+            response.Errors.AddRange(r.Errors.Select(error =>
+            {
+                var item = new ScenarioValidationErrorItem
+                {
+                    Code = error.Code,
+                    Message = error.Message,
+                };
+
+                if (error.NodeId is { } nodeId)
+                    item.NodeId = nodeId.ToString();
+
+                if (!string.IsNullOrWhiteSpace(error.Path))
+                    item.Path = error.Path;
+
+                return item;
+            }));
+
+            return response;
+        });
+    }
+
     public override async Task<GetReleasedScenarioResponse> GetReleasedScenario(GetReleasedScenarioRequest request, ServerCallContext context)
     {
         var query = new GetReleasedScenarioQuery(request.ProjectId);

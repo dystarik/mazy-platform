@@ -24,6 +24,7 @@ public static class ErrorCodes
         public const string VersionInUse = "scenario_graph.version_in_use";
         public const string NoReleasedVersion = "scenario_graph.no_released_version";
         public const string PromotionFailed = "scenario_graph.promotion_failed";
+        public const string ValidationFailed = "scenario_graph.validation_failed";
     }
 
     public static class EntitySchema
