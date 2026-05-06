@@ -1,4 +1,4 @@
-import type { NodeCatalogItem } from '@/types/api'
+import type { NodeCatalogItem, NodeParamItem } from '@/types/api'
 import {
   BUTTON_BRANCHING_NODE_TYPE,
   DATA_NODE_TYPE,
@@ -156,12 +156,76 @@ export function withEditorCatalogItems(runtimeCatalog: NodeCatalogItem[]): NodeC
       .map(type => runtimeCatalog.find(item => item.type === type))
       .find((item): item is NodeCatalogItem => Boolean(item))
 
-    byType.set(definition.type, runtimeItem && !definition.catalogItem.schema?.length
-      ? { ...runtimeItem, type: definition.type }
+    byType.set(definition.type, runtimeItem
+      ? mergeEditorCatalogItem(definition.catalogItem, runtimeItem, definition.type, runtimeCatalog)
       : definition.catalogItem)
   }
 
   return [...byType.values()]
+}
+
+function mergeEditorCatalogItem(
+  editorItem: NodeCatalogItem,
+  runtimeItem: NodeCatalogItem,
+  editorType: string,
+  runtimeCatalog: NodeCatalogItem[],
+): NodeCatalogItem {
+  if (editorType === MESSAGE_NODE_TYPE) {
+    return withSendButtonsSchema({ ...runtimeItem, type: editorType }, runtimeCatalog)
+  }
+
+  if (!editorItem.schema?.length) {
+    return { ...runtimeItem, type: editorType }
+  }
+
+  return {
+    ...editorItem,
+    schema: editorItem.schema.map(param => mergeParamLimits(param, runtimeItem.schema ?? [])),
+  }
+}
+
+function withSendButtonsSchema(item: NodeCatalogItem, runtimeCatalog: NodeCatalogItem[]): NodeCatalogItem {
+  const schema = item.schema ?? []
+  if (schema.some(param => param.key === 'buttons')) return item
+
+  const buttonsParam = runtimeCatalog
+    .find(candidate => candidate.type === 'send_buttons')
+    ?.schema
+    ?.find(param => param.key === 'buttons')
+
+  if (!buttonsParam) return item
+
+  return {
+    ...item,
+    schema: [...schema, buttonsParam],
+  }
+}
+
+function mergeParamLimits(editorParam: NodeParamItem, runtimeSchema: NodeParamItem[]): NodeParamItem {
+  const runtimeParam = runtimeSchema.find(param => param.key === editorParam.key)
+  if (!runtimeParam) return editorParam
+
+  return {
+    ...editorParam,
+    ...pickParamLimits(runtimeParam),
+    ...(editorParam.fields?.length
+      ? { fields: editorParam.fields.map(field => mergeParamLimits(field, runtimeParam.fields ?? [])) }
+      : {}),
+  }
+}
+
+function pickParamLimits(param: NodeParamItem): Partial<NodeParamItem> {
+  const source = param as NodeParamItem & {
+    maxRows?: number
+    maxItemsPerRow?: number
+    maxItemsTotal?: number
+  }
+
+  return {
+    ...(source.maxRows != null ? { maxRows: source.maxRows } : {}),
+    ...(source.maxItemsPerRow != null ? { maxItemsPerRow: source.maxItemsPerRow } : {}),
+    ...(source.maxItemsTotal != null ? { maxItemsTotal: source.maxItemsTotal } : {}),
+  } as Partial<NodeParamItem>
 }
 
 export function buildEditorCatalogCategories(items: NodeCatalogItem[]) {

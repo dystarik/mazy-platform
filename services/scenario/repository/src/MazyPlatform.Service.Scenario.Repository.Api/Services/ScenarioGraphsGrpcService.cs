@@ -118,6 +118,15 @@ internal sealed class ScenarioGraphsGrpcService(ICommandDispatcher commands, IQu
             if (p.Fields is not null)
                 item.Fields.AddRange(p.Fields.Select(MapParam));
 
+            if (p.MaxRows is { } maxRows)
+                item.MaxRows = maxRows;
+
+            if (p.MaxItemsPerRow is { } maxItemsPerRow)
+                item.MaxItemsPerRow = maxItemsPerRow;
+
+            if (p.MaxItemsTotal is { } maxItemsTotal)
+                item.MaxItemsTotal = maxItemsTotal;
+
             return item;
         }
 

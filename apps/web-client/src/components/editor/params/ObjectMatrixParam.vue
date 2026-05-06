@@ -20,10 +20,25 @@
         </div>
       </div>
 
-      <Button class="matrix__add-item" label="+ Добавить элемент" text severity="secondary" @click.stop="addItem(rowIndex)" />
+      <Button
+        class="matrix__add-item"
+        label="+ Добавить элемент"
+        text
+        severity="secondary"
+        :disabled="!canAddItem(rowIndex)"
+        @click.stop="addItem(rowIndex)"
+      />
     </div>
 
-    <Button class="matrix__add-row" label="+ Добавить ряд" text severity="secondary" @click.stop="addRow" />
+    <Button
+      class="matrix__add-row"
+      label="+ Добавить ряд"
+      text
+      severity="secondary"
+      :disabled="!canAddRow"
+      @click.stop="addRow"
+    />
+    <p v-if="limitMessage" class="matrix__limit">{{ limitMessage }}</p>
   </div>
 </template>
 
@@ -31,14 +46,22 @@
 import { computed } from 'vue'
 import Button from 'primevue/button'
 import type { NodeParamItem } from '@/types/api'
+import {
+  canAddObjectMatrixItem,
+  canAddObjectMatrixRow,
+  getObjectMatrixLimitMessage,
+} from '@/components/editor/buttonMatrixLimits'
 import ObjectParam from './ObjectParam.vue'
 
 const props = defineProps<{ schema: NodeParamItem; value: unknown }>()
 const emit = defineEmits<{ update: [value: Record<string, unknown>[][]] }>()
 
 const matrixValue = computed(() => (props.value as Record<string, unknown>[][]) ?? [])
+const canAddRow = computed(() => canAddObjectMatrixRow(matrixValue.value, props.schema))
+const limitMessage = computed(() => getObjectMatrixLimitMessage(matrixValue.value, props.schema))
 
 function addRow(): void {
+  if (!canAddRow.value) return
   emit('update', [...matrixValue.value, []])
 }
 
@@ -49,9 +72,14 @@ function removeRow(rowIndex: number): void {
 }
 
 function addItem(rowIndex: number): void {
+  if (!canAddItem(rowIndex)) return
   const next = matrixValue.value.map(row => [...row])
   next[rowIndex] = [...(next[rowIndex] ?? []), {}]
   emit('update', next)
+}
+
+function canAddItem(rowIndex: number): boolean {
+  return canAddObjectMatrixItem(matrixValue.value, rowIndex, props.schema)
 }
 
 function removeItem(rowIndex: number, itemIndex: number): void {
@@ -139,5 +167,16 @@ function updateItem(rowIndex: number, itemIndex: number, value: Record<string, u
 .matrix__add-row:hover {
   color: var(--node-color, var(--color-primary));
   border-color: var(--node-color, var(--color-primary));
+}
+.matrix__add-item:disabled,
+.matrix__add-row:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.matrix__limit {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 10px;
+  line-height: 14px;
 }
 </style>
