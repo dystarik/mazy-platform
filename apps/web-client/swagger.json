@@ -587,6 +587,54 @@
         }
       }
     },
+    "/api/v1/bots/{botInstanceId}/scenario-version-update-mode": {
+      "put": {
+        "tags": [
+          "BotService"
+        ],
+        "parameters": [
+          {
+            "name": "botInstanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeBotScenarioVersionUpdateModeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{projectId}/schemas": {
       "post": {
         "tags": [
@@ -2438,6 +2486,9 @@
           "scenarioVersion": {
             "type": "integer",
             "format": "int32"
+          },
+          "scenarioVersionUpdateMode": {
+            "$ref": "#/components/schemas/BotScenarioVersionUpdateMode"
           }
         },
         "additionalProperties": false
@@ -2469,6 +2520,9 @@
           },
           "projectId": {
             "type": "string"
+          },
+          "scenarioVersionUpdateMode": {
+            "$ref": "#/components/schemas/BotScenarioVersionUpdateMode"
           }
         },
         "additionalProperties": false
@@ -2478,6 +2532,14 @@
           "Bot_PLATFORM_TYPE_UNSPECIFIED",
           "Bot_PLATFORM_TYPE_VK",
           "Bot_PLATFORM_TYPE_TELEGRAM"
+        ],
+        "type": "string"
+      },
+      "BotScenarioVersionUpdateMode": {
+        "enum": [
+          "BOT_SCENARIO_VERSION_UPDATE_MODE_UNSPECIFIED",
+          "BOT_SCENARIO_VERSION_UPDATE_MODE_AUTO",
+          "BOT_SCENARIO_VERSION_UPDATE_MODE_MANUAL"
         ],
         "type": "string"
       },
@@ -2498,6 +2560,18 @@
           "newScenarioVersion": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChangeBotScenarioVersionUpdateModeRequest": {
+        "type": "object",
+        "properties": {
+          "botInstanceId": {
+            "type": "string"
+          },
+          "scenarioVersionUpdateMode": {
+            "$ref": "#/components/schemas/BotScenarioVersionUpdateMode"
           }
         },
         "additionalProperties": false
@@ -2634,6 +2708,9 @@
           "scenarioVersion": {
             "type": "integer",
             "format": "int32"
+          },
+          "scenarioVersionUpdateMode": {
+            "$ref": "#/components/schemas/BotScenarioVersionUpdateMode"
           }
         },
         "additionalProperties": false
@@ -2661,6 +2738,9 @@
           },
           "communityId": {
             "type": "string"
+          },
+          "scenarioVersionUpdateMode": {
+            "$ref": "#/components/schemas/BotScenarioVersionUpdateMode"
           }
         },
         "additionalProperties": false
@@ -2823,6 +2903,9 @@
           },
           "status": {
             "$ref": "#/components/schemas/BotStatus"
+          },
+          "scenarioVersionUpdateMode": {
+            "$ref": "#/components/schemas/BotScenarioVersionUpdateMode"
           }
         },
         "additionalProperties": false

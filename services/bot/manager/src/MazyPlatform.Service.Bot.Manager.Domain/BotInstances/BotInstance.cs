@@ -28,6 +28,9 @@ public sealed class BotInstance : AggregateRoot
     /// <summary>Версия привязанного сценария.</summary>
     public int? ScenarioVersion { get; private set; }
 
+    /// <summary>Режим обновления версии привязанного сценария.</summary>
+    public ScenarioVersionUpdateMode ScenarioVersionUpdateMode { get; private set; }
+
     /// <summary>Текущий статус бота.</summary>
     public BotStatus Status { get; private set; }
 
@@ -51,7 +54,8 @@ public sealed class BotInstance : AggregateRoot
         string name,
         IBotCredentials credentials,
         int? scenarioVersion,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        ScenarioVersionUpdateMode scenarioVersionUpdateMode = ScenarioVersionUpdateMode.Auto)
     {
         ArgumentNullException.ThrowIfNull(credentials);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
@@ -64,6 +68,7 @@ public sealed class BotInstance : AggregateRoot
             Name = name,
             Credentials = credentials,
             ScenarioVersion = scenarioVersion,
+            ScenarioVersionUpdateMode = scenarioVersionUpdateMode,
             Status = BotStatus.Inactive,
             CreatedAt = now,
         };
@@ -153,13 +158,21 @@ public sealed class BotInstance : AggregateRoot
     /// Успех, если привязка выполнена;
     /// сбой <see cref="ErrorCodes.BotInstance.AlreadyBound"/>, если бот уже привязан к проекту.
     /// </returns>
-    public Result BindToProject(Guid projectId, int scenarioVersion, DateTimeOffset now)
+    public Result BindToProject(
+        Guid projectId,
+        int scenarioVersion,
+        DateTimeOffset now,
+        ScenarioVersionUpdateMode scenarioVersionUpdateMode = ScenarioVersionUpdateMode.Auto)
     {
         if (ProjectId is not null)
             return Error.Conflict(ErrorCodes.BotInstance.AlreadyBound, "Бот уже привязан к проекту.");
 
+        if (!IsValidScenarioVersionUpdateMode(scenarioVersionUpdateMode))
+            return Error.Validation(ErrorCodes.BotInstance.InvalidScenarioVersionUpdateMode, "Неверный режим обновления версии сценария.");
+
         ProjectId = projectId;
         ScenarioVersion = scenarioVersion;
+        ScenarioVersionUpdateMode = scenarioVersionUpdateMode;
         MarkAsUpdated(now);
 
         return Result.Success();
@@ -188,6 +201,51 @@ public sealed class BotInstance : AggregateRoot
         AddDomainEvent(new BotInstanceScenarioVersionChangedDomainEvent(now, Id, newScenarioVersion));
 
         return Result.Success();
+    }
+
+    /// <summary>
+    /// Изменяет режим обновления версии сценария.
+    /// </summary>
+    /// <param name="mode">Новый режим обновления версии.</param>
+    /// <param name="now">Текущий момент времени.</param>
+    /// <returns>Успех, если режим сохранён; validation error, если режим неизвестен.</returns>
+    public Result ChangeScenarioVersionUpdateMode(ScenarioVersionUpdateMode mode, DateTimeOffset now)
+    {
+        if (!IsValidScenarioVersionUpdateMode(mode))
+            return Error.Validation(ErrorCodes.BotInstance.InvalidScenarioVersionUpdateMode, "Неверный режим обновления версии сценария.");
+
+        if (ScenarioVersionUpdateMode == mode)
+            return Result.Success();
+
+        ScenarioVersionUpdateMode = mode;
+        MarkAsUpdated(now);
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Применяет новый опубликованный релиз сценария с учётом режима обновления версии.
+    /// </summary>
+    /// <param name="currentVersion">Новая текущая версия релиза сценария.</param>
+    /// <param name="now">Текущий момент времени.</param>
+    /// <returns><see langword="true"/>, если версия бота была изменена; иначе <see langword="false"/>.</returns>
+    public Result<bool> ApplyScenarioRelease(int currentVersion, DateTimeOffset now)
+    {
+        if (ScenarioVersionUpdateMode is ScenarioVersionUpdateMode.Manual)
+            return false;
+
+        if (ProjectId is null)
+            return Error.Conflict(ErrorCodes.BotInstance.CannotChangeVersionWhenUnbound, "Невозможно изменить версию сценария у бота без привязки к проекту.");
+
+        if (ScenarioVersion == currentVersion)
+            return false;
+
+        ScenarioVersion = currentVersion;
+        MarkAsUpdated(now);
+
+        AddDomainEvent(new BotInstanceScenarioVersionChangedDomainEvent(now, Id, currentVersion));
+
+        return true;
     }
 
     /// <summary>
@@ -236,4 +294,7 @@ public sealed class BotInstance : AggregateRoot
         MarkAsUpdated(now);
         AddDomainEvent(new BotInstanceDeletedDomainEvent(now, Id, ProjectId));
     }
+
+    private static bool IsValidScenarioVersionUpdateMode(ScenarioVersionUpdateMode mode) =>
+        mode is ScenarioVersionUpdateMode.Auto or ScenarioVersionUpdateMode.Manual;
 }

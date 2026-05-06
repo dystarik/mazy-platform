@@ -10,4 +10,5 @@ public sealed record GetBotResult(
     string MaskedAccessToken,
     string? CommunityId,
     int? ScenarioVersion,
-    BotStatus Status);
+    BotStatus Status,
+    ScenarioVersionUpdateMode ScenarioVersionUpdateMode);

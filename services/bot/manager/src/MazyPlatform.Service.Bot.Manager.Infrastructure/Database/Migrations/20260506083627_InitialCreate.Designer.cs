@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MazyPlatform.Service.Bot.Manager.Infrastructure.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260428022701_InitialCreate")]
+    [Migration("20260506083627_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -57,6 +57,12 @@ namespace MazyPlatform.Service.Bot.Manager.Infrastructure.Database.Migrations
                     b.Property<int?>("ScenarioVersion")
                         .HasColumnType("integer")
                         .HasColumnName("scenario_version");
+
+                    b.Property<int>("ScenarioVersionUpdateMode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("scenario_version_update_mode");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer")

@@ -4,11 +4,11 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
-    <PackageVersion Include="MazyPlatform.Contracts.Bot" Version="0.6.13-preview" />
-    <PackageVersion Include="MazyPlatform.Contracts.Bot.Grpc" Version="0.6.13-preview" />
-    <PackageVersion Include="MazyPlatform.Contracts.Scenario" Version="0.6.13-preview" />
-    <PackageVersion Include="MazyPlatform.Contracts.Scenario.Grpc" Version="0.6.13-preview" />
-    <PackageVersion Include="MazyPlatform.Contracts.User" Version="0.6.13-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.Bot" Version="0.6.14-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.Bot.Grpc" Version="0.6.14-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.Scenario" Version="0.6.14-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.Scenario.Grpc" Version="0.6.14-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.User" Version="0.6.14-preview" />
     <PackageVersion Include="Grpc.AspNetCore" Version="2.80.0" />
     <PackageVersion Include="MazyPlatform.SharedKernel.Api" Version="0.6.3-preview" />
     <PackageVersion Include="MazyPlatform.SharedKernel.Application" Version="0.6.3-preview" />
@@ -39,5 +39,6 @@
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageVersion Include="Serilog.Sinks.Grafana.Loki" Version="8.3.2" />
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
+    <PackageVersion Include="TUnit" Version="1.43.11" />
   </ItemGroup>
 </Project>

@@ -36,7 +36,8 @@ internal sealed partial class GetBotHandler(
             TokenMasker.Mask(botInstance.Credentials.AccessToken),
             communityId,
             botInstance.ScenarioVersion,
-            botInstance.Status);
+            botInstance.Status,
+            botInstance.ScenarioVersionUpdateMode);
     }
 
     #region Logging

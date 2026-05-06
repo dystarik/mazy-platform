@@ -10,4 +10,5 @@ public sealed record CreateBotCommand(
     PlatformType PlatformType,
     string AccessToken,
     string? CommunityId,
-    int ScenarioVersion) : ICommand<CreateBotResult>;
+    int ScenarioVersion,
+    ScenarioVersionUpdateMode ScenarioVersionUpdateMode) : ICommand<CreateBotResult>;

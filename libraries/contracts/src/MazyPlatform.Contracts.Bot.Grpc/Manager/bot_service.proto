@@ -114,6 +114,16 @@ service BotService {
         };
     }
 
+    // Изменяет режим обновления версии сценария у бота.
+    // AUTO сохраняет текущее поведение: бот переходит на новую опубликованную версию.
+    // MANUAL оставляет бота на текущей версии до ручного переключения.
+    rpc ChangeBotScenarioVersionUpdateMode (ChangeBotScenarioVersionUpdateModeRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            put: "/api/v1/bots/{bot_instance_id}/scenario-version-update-mode"
+            body: "*"
+        };
+    }
+
     // Удаляет бота.
     // Перед физическим удалением публикует BotInstanceDeletedIntegrationEvent,
     // чтобы service-bot-integration и service-scenario-engine удалили бота из своих кешей.
@@ -138,6 +148,8 @@ message CreateBotRequest {
     optional string community_id = 5;
     // Версия сценария, с которой будет работать бот.
     int32 scenario_version = 6;
+    // Режим обновления версии сценария. Если не указан — AUTO.
+    optional BotScenarioVersionUpdateMode scenario_version_update_mode = 7;
 }
 
 // Запрос на создание бота без привязки к проекту.
@@ -150,6 +162,8 @@ message CreateBotWithoutProjectRequest {
     string access_token = 3;
     // Идентификатор сообщества на платформе. Обязателен для VK.
     optional string community_id = 4;
+    // Режим обновления версии сценария. Если не указан — AUTO.
+    optional BotScenarioVersionUpdateMode scenario_version_update_mode = 5;
 }
 
 // Ответ на создание бота.
@@ -183,6 +197,8 @@ message GetBotResponse {
     optional int32 scenario_version = 7;
     // Текущий статус бота.
     BotStatus status = 8;
+    // Режим обновления версии сценария.
+    BotScenarioVersionUpdateMode scenario_version_update_mode = 9;
 }
 
 // Запрос на получение списка ботов проекта.
@@ -211,6 +227,8 @@ message BindBotToProjectRequest {
     string project_id = 2;
     // Версия сценария, с которой будет работать бот.
     int32 scenario_version = 3;
+    // Режим обновления версии сценария. Если не указан — AUTO.
+    optional BotScenarioVersionUpdateMode scenario_version_update_mode = 4;
 }
 
 // Запрос на отвязку бота от проекта.
@@ -237,6 +255,8 @@ message BotListItem {
     BotStatus status = 7;
     // Идентификатор проекта. Null если бот не привязан к проекту.
     optional string project_id = 8;
+    // Режим обновления версии сценария.
+    BotScenarioVersionUpdateMode scenario_version_update_mode = 9;
 }
 
 // Запрос на активацию бота.
@@ -267,6 +287,14 @@ message ChangeBotScenarioVersionRequest {
     string bot_instance_id = 1;
     // Новая версия сценария. Должна существовать в проекте, к которому привязан бот.
     int32 new_scenario_version = 2;
+}
+
+// Запрос на изменение режима обновления версии сценария бота.
+message ChangeBotScenarioVersionUpdateModeRequest {
+    // Идентификатор бота.
+    string bot_instance_id = 1;
+    // Новый режим обновления версии сценария.
+    BotScenarioVersionUpdateMode scenario_version_update_mode = 2;
 }
 
 // Запрос на удаление бота.

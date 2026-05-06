@@ -5,4 +5,7 @@
     <Project Path="src/MazyPlatform.Service.Bot.Manager.Domain/MazyPlatform.Service.Bot.Manager.Domain.csproj" />
     <Project Path="src/MazyPlatform.Service.Bot.Manager.Infrastructure/MazyPlatform.Service.Bot.Manager.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MazyPlatform.Service.Bot.Manager.Domain.Tests/MazyPlatform.Service.Bot.Manager.Domain.Tests.csproj" />
+  </Folder>
 </Solution>

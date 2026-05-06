@@ -68,6 +68,9 @@
               <div v-if="bot.projectId" class="bots-table__binding">
                 <span class="bots-table__project">{{ projectName(bot.projectId) }}</span>
                 <span class="bots-table__version">v{{ bot.scenarioVersion ?? '—' }}</span>
+                <span class="bots-table__version-mode">
+                  {{ scenarioVersionUpdateModeLabel(bot.scenarioVersionUpdateMode) }}
+                </span>
               </div>
               <span v-else class="bots-table__muted">Не привязан</span>
           </template>
@@ -230,7 +233,6 @@
                 input-id="binding-auto-upgrade"
                 v-model="bindingForm.autoUpgrade"
                 binary
-                disabled
               />
               <label for="binding-auto-upgrade">Переходить на новую версию автоматически</label>
             </div>
@@ -344,6 +346,7 @@ import StatusPill from '@/components/ui/StatusPill.vue'
 import type {
   BotListItem,
   BotPlatformType,
+  BotScenarioVersionUpdateMode,
   BotStatus,
   PlatformType,
   ProjectListItem,
@@ -534,6 +537,20 @@ function statusLabel(status?: BotStatus): string {
   return status === 'BOT_STATUS_ACTIVE' ? 'Активен' : 'Неактивен'
 }
 
+function scenarioVersionUpdateModeLabel(mode?: BotScenarioVersionUpdateMode): string {
+  return isAutoUpgradeMode(mode) ? 'Автопереход' : 'Ручной режим'
+}
+
+function isAutoUpgradeMode(mode?: BotScenarioVersionUpdateMode): boolean {
+  return mode !== 'BOT_SCENARIO_VERSION_UPDATE_MODE_MANUAL'
+}
+
+function toScenarioVersionUpdateMode(autoUpgrade: boolean): BotScenarioVersionUpdateMode {
+  return autoUpgrade
+    ? 'BOT_SCENARIO_VERSION_UPDATE_MODE_AUTO'
+    : 'BOT_SCENARIO_VERSION_UPDATE_MODE_MANUAL'
+}
+
 function openActionsMenu(event: MouseEvent, bot: BotListItem): void {
   actionsMenuBot.value = bot
   actionsMenu.value?.toggle(event)
@@ -679,7 +696,7 @@ function openBindingModal(bot: BotListItem): void {
   availableVersions.value = []
   bindingForm.projectId = bot.projectId ?? ''
   bindingForm.scenarioVersion = bot.scenarioVersion ?? null
-  bindingForm.autoUpgrade = true
+  bindingForm.autoUpgrade = isAutoUpgradeMode(bot.scenarioVersionUpdateMode)
 
   if (bindingForm.projectId) {
     void loadVersions(bindingForm.projectId)
@@ -729,15 +746,26 @@ async function handleSubmitBinding(): Promise<void> {
 
   try {
     if (bindingTarget.value.projectId) {
-      await botsApi.changeScenarioVersion(botInstanceId, {
-        botInstanceId,
-        newScenarioVersion: bindingForm.scenarioVersion!,
-      })
+      if (bindingTarget.value.scenarioVersion !== bindingForm.scenarioVersion) {
+        await botsApi.changeScenarioVersion(botInstanceId, {
+          botInstanceId,
+          newScenarioVersion: bindingForm.scenarioVersion!,
+        })
+      }
+
+      const nextMode = toScenarioVersionUpdateMode(bindingForm.autoUpgrade)
+      if (isAutoUpgradeMode(bindingTarget.value.scenarioVersionUpdateMode) !== bindingForm.autoUpgrade) {
+        await botsApi.changeScenarioVersionUpdateMode(botInstanceId, {
+          botInstanceId,
+          scenarioVersionUpdateMode: nextMode,
+        })
+      }
     } else {
       await botsApi.bind(botInstanceId, {
         botInstanceId,
         projectId: bindingForm.projectId,
         scenarioVersion: bindingForm.scenarioVersion!,
+        scenarioVersionUpdateMode: toScenarioVersionUpdateMode(bindingForm.autoUpgrade),
       })
     }
 
@@ -1133,6 +1161,11 @@ async function handleDelete(): Promise<void> {
 
 .bots-table__version {
   color: var(--color-primary);
+  font-size: 12px;
+}
+
+.bots-table__version-mode {
+  color: var(--color-text-secondary);
   font-size: 12px;
 }
 

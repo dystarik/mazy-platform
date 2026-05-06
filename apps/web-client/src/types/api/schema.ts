@@ -646,6 +646,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/bots/{botInstanceId}/scenario-version-update-mode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    botInstanceId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ChangeBotScenarioVersionUpdateModeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Empty"];
+                    };
+                };
+                /** @description Error */
+                default: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Status"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectId}/schemas": {
         parameters: {
             query?: never;
@@ -2607,6 +2657,7 @@ export interface components {
             projectId?: string;
             /** Format: int32 */
             scenarioVersion?: number;
+            scenarioVersionUpdateMode?: components["schemas"]["BotScenarioVersionUpdateMode"];
         };
         BotListItem: {
             botInstanceId?: string;
@@ -2618,15 +2669,22 @@ export interface components {
             scenarioVersion?: number;
             status?: components["schemas"]["BotStatus"];
             projectId?: string;
+            scenarioVersionUpdateMode?: components["schemas"]["BotScenarioVersionUpdateMode"];
         };
         /** @enum {string} */
         BotPlatformType: "Bot_PLATFORM_TYPE_UNSPECIFIED" | "Bot_PLATFORM_TYPE_VK" | "Bot_PLATFORM_TYPE_TELEGRAM";
+        /** @enum {string} */
+        BotScenarioVersionUpdateMode: "BOT_SCENARIO_VERSION_UPDATE_MODE_UNSPECIFIED" | "BOT_SCENARIO_VERSION_UPDATE_MODE_AUTO" | "BOT_SCENARIO_VERSION_UPDATE_MODE_MANUAL";
         /** @enum {string} */
         BotStatus: "BOT_STATUS_UNSPECIFIED" | "BOT_STATUS_INACTIVE" | "BOT_STATUS_ACTIVE";
         ChangeBotScenarioVersionRequest: {
             botInstanceId?: string;
             /** Format: int32 */
             newScenarioVersion?: number;
+        };
+        ChangeBotScenarioVersionUpdateModeRequest: {
+            botInstanceId?: string;
+            scenarioVersionUpdateMode?: components["schemas"]["BotScenarioVersionUpdateMode"];
         };
         ChangePasswordRequest: {
             currentPassword?: string;
@@ -2672,6 +2730,7 @@ export interface components {
             communityId?: string;
             /** Format: int32 */
             scenarioVersion?: number;
+            scenarioVersionUpdateMode?: components["schemas"]["BotScenarioVersionUpdateMode"];
         };
         CreateBotResponse: {
             botInstanceId?: string;
@@ -2681,6 +2740,7 @@ export interface components {
             platformType?: components["schemas"]["BotPlatformType"];
             accessToken?: string;
             communityId?: string;
+            scenarioVersionUpdateMode?: components["schemas"]["BotScenarioVersionUpdateMode"];
         };
         CreateEntitySchemaRequest: {
             projectId?: string;
@@ -2732,6 +2792,7 @@ export interface components {
             /** Format: int32 */
             scenarioVersion?: number;
             status?: components["schemas"]["BotStatus"];
+            scenarioVersionUpdateMode?: components["schemas"]["BotScenarioVersionUpdateMode"];
         };
         GetBotsByProjectResponse: {
             items?: components["schemas"]["BotListItem"][];

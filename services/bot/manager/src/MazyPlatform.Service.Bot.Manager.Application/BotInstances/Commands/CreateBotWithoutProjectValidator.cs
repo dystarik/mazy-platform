@@ -35,6 +35,11 @@ internal sealed class CreateBotWithoutProjectValidator : AbstractValidator<Creat
             .WithErrorCode(ErrorCodes.Validation.Required)
             .WithMessage("Токен доступа обязателен для заполнения.");
 
+        RuleFor(x => x.ScenarioVersionUpdateMode)
+            .IsInEnum()
+            .WithErrorCode(ErrorCodes.Validation.Invalid)
+            .WithMessage("Указан неверный режим обновления версии сценария.");
+
         When(x => x.PlatformType == PlatformType.Vk, () =>
         {
             RuleFor(x => x.CommunityId)

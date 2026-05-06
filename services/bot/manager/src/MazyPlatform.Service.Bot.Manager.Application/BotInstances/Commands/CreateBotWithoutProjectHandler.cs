@@ -24,7 +24,8 @@ internal sealed class CreateBotWithoutProjectHandler(
             command.Name,
             credentialsResult.Value,
             scenarioVersion: null,
-            timeProvider.GetUtcNow());
+            timeProvider.GetUtcNow(),
+            command.ScenarioVersionUpdateMode);
 
         repository.Add(botInstance);
         await unitOfWork.SaveChangesAsync(cancellationToken);

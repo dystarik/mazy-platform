@@ -44,6 +44,9 @@ internal sealed class BotServiceProxy(BotService.BotServiceClient client) : BotS
     public override Task<Empty> ChangeBotScenarioVersion(ChangeBotScenarioVersionRequest request, ServerCallContext context)
         => client.ChangeBotScenarioVersionAsync(request, cancellationToken: context.CancellationToken).ResponseAsync;
 
+    public override Task<Empty> ChangeBotScenarioVersionUpdateMode(ChangeBotScenarioVersionUpdateModeRequest request, ServerCallContext context)
+        => client.ChangeBotScenarioVersionUpdateModeAsync(request, cancellationToken: context.CancellationToken).ResponseAsync;
+
     public override Task<Empty> DeleteBot(DeleteBotRequest request, ServerCallContext context)
         => client.DeleteBotAsync(request, cancellationToken: context.CancellationToken).ResponseAsync;
 }

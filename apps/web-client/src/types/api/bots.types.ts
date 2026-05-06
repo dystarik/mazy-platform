@@ -5,6 +5,7 @@ import type { components } from './schema'
 // the scenario service's PlatformType — values are even prefixed differently
 // ("Bot_PLATFORM_TYPE_VK" vs "PLATFORM_TYPE_VK"). Don't conflate them.
 export type BotPlatformType = components['schemas']['BotPlatformType']
+export type BotScenarioVersionUpdateMode = components['schemas']['BotScenarioVersionUpdateMode']
 export type BotStatus       = components['schemas']['BotStatus']
 
 // ── Domain ────────────────────────────────────────────────────────────────────
@@ -23,3 +24,5 @@ export type BindBotToProjectRequest         = components['schemas']['BindBotToPr
 export type UnbindBotFromProjectRequest     = components['schemas']['UnbindBotFromProjectRequest']
 export type UpdateBotTokenRequest           = components['schemas']['UpdateBotTokenRequest']
 export type ChangeBotScenarioVersionRequest = components['schemas']['ChangeBotScenarioVersionRequest']
+export type ChangeBotScenarioVersionUpdateModeRequest =
+  components['schemas']['ChangeBotScenarioVersionUpdateModeRequest']

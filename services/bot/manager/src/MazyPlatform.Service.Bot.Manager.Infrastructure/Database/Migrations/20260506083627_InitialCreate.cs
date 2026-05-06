@@ -21,6 +21,7 @@ namespace MazyPlatform.Service.Bot.Manager.Infrastructure.Database.Migrations
                     name = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
                     credentials = table.Column<string>(type: "jsonb", nullable: false),
                     scenario_version = table.Column<int>(type: "integer", nullable: true),
+                    scenario_version_update_mode = table.Column<int>(type: "integer", nullable: false, defaultValue: 1),
                     status = table.Column<int>(type: "integer", nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
