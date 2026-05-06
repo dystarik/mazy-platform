@@ -6,7 +6,7 @@
     @wheel.capture="$emit('canvasWheel', $event)"
     @pointerdown.capture="$emit('canvasPointerDownCapture', $event)"
     @mousedown.capture="$emit('canvasMouseDownCapture', $event)"
-    @contextmenu.prevent
+    @contextmenu.prevent="$emit('paneContextMenu', $event)"
   >
     <VueFlow
       v-model:nodes="nodesModel"
@@ -143,6 +143,7 @@ const emit = defineEmits<{
   edgeClick: [event: EdgeMouseEvent]
   edgeContextMenu: [event: EdgeMouseEvent]
   paneClick: [event: MouseEvent]
+  paneContextMenu: [event: MouseEvent]
   updateParam: [nodeId: string, key: string, value: unknown]
   updateNodeUi: [nodeId: string, value: EditorNodeUiState]
   pickMessage: [nodeId: string]
