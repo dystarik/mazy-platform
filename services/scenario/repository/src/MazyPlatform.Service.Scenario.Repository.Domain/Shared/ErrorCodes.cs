@@ -20,7 +20,6 @@ public static class ErrorCodes
     {
         public const string NotFound = "scenario_graph.not_found";
         public const string VersionNotFound = "scenario_graph.version_not_found";
-        public const string CannotDeleteCurrentVersion = "scenario_graph.cannot_delete_current_version";
         public const string VersionInUse = "scenario_graph.version_in_use";
         public const string NoReleasedVersion = "scenario_graph.no_released_version";
         public const string PromotionFailed = "scenario_graph.promotion_failed";

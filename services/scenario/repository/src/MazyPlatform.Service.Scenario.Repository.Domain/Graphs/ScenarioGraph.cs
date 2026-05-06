@@ -128,15 +128,15 @@ public sealed class ScenarioGraph : AggregateRoot
 
     /// <summary>
     /// Удаляет версию из истории релизов.
-    /// Запрещено удалять текущую активную версию — сначала нужно откатиться на другую.
-    /// Публикует <see cref="ScenarioVersionDeletedDomainEvent"/>.
+    /// Если удаляется текущий релиз, активной становится максимальная оставшаяся версия.
+    /// Если версий больше нет, активный релиз сбрасывается.
+    /// Публикует <see cref="ScenarioVersionDeletedDomainEvent"/> и событие изменения релиза, если текущий релиз изменился.
     /// </summary>
     /// <param name="targetVersion">Номер версии из <see cref="Versions"/>, которую нужно удалить.</param>
     /// <param name="now">Текущий момент времени; используется как <c>UpdatedAt</c>.</param>
     /// <returns>
     /// <see cref="Result.Success()"/>, если версия успешно удалена.<br/>
-    /// <see cref="Error.NotFound"/> с кодом <see cref="ErrorCodes.ScenarioGraph.VersionNotFound"/>, если версия с указанным номером не существует.<br/>
-    /// <see cref="Error.Conflict"/> с кодом <see cref="ErrorCodes.ScenarioGraph.CannotDeleteCurrentVersion"/>, если указанная версия является текущим активным релизом.
+    /// <see cref="Error.NotFound"/> с кодом <see cref="ErrorCodes.ScenarioGraph.VersionNotFound"/>, если версия с указанным номером не существует.
     /// </returns>
     public Result DeleteVersion(int targetVersion, DateTimeOffset now)
     {
@@ -144,17 +144,23 @@ public sealed class ScenarioGraph : AggregateRoot
         if (version is null)
             return Error.NotFound(ErrorCodes.ScenarioGraph.VersionNotFound, $"Версия '{targetVersion}' не найдена.");
 
-        if (CurrentReleaseVersion == targetVersion)
-        {
-            return Error.Conflict(
-                ErrorCodes.ScenarioGraph.CannotDeleteCurrentVersion,
-                "Невозможно удалить активную версию релиза. Сначала откатитесь на другую версию.");
-        }
+        var isCurrentRelease = CurrentReleaseVersion == targetVersion;
 
         _versions.Remove(version);
+
+        if (isCurrentRelease)
+            CurrentReleaseVersion = _versions.Count == 0 ? null : _versions.Max(v => v.Version);
+
         MarkAsUpdated(now);
 
         AddDomainEvent(new ScenarioVersionDeletedDomainEvent(now, Id, ProjectId, targetVersion));
+
+        if (isCurrentRelease && CurrentReleaseVersion is { } nextVersion)
+            AddDomainEvent(new ScenarioReleaseChangedDomainEvent(now, Id, ProjectId, nextVersion));
+
+        if (isCurrentRelease && CurrentReleaseVersion is null)
+            AddDomainEvent(new ScenarioReleaseRemovedDomainEvent(now, Id, ProjectId));
+
         return Result.Success();
     }
 }
