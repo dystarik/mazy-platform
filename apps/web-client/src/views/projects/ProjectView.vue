@@ -122,8 +122,23 @@
         />
       </div>
 
-      <div v-if="scenarioErrors.length" class="project-errors project-errors--scenario">
-        <p v-for="(msg, i) in scenarioErrors" :key="i">{{ msg }}</p>
+      <div v-if="scenarioErrors.length || scenarioNodeErrors.length" class="project-errors project-errors--scenario">
+        <template v-if="scenarioNodeErrors.length">
+          <p class="project-errors__title">Ошибки сценария</p>
+          <div
+            v-for="(error, i) in scenarioNodeErrors"
+            :key="`${error.nodeId ?? 'scenario'}:${error.path ?? error.code}:${i}`"
+            class="project-errors__item"
+          >
+            <p class="project-errors__message">{{ error.message }}</p>
+            <p v-if="formatScenarioNodeErrorMeta(error)" class="project-errors__meta">
+              {{ formatScenarioNodeErrorMeta(error) }}
+            </p>
+          </div>
+        </template>
+        <template v-else>
+          <p v-for="(msg, i) in scenarioErrors" :key="i">{{ msg }}</p>
+        </template>
       </div>
 
       <div class="project-block">
@@ -450,6 +465,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { botsApi, entitySchemasApi, projectsApi, scenarioApi, userDataApi } from '@/api'
 import { parseApiError } from '@/composables/useApiError'
+import { parseScenarioError, type ScenarioNodeHeaderError } from '@/composables/useScenarioApiError'
 import AppModal from '@/components/ui/AppModal.vue'
 import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 import FormErrorList from '@/components/ui/FormErrorList.vue'
@@ -506,6 +522,7 @@ const versionsLoading = ref(false)
 const promoting = ref(false)
 const rolling = ref(false)
 const scenarioErrors = ref<string[]>([])
+const scenarioNodeErrors = ref<ScenarioNodeHeaderError[]>([])
 const deleteVersionTarget = ref<VersionItem | null>(null)
 const versionDeleting = ref(false)
 const deleteVersionErrors = ref<string[]>([])
@@ -620,6 +637,14 @@ function formatTs(ts?: number): string {
 function botCountForVersion(version?: number): number {
   if (!version) return 0
   return botUsageByVersion.value.get(version) ?? 0
+}
+
+function formatScenarioNodeErrorMeta(error: ScenarioNodeHeaderError): string {
+  return [
+    error.nodeId ? `Узел: ${error.nodeId}` : '',
+    error.path ? `Поле: ${error.path}` : '',
+    error.code ? `Код: ${error.code}` : '',
+  ].filter(Boolean).join(' · ')
 }
 
 function canDeleteVersion(version: VersionItem): boolean {
@@ -749,12 +774,15 @@ async function handlePromote(): Promise<void> {
   if (promoting.value) return
   promoting.value = true
   scenarioErrors.value = []
+  scenarioNodeErrors.value = []
 
   try {
     await scenarioApi.promote(projectId)
     await Promise.all([loadScenario(), loadVersions(), loadBots()])
   } catch (error) {
-    scenarioErrors.value = parseApiError(error)
+    const parsedError = parseScenarioError(error)
+    scenarioErrors.value = parsedError.messages
+    scenarioNodeErrors.value = parsedError.nodeErrors
   } finally {
     promoting.value = false
   }
@@ -764,6 +792,7 @@ async function handleRollbackTo(version: number): Promise<void> {
   if (rolling.value) return
   rolling.value = true
   scenarioErrors.value = []
+  scenarioNodeErrors.value = []
 
   try {
     await scenarioApi.rollback(projectId, version)
@@ -1160,6 +1189,25 @@ async function handleDeleteSchema(): Promise<void> {
 
 .project-errors p {
   margin: 0;
+}
+
+.project-errors .project-errors__title {
+  margin: 0 0 10px;
+  font-weight: 700;
+}
+
+.project-errors__item + .project-errors__item {
+  margin-top: 10px;
+}
+
+.project-errors__message {
+  font-weight: 600;
+}
+
+.project-errors .project-errors__meta {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
 }
 
 .project-block__header {
