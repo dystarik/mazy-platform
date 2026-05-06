@@ -51,6 +51,10 @@ public sealed class RegisterByPasswordService(
             userAccountRepository.Delete(existingUserAccount);
         }
 
+        var isMfaEmailInUse = await userAccountRepository.IsMfaEmailInUseAsync(email, cancellationToken);
+        if (isMfaEmailInUse)
+            return Error.Conflict(ErrorCodes.Auth.Registration.EmailAlreadyUsedAsMfaEmail, "Email уже используется как MFA email другого аккаунта.");
+
         var passwordHash = PasswordHash.FromTrusted(passwordHasher.Hash(password.Value));
 
         var newUserAccount = UserAccount.RegisterByPassword(email, passwordHash, now);

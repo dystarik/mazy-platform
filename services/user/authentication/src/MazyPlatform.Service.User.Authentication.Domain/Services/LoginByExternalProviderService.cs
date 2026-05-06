@@ -39,8 +39,20 @@ public sealed class LoginByExternalProviderService(
         var now = timeProvider.GetUtcNow();
 
         var userAccount = await userAccountRepository.GetByExternalProviderAsync(externalProvider, cancellationToken);
-        var isNewAccount = userAccount is null;
-        userAccount ??= UserAccount.RegisterByExternalProvider(externalProvider.Email, externalProvider, now);
+        var isNewAccount = false;
+        if (userAccount is null)
+        {
+            var existingUserAccount = await userAccountRepository.GetByEmailAsync(externalProvider.Email, cancellationToken);
+            if (existingUserAccount is not null)
+                return Error.Conflict(ErrorCodes.Auth.Registration.EmailAlreadyInUse, "Пользователь с таким email уже существует.");
+
+            var isMfaEmailInUse = await userAccountRepository.IsMfaEmailInUseAsync(externalProvider.Email, cancellationToken);
+            if (isMfaEmailInUse)
+                return Error.Conflict(ErrorCodes.Auth.Registration.EmailAlreadyUsedAsMfaEmail, "Email уже используется как MFA email другого аккаунта.");
+
+            userAccount = UserAccount.RegisterByExternalProvider(externalProvider.Email, externalProvider, now);
+            isNewAccount = true;
+        }
 
         var refreshToken = Guid.NewGuid().ToString();
         var refreshTokenHash = RefreshTokenHash.FromTrusted(tokenHasher.Hash(refreshToken));

@@ -53,6 +53,25 @@ public class RegisterByPasswordServiceTests
     }
 
     [Test]
+    public async Task ExecuteAsync_Should_ReturnError_When_EmailIsUsedAsMfaEmail()
+    {
+        // Arrange
+        var (service, repo, _, _, _) = CreateService();
+        var email = Email.Create("mfa@example.com").Value!;
+        var password = Password.Create("StrongPass1!").Value!;
+
+        repo.GetByEmailAsync(email, Arg.Any<CancellationToken>()).Returns((UserAccount?)null);
+        repo.IsMfaEmailInUseAsync(email, Arg.Any<CancellationToken>()).Returns(true);
+
+        // Act
+        var result = await service.ExecuteAsync(email, password, CancellationToken.None);
+
+        // Assert
+        await Assert.That(result.IsSuccess).IsFalse();
+        await Assert.That(result.Errors!.First().Code).IsEqualTo(ErrorCodes.Auth.Registration.EmailAlreadyUsedAsMfaEmail);
+    }
+
+    [Test]
     public async Task ExecuteAsync_Should_ReturnError_When_UnverifiedAccountIsRecent()
     {
         // Arrange

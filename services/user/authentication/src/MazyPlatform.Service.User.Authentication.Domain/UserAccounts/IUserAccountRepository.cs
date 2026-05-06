@@ -35,6 +35,17 @@ public interface IUserAccountRepository : IRepository<UserAccount>
     Task<UserAccount?> GetByUnverifiedEmailAsync(Email email, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Проверяет, используется ли email-адрес как email-метод MFA любого аккаунта.
+    /// </summary>
+    /// <param name="email">Email-адрес для поиска.</param>
+    /// <param name="cancellationToken">Токен отмены операции.</param>
+    /// <returns>
+    /// <see langword="true"/>, если email уже сохранён в MFA-настройках;
+    /// иначе <see langword="false"/>.
+    /// </returns>
+    Task<bool> IsMfaEmailInUseAsync(Email email, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Возвращает аккаунт пользователя по данным внешнего провайдера.
     /// </summary>
     /// <param name="externalProvider">Данные внешнего провайдера (тип и email).</param>
