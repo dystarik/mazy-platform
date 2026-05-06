@@ -24,6 +24,20 @@
       @save="saveDraft"
     />
 
+    <div v-if="scenarioNodeErrors.length" class="editor__scenario-errors">
+      <p class="editor__scenario-errors-title">Ошибки сценария</p>
+      <div
+        v-for="(error, i) in scenarioNodeErrors"
+        :key="`${error.nodeId ?? 'scenario'}:${error.path ?? error.code}:${i}`"
+        class="editor__scenario-error"
+      >
+        <p class="editor__scenario-error-message">{{ error.message }}</p>
+        <p v-if="formatScenarioNodeErrorMeta(error)" class="editor__scenario-error-meta">
+          {{ formatScenarioNodeErrorMeta(error) }}
+        </p>
+      </div>
+    </div>
+
     <div class="editor__body">
 
       <!-- Панель каталога -->
@@ -103,6 +117,7 @@ import {
   type NodeMouseEvent,
 } from '@vue-flow/core'
 import { scenarioApi, nodesApi, entitySchemasApi, projectsApi } from '@/api'
+import { parseScenarioError, type ScenarioNodeHeaderError } from '@/composables/useScenarioApiError'
 import type { NodeCatalogItem, NodeParamItem, PlatformType } from '@/types/api'
 import type { GetEntitySchemaResponse } from '@/types/api/entity-schemas.types'
 import type { ELK, ElkExtendedEdge, ElkNode, ElkPoint, ElkPort } from 'elkjs/lib/elk.bundled'
@@ -676,6 +691,7 @@ function parseScenarioVersion(value: string): number | null {
 const saving = ref(false)
 const saveStatus = ref<'idle' | 'saved' | 'imported' | 'exported' | 'error'>('idle')
 const statusMessage = ref('')
+const scenarioNodeErrors = ref<ScenarioNodeHeaderError[]>([])
 let statusResetTimer: ReturnType<typeof setTimeout> | null = null
 
 // ── Vue Flow utils ────────────────────────────────────────────────────────────
@@ -1504,17 +1520,29 @@ function setEditorStatus(
   }
 }
 
+function formatScenarioNodeErrorMeta(error: ScenarioNodeHeaderError): string {
+  return [
+    error.nodeId ? `Узел: ${error.nodeId}` : '',
+    error.path ? `Поле: ${error.path}` : '',
+    error.code ? `Код: ${error.code}` : '',
+  ].filter(Boolean).join(' · ')
+}
+
 async function saveDraft(): Promise<void> {
   if (isReadOnly.value) return
+  scenarioNodeErrors.value = []
   if (!validateScenarioBeforeSerialization()) return
 
   saving.value = true
   setEditorStatus('idle')
   try {
     await scenarioApi.saveDraft(projectId.value, { projectId: projectId.value, graphJson: buildGraphJson() })
+    scenarioNodeErrors.value = []
     setEditorStatus('saved')
-  } catch {
-    setEditorStatus('error', 'Ошибка сохранения')
+  } catch (error) {
+    const parsedError = parseScenarioError(error)
+    scenarioNodeErrors.value = parsedError.nodeErrors
+    setEditorStatus('error', parsedError.nodeErrors.length ? 'Есть ошибки в сценарии' : (parsedError.messages[0] ?? 'Ошибка сохранения'), 0)
   } finally {
     saving.value = false
   }
@@ -4041,6 +4069,42 @@ function stringRecordValue(record: Record<string, unknown>, key: string): string
   height: 100%;
   overflow: hidden;
   background: var(--color-bg);
+}
+
+.editor__scenario-errors {
+  flex: 0 0 auto;
+  margin: 10px 12px 0;
+  padding: 12px 14px;
+  border: 0.5px solid color-mix(in srgb, var(--color-danger) 35%, var(--color-border));
+  border-radius: 8px;
+  background: var(--color-bg-card);
+  color: var(--color-danger);
+  font-size: 13px;
+}
+
+.editor__scenario-errors-title,
+.editor__scenario-error-message,
+.editor__scenario-error-meta {
+  margin: 0;
+}
+
+.editor__scenario-errors-title {
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.editor__scenario-error + .editor__scenario-error {
+  margin-top: 8px;
+}
+
+.editor__scenario-error-message {
+  font-weight: 600;
+}
+
+.editor__scenario-error-meta {
+  margin-top: 4px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
 }
 
 /* ── Тело ── */

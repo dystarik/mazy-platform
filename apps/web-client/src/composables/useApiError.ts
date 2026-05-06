@@ -72,7 +72,7 @@ export function parseApiError(error: unknown): string[] {
   // Если есть details — маппим каждый reason на текст
   if (data.details && data.details.length > 0) {
     const messages = data.details
-      .map((d) => errorMessages[d.reason] ?? d.reason)
+      .map((d) => errorMessages[d.reason] ?? d.metadata?.message ?? d.reason)
       .filter(Boolean)
 
     if (messages.length > 0) return messages
