@@ -35,4 +35,9 @@ public enum MfaSessionAction
     /// Сброс пароля при наличии настроенного MFA (высокорисковое действие).
     /// </summary>
     ResetPassword = 5,
+
+    /// <summary>
+    /// Установка первого локального пароля при наличии настроенного MFA.
+    /// </summary>
+    SetPassword = 6,
 }

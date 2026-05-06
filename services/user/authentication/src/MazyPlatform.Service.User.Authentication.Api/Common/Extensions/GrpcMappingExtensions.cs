@@ -73,6 +73,13 @@ internal static class GrpcMappingExtensions
         AvailableFactors = { data.AvailableFactors.ToProto() },
     };
 
+    public static MfaChallenge ToProto(this SetPasswordResult.MfaRequired data) => new()
+    {
+        MfaSessionId = data.MfaSessionId.ToString(),
+        RequiredFactorCount = data.RequiredFactorCount,
+        AvailableFactors = { data.AvailableFactors.ToProto() },
+    };
+
     public static MfaChallenge ToProto(this ResetPasswordResult.MfaChallenge data) => new()
     {
         MfaSessionId = data.MfaSessionId.ToString(),

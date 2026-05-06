@@ -172,6 +172,9 @@ public sealed class ErrorCodes
 
             /// <summary>Невозможно отвязать последний способ аутентификации; аккаунт должен иметь хотя бы один способ входа.</summary>
             public const string CannotUnlinkLastAuthenticationMethod = "AUTH.USER_ACCOUNT.CANNOT_UNLINK_LAST_AUTHENTICATION_METHOD";
+
+            /// <summary>Локальный пароль уже установлен; для изменения нужно использовать flow смены пароля.</summary>
+            public const string PasswordAlreadySet = "AUTH.USER_ACCOUNT.PASSWORD_ALREADY_SET";
         }
 
         /// <summary>

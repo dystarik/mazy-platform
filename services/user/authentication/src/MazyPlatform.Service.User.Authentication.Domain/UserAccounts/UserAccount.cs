@@ -260,6 +260,32 @@ public sealed class UserAccount : AggregateRoot
     }
 
     /// <summary>
+    /// Устанавливает первый локальный пароль пользователя.
+    /// </summary>
+    /// <param name="newPasswordHash">Хэш нового пароля, вычисленный через <see cref="IPasswordHasher"/>.</param>
+    /// <param name="now">Текущая временная метка UTC, передаётся для тестируемости.</param>
+    /// <returns>
+    /// <see cref="Result"/> с успехом, если у аккаунта ещё нет локального пароля;
+    /// сбой с кодом <see cref="ErrorCodes.Auth.UserAccount.PasswordAlreadySet"/>, если пароль уже установлен.
+    /// </returns>
+    /// <remarks>
+    /// Поднимает <see cref="UserAccountPasswordSetDomainEvent"/> при успехе.
+    /// Обновляет <see cref="PasswordSetAt"/> на текущее значение <paramref name="now"/>.
+    /// </remarks>
+    public Result SetPassword(PasswordHash newPasswordHash, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(newPasswordHash);
+
+        if (HasPassword)
+            return Error.Validation(ErrorCodes.Auth.UserAccount.PasswordAlreadySet, "Локальный пароль уже установлен. Используйте смену пароля.");
+
+        PasswordHash = newPasswordHash;
+        PasswordSetAt = now;
+
+        return CompleteMutation(Result.Success(), now, new UserAccountPasswordSetDomainEvent(now, Id, Email));
+    }
+
+    /// <summary>
     /// Привязывает к аккаунту новый внешний провайдер.
     /// </summary>
     /// <param name="provider">Value Object внешнего провайдера аутентификации.</param>

@@ -3,6 +3,7 @@ namespace MazyPlatform.Service.User.Authentication.Domain.Tests.UserAccounts;
 using MazyPlatform.Service.User.Authentication.Domain.Shared;
 using MazyPlatform.Service.User.Authentication.Domain.Shared.Hashing;
 using MazyPlatform.Service.User.Authentication.Domain.UserAccounts;
+using MazyPlatform.Service.User.Authentication.Domain.UserAccounts.Events;
 using MazyPlatform.Service.User.Authentication.Domain.UserAccounts.LinkedProviders;
 using MazyPlatform.Service.User.Authentication.Domain.UserAccounts.Mfa;
 using MazyPlatform.Service.User.Authentication.Domain.UserAccounts.Mfa.Payloads;
@@ -78,6 +79,61 @@ public class UserAccountTests
         await Assert.That(result.IsSuccess).IsTrue();
         await Assert.That(account.PasswordHash).IsEqualTo(newHash);
         await Assert.That(account.PasswordSetAt).IsEqualTo(changeTime);
+    }
+
+    // ── SetPassword ──────────────────────────────────────────────────────────
+    [Test]
+    public async Task SetPassword_Should_UpdatePasswordHash_When_AccountHasNoPassword()
+    {
+        // Arrange
+        var email = Email.Create("test@example.com").Value!;
+        var provider = new ExternalProvider(ExternalProviderType.Yandex, email);
+        var account = UserAccount.RegisterByExternalProvider(email, provider, Now);
+        var newHash = PasswordHash.FromTrusted("new_hash");
+        var setTime = Now.AddHours(1);
+
+        // Act
+        var result = account.SetPassword(newHash, setTime);
+
+        // Assert
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(account.PasswordHash).IsEqualTo(newHash);
+        await Assert.That(account.PasswordSetAt).IsEqualTo(setTime);
+        await Assert.That(account.HasPassword).IsTrue();
+    }
+
+    [Test]
+    public async Task SetPassword_Should_AddPasswordSetDomainEvent_When_Succeeded()
+    {
+        // Arrange
+        var email = Email.Create("test@example.com").Value!;
+        var provider = new ExternalProvider(ExternalProviderType.Yandex, email);
+        var account = UserAccount.RegisterByExternalProvider(email, provider, Now);
+        var newHash = PasswordHash.FromTrusted("new_hash");
+
+        // Act
+        var result = account.SetPassword(newHash, Now);
+
+        // Assert
+        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(account.DomainEvents.OfType<UserAccountPasswordSetDomainEvent>().Any()).IsTrue();
+    }
+
+    [Test]
+    public async Task SetPassword_Should_ReturnError_When_PasswordAlreadySet()
+    {
+        // Arrange
+        var email = Email.Create("test@example.com").Value!;
+        var account = UserAccount.RegisterByPassword(email, PasswordHash.FromTrusted("old_hash"), Now);
+        var newHash = PasswordHash.FromTrusted("new_hash");
+
+        // Act
+        var result = account.SetPassword(newHash, Now.AddHours(1));
+
+        // Assert
+        await Assert.That(result.IsSuccess).IsFalse();
+        await Assert.That(result.Errors!.First().Code).IsEqualTo(ErrorCodes.Auth.UserAccount.PasswordAlreadySet);
+        await Assert.That(account.PasswordHash!.Value).IsEqualTo("old_hash");
     }
 
     // ── AddMfaMethod ──────────────────────────────────────────────────────────

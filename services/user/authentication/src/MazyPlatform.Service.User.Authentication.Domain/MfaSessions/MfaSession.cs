@@ -165,6 +165,7 @@ public sealed class MfaSession : AggregateRoot
             MfaSessionAction.ChangePassword => 1,
             MfaSessionAction.DeleteMfaMethod => 2,
             MfaSessionAction.ResetPassword => 2,
+            MfaSessionAction.SetPassword => 1,
             _ => throw new ArgumentOutOfRangeException(nameof(action), $"Неизвестное действие для MFA сессии: {action}"),
         };
 
