@@ -21,13 +21,15 @@
         @pointerdown.stop
       >
         <span class="user-info-node__label">Префикс</span>
-        <InputText
-          class="user-info-node__input"
-          :model-value="prefix"
-          :readonly="isReadOnly"
-          placeholder="user"
-          @update:model-value="value => updatePrefix(stringValue(value))"
-        />
+        <EditorOverflowTooltip :value="prefix">
+          <InputText
+            class="user-info-node__input"
+            :model-value="prefix"
+            :readonly="isReadOnly"
+            placeholder="user"
+            @update:model-value="value => updatePrefix(stringValue(value))"
+          />
+        </EditorOverflowTooltip>
       </label>
 
       <div class="user-info-node__variables">
@@ -50,6 +52,7 @@
 import { computed, type CSSProperties } from 'vue'
 import InputText from 'primevue/inputtext'
 import type { NodeParamItem } from '@/types/api'
+import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import BaseNode from './BaseNode.vue'
 

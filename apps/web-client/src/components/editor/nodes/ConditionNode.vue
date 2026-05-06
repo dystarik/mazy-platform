@@ -21,13 +21,15 @@
       @click.stop
     >
       <div class="condition-node__expression">
-        <InputText
-          class="condition-node__input"
-          :model-value="leftOperand"
-          :readonly="isReadOnly"
-          placeholder="left"
-          @update:model-value="value => updateParam('leftOperand', stringValue(value))"
-        />
+        <EditorOverflowTooltip :value="leftOperand" :known-variables="knownVariables" :variable-scope="variableScope">
+          <InputText
+            class="condition-node__input"
+            :model-value="leftOperand"
+            :readonly="isReadOnly"
+            placeholder="left"
+            @update:model-value="value => updateParam('leftOperand', stringValue(value))"
+          />
+        </EditorOverflowTooltip>
         <Select
           class="condition-node__operator"
           :model-value="operator"
@@ -38,13 +40,15 @@
           :disabled="isReadOnly"
           @update:model-value="value => updateParam('operator', stringValue(value))"
         />
-        <InputText
-          class="condition-node__input"
-          :model-value="rightOperand"
-          :readonly="isReadOnly"
-          placeholder="right"
-          @update:model-value="value => updateParam('rightOperand', stringValue(value))"
-        />
+        <EditorOverflowTooltip :value="rightOperand" :known-variables="knownVariables" :variable-scope="variableScope">
+          <InputText
+            class="condition-node__input"
+            :model-value="rightOperand"
+            :readonly="isReadOnly"
+            placeholder="right"
+            @update:model-value="value => updateParam('rightOperand', stringValue(value))"
+          />
+        </EditorOverflowTooltip>
       </div>
     </div>
 
@@ -74,6 +78,8 @@ import { Handle, Position } from '@vue-flow/core'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import type { NodeParamItem } from '@/types/api'
+import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
+import type { VariableScope } from '@/components/editor/variableHighlight'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import BaseNode from './BaseNode.vue'
 
@@ -88,6 +94,8 @@ const props = defineProps<{
   isPickTarget?: boolean
   isRelated?: boolean
   label: string
+  knownVariables?: string[]
+  variableScope?: VariableScope
 }>()
 
 const emit = defineEmits<{

@@ -21,13 +21,15 @@
     >
       <label class="switch-node__field">
         <span class="switch-node__field-label">Переключить по</span>
-        <InputText
-          class="switch-node__input"
-          :model-value="variableLabel"
-          :readonly="isReadOnly"
-          placeholder="variable"
-          @update:model-value="value => updateVariable(text(value, ''))"
-        />
+        <EditorOverflowTooltip :value="variableLabel" :known-variables="knownVariables" :variable-scope="variableScope">
+          <InputText
+            class="switch-node__input"
+            :model-value="variableLabel"
+            :readonly="isReadOnly"
+            placeholder="variable"
+            @update:model-value="value => updateVariable(text(value, ''))"
+          />
+        </EditorOverflowTooltip>
       </label>
     </div>
 
@@ -54,13 +56,15 @@
         @click.stop
       >
         <div class="switch-node__branch-control">
-          <InputText
-            class="switch-node__case-input"
-            :model-value="switchCase.value"
-            :readonly="isReadOnly"
-            placeholder="Значение"
-            @update:model-value="value => updateCaseValue(index, text(value, ''))"
-          />
+          <EditorOverflowTooltip :value="switchCase.value" :known-variables="knownVariables" :variable-scope="variableScope">
+            <InputText
+              class="switch-node__case-input"
+              :model-value="switchCase.value"
+              :readonly="isReadOnly"
+              placeholder="Значение"
+              @update:model-value="value => updateCaseValue(index, text(value, ''))"
+            />
+          </EditorOverflowTooltip>
           <Button
             v-if="!isReadOnly"
             class="switch-node__remove"
@@ -96,6 +100,8 @@ import { Handle, Position } from '@vue-flow/core'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import type { NodeParamItem } from '@/types/api'
+import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
+import type { VariableScope } from '@/components/editor/variableHighlight'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import BaseNode from './BaseNode.vue'
 
@@ -115,6 +121,8 @@ const props = defineProps<{
   isPickTarget?: boolean
   isRelated?: boolean
   label: string
+  knownVariables?: string[]
+  variableScope?: VariableScope
 }>()
 
 const emit = defineEmits<{

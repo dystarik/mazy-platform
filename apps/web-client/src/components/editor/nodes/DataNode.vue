@@ -118,13 +118,15 @@
             :key="key"
             class="data-node__dict-row"
           >
-            <InputText
-              class="data-node__dict-input"
-              :model-value="key"
-              :readonly="isReadOnly"
-              placeholder="поле"
-              @change="event => renameDictionaryKey(dictionaryKey, key, (event.target as HTMLInputElement).value)"
-            />
+            <EditorOverflowTooltip :value="key" :known-variables="knownVariables" :variable-scope="variableScope">
+              <InputText
+                class="data-node__dict-input"
+                :model-value="key"
+                :readonly="isReadOnly"
+                placeholder="поле"
+                @change="event => renameDictionaryKey(dictionaryKey, key, (event.target as HTMLInputElement).value)"
+              />
+            </EditorOverflowTooltip>
             <EditorVariableInput
               class="data-node__variable-input data-node__variable-input--value"
               :model-value="value"
@@ -192,6 +194,7 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import type { NodeParamItem } from '@/types/api'
 import type { FieldType, GetEntitySchemaResponse } from '@/types/api/entity-schemas.types'
+import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import { DATA_NODE_TYPE } from '@/components/editor/editorTypes'
 import EditorVariableInput from '@/components/editor/EditorVariableInput.vue'

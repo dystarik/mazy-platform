@@ -1,26 +1,28 @@
 <template>
-  <InputText
-    v-if="normalizedType === 'int'"
-    class="input"
-    :model-value="formatValue(value)"
-    :placeholder="schema.isRequired ? 'Обязательное' : '—'"
-    type="number"
-    inputmode="numeric"
-    :step="1"
-    @click.stop
-    @mousedown.stop
-    @update:model-value="handleChange"
-  />
-  <Textarea
-    v-else
-    class="input input--textarea"
-    rows="1"
-    :model-value="formatValue(value)"
-    :placeholder="schema.isRequired ? 'Обязательное' : '—'"
-    @click.stop
-    @mousedown.stop
-    @update:model-value="handleChange"
-  />
+  <EditorOverflowTooltip :value="formattedValue">
+    <InputText
+      v-if="normalizedType === 'int'"
+      class="input"
+      :model-value="formattedValue"
+      :placeholder="schema.isRequired ? 'Обязательное' : '—'"
+      type="number"
+      inputmode="numeric"
+      :step="1"
+      @click.stop
+      @mousedown.stop
+      @update:model-value="handleChange"
+    />
+    <Textarea
+      v-else
+      class="input input--textarea"
+      rows="1"
+      :model-value="formattedValue"
+      :placeholder="schema.isRequired ? 'Обязательное' : '—'"
+      @click.stop
+      @mousedown.stop
+      @update:model-value="handleChange"
+    />
+  </EditorOverflowTooltip>
 </template>
 
 <script setup lang="ts">
@@ -29,10 +31,12 @@ import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import type { NodeParamItem } from '@/types/api'
 import { normalizeNodeParamType } from '@/components/editor/editorTypes'
+import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
 
 const props = defineProps<{ schema: NodeParamItem; value: unknown }>()
 const emit = defineEmits<{ update: [value: unknown] }>()
 const normalizedType = computed(() => normalizeNodeParamType(props.schema.type))
+const formattedValue = computed(() => formatValue(props.value))
 
 function formatValue(value: unknown): string {
   if (value === null || value === undefined) return ''
