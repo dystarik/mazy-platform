@@ -7,6 +7,7 @@ using MazyPlatform.Service.User.Authentication.Domain.Shared.Hashing;
 using MazyPlatform.Service.User.Authentication.Domain.UserAccounts;
 using MazyPlatform.Service.User.Authentication.Domain.UserAccounts.Mfa;
 using MazyPlatform.Service.User.Authentication.Domain.UserAccounts.Mfa.Payloads;
+using MazyPlatform.Service.User.Authentication.Domain.UserAccounts.ValueObjects;
 using MazyPlatform.SharedKernel.Application.Abstractions.Commands;
 using MazyPlatform.SharedKernel.Domain.Abstractions;
 using MazyPlatform.SharedKernel.Domain.Results;
@@ -34,11 +35,23 @@ internal sealed partial class AddEmailHandler(
         }
 
         var now = timeProvider.GetUtcNow();
+        var mfaEmail = userAccount.Email;
+        if (!string.IsNullOrWhiteSpace(command.Email))
+        {
+            var mfaEmailR = Email.Create(command.Email);
+            if (mfaEmailR.IsFailure)
+            {
+                InvalidEmail(command.Email, mfaEmailR.Errors);
+                return mfaEmailR.Errors;
+            }
 
-        var addMfaMethodR = userAccount.AddMfaMethod(new EmailPayload(userAccount.Email), now);
+            mfaEmail = mfaEmailR.Value;
+        }
+
+        var addMfaMethodR = userAccount.AddMfaMethod(new EmailPayload(mfaEmail), now);
         if (addMfaMethodR.IsFailure)
         {
-            AddMfaMethodFailed(userAccount.Email.Value, addMfaMethodR.Errors);
+            AddMfaMethodFailed(mfaEmail.Value, addMfaMethodR.Errors);
             return addMfaMethodR.Errors;
         }
 
@@ -56,7 +69,7 @@ internal sealed partial class AddEmailHandler(
             var mfaMethodConfirmationR = userAccount.ConfirmMfaMethod(MfaMethodType.Email, backupCodeHasher, now);
             if (mfaMethodConfirmationR.IsFailure)
             {
-                ConfirmMfaMethodFailed(userAccount.Email.Value, mfaMethodConfirmationR.Errors);
+                ConfirmMfaMethodFailed(mfaEmail.Value, mfaMethodConfirmationR.Errors);
                 return mfaMethodConfirmationR.Errors;
             }
 
@@ -65,7 +78,7 @@ internal sealed partial class AddEmailHandler(
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        EmailMfaAdded(userAccount.Email.Value);
+        EmailMfaAdded(mfaEmail.Value);
         return new AddEmailResult(otpId, backupCodes, isVerificationRequired);
     }
 
@@ -76,10 +89,13 @@ internal sealed partial class AddEmailHandler(
     [LoggerMessage(2, LogLevel.Warning, "Ошибка добавления Email MFA-метода для пользователя с email '{Email}': {Errors}")]
     private partial void AddMfaMethodFailed(string email, object errors);
 
-    [LoggerMessage(3, LogLevel.Information, "Пользователь с email '{Email}' успешно добавил Email MFA-метод.")]
+    [LoggerMessage(3, LogLevel.Information, "Пользователь успешно добавил Email MFA-метод для email '{Email}'.")]
     private partial void EmailMfaAdded(string email);
 
     [LoggerMessage(4, LogLevel.Error, "Внутренняя ошибка подтверждения Email MFA-метода для пользователя с email '{Email}': {Errors}")]
     private partial void ConfirmMfaMethodFailed(string email, object errors);
+
+    [LoggerMessage(5, LogLevel.Warning, "Не удалось создать ValueObject Email из строки '{Email}': {Errors}")]
+    private partial void InvalidEmail(string email, object errors);
     #endregion
 }

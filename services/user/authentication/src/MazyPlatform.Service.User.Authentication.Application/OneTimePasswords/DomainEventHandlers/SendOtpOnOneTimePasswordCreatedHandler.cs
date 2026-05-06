@@ -51,9 +51,10 @@ internal sealed partial class SendOtpOnOneTimePasswordCreatedHandler(
             return;
         }
 
-        var integrationEvent = new UserAccountMfaEmailCodeGeneratedIntegrationEvent(@event.OccurredAt, @event.UserAccountId, account.Email.Value, @event.Code);
+        var email = account.MfaSettings.EmailMethod?.Email.Value ?? account.Email.Value;
+        var integrationEvent = new UserAccountMfaEmailCodeGeneratedIntegrationEvent(@event.OccurredAt, @event.UserAccountId, email, @event.Code);
         await eventPublisher.PublishAsync(integrationEvent, cancellationToken);
-        MfaEmailCodePublished(@event.UserAccountId, account.Email.Value);
+        MfaEmailCodePublished(@event.UserAccountId, email);
     }
 
     private async Task PublishPasswordResetCodeAsync(OneTimePasswordCreatedDomainEvent @event, CancellationToken cancellationToken)
