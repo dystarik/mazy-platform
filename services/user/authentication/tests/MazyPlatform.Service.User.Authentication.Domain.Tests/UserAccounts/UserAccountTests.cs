@@ -56,7 +56,8 @@ public class UserAccountTests
         await Assert.That(account.CreatedAt).IsEqualTo(Now);
         await Assert.That(account.HasPassword).IsFalse();
         await Assert.That(account.PasswordHash).IsNull();
-        await Assert.That(account.IsEmailVerified).IsFalse();
+        await Assert.That(account.IsEmailVerified).IsTrue();
+        await Assert.That(account.EmailVerifiedAt).IsEqualTo(Now);
         await Assert.That(account.UserLinkedProviders.LinkedProviders.Count).IsEqualTo(1);
         await Assert.That(account.UserLinkedProviders.LinkedProviders.First()).IsEqualTo(provider);
     }

@@ -118,6 +118,7 @@ public sealed class UserAccount : AggregateRoot
         {
             Id = id,
             Email = email,
+            EmailVerifiedAt = now,
             CreatedAt = now,
             MfaSettings = MfaSettings.Create(id, now),
             UserLinkedProviders = UserLinkedProviders.Create(id, now),
@@ -125,6 +126,7 @@ public sealed class UserAccount : AggregateRoot
 
         userAccount.UserLinkedProviders.LinkProvider(provider, now);
         userAccount.AddDomainEvent(new UserAccountRegisteredByExternalProviderDomainEvent(now, userAccount.Id, userAccount.Email, provider.Type));
+        userAccount.AddDomainEvent(new UserAccountEmailVerifiedDomainEvent(now, userAccount.Id, userAccount.Email));
         return userAccount;
     }
 

@@ -28,6 +28,8 @@ public class LoginByExternalProviderServiceTests
         await Assert.That(result.IsSuccess).IsTrue();
         await Assert.That(result.Value!.IsNewAccount).IsTrue();
         await Assert.That(result.Value.UserAccount).IsNotNull();
+        await Assert.That(result.Value.UserAccount.IsEmailVerified).IsTrue();
+        await Assert.That(result.Value.UserAccount.EmailVerifiedAt).IsEqualTo(Now);
         await Assert.That(result.Value.UserSession).IsNotNull();
         await Assert.That(result.Value.RefreshToken).IsNotNullOrEmpty();
     }
