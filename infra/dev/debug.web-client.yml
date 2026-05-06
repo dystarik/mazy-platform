@@ -1,0 +1,4 @@
+services:
+  web-client:
+    profiles:
+      - disabled
