@@ -1,0 +1,8 @@
+apiVersion: 1
+
+providers:
+  - name: Mazy Platform
+    folder: Mazy Platform
+    type: file
+    options:
+      path: /etc/grafana/provisioning/dashboards

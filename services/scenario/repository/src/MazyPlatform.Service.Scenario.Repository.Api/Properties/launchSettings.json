@@ -1,0 +1,20 @@
+{
+  "profiles": {
+    "MazyPlatform.Service.Scenario.Repository.Api": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "http://localhost:6101;http://localhost:6102"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+      "environmentVariables": {
+        "ASPNETCORE_HTTP_PORTS": "8083"
+      },
+      "publishAllPorts": true,
+      "useSSL": false
+    }
+  }
+}

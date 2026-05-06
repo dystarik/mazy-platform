@@ -1,0 +1,8 @@
+services:
+  scenario-repository-migration:
+    profiles:
+      - disabled
+
+  scenario-repository:
+    profiles:
+      - disabled

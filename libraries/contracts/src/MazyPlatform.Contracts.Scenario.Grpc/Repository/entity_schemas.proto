@@ -1,0 +1,123 @@
+syntax = "proto3";
+
+package mazy_platform.scenario.repository.v1;
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "common.proto";
+
+option csharp_namespace = "MazyPlatform.Contracts.Scenario.Repository.Grpc";
+
+service EntitySchemaService {
+    rpc CreateEntitySchema (CreateEntitySchemaRequest) returns (CreateEntitySchemaResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/projects/{project_id}/schemas"
+            body: "*"
+        };
+    }
+    rpc DeleteEntitySchema (DeleteEntitySchemaRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/api/v1/schemas/{schema_id}"
+        };
+    }
+    rpc UpdateEntitySchema (UpdateEntitySchemaRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            patch: "/api/v1/schemas/{schema_id}"
+            body: "*"
+        };
+    }
+    rpc GetEntitySchema (GetEntitySchemaRequest) returns (GetEntitySchemaResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/schemas/{schema_id}"
+        };
+    }
+    rpc GetEntitySchemaList (GetEntitySchemaListRequest) returns (GetEntitySchemaListResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/projects/{project_id}/schemas"
+        };
+    }
+}
+
+// Запрос на создание схемы сущности.
+message CreateEntitySchemaRequest {
+    // Идентификатор проекта.
+    string project_id = 1;
+    // Название схемы. Максимум 256 символов.
+    string name = 2;
+}
+
+// Ответ на создание схемы сущности.
+message CreateEntitySchemaResponse {
+    // Идентификатор созданной схемы.
+    string schema_id = 1;
+}
+
+// Запрос на удаление схемы сущности.
+message DeleteEntitySchemaRequest {
+    // Идентификатор схемы.
+    string schema_id = 1;
+}
+
+// Запрос на добавление поля в схему сущности.
+message UpdateEntitySchemaRequest {
+    // Идентификатор схемы.
+    string schema_id = 1;
+    // Название поля. Максимум 256 символов.
+    string name = 2;
+    // Тип поля.
+    FieldType field_type = 3;
+    // Является ли поле обязательным.
+    bool is_required = 4;
+    // Значение по умолчанию (опционально).
+    optional string default_value = 5;
+}
+
+// Запрос на получение схемы сущности.
+message GetEntitySchemaRequest {
+    // Идентификатор схемы.
+    string schema_id = 1;
+}
+
+// Ответ с данными схемы сущности.
+message GetEntitySchemaResponse {
+    // Идентификатор схемы.
+    string schema_id = 1;
+    // Название схемы.
+    string name = 2;
+    // Список полей схемы.
+    repeated EntityFieldItem fields = 3;
+}
+
+// Поле схемы сущности.
+message EntityFieldItem {
+    // Идентификатор поля.
+    string field_id = 1;
+    // Название поля.
+    string name = 2;
+    // Тип поля.
+    FieldType field_type = 3;
+    // Является ли поле обязательным.
+    bool is_required = 4;
+    // Значение по умолчанию (опционально).
+    optional string default_value = 5;
+}
+
+// Запрос на получение списка схем сущностей.
+message GetEntitySchemaListRequest {
+    // Идентификатор проекта.
+    string project_id = 1;
+}
+
+// Ответ со списком схем сущностей.
+message GetEntitySchemaListResponse {
+    // Список схем.
+    repeated EntitySchemaListItem items = 1;
+}
+
+// Элемент списка схем сущностей.
+message EntitySchemaListItem {
+    // Идентификатор схемы.
+    string schema_id = 1;
+    // Название схемы.
+    string name = 2;
+}

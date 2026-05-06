@@ -1,0 +1,14 @@
+services:
+  authentication-migration:
+    profiles:
+      - disabled
+
+  authentication:
+    profiles:
+      - disabled
+
+  gateway:
+    environment:
+      Services__Authentication: http://host.docker.internal:8081
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

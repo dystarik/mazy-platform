@@ -1,0 +1,226 @@
+syntax = "proto3";
+
+package mazy_platform.scenario.repository.v1;
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "common.proto";
+
+option csharp_namespace = "MazyPlatform.Contracts.Scenario.Repository.Grpc";
+
+service ScenarioGraphService {
+    rpc UpdateScenarioDraft (UpdateScenarioDraftRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            put: "/api/v1/projects/{project_id}/scenario/draft"
+            body: "*"
+        };
+    }
+    rpc PromoteToRelease (PromoteToReleaseRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/projects/{project_id}/scenario/promote"
+            body: "*"
+        };
+    }
+    rpc RollbackRelease (RollbackReleaseRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/projects/{project_id}/scenario/rollback"
+            body: "*"
+        };
+    }
+    rpc DeleteScenarioVersion (DeleteScenarioVersionRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/api/v1/projects/{project_id}/scenario/versions/{version}"
+        };
+    }
+    rpc GetScenarioDraft (GetScenarioDraftRequest) returns (GetScenarioDraftResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/projects/{project_id}/scenario/draft"
+        };
+    }
+    rpc GetReleasedScenario (GetReleasedScenarioRequest) returns (GetReleasedScenarioResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/projects/{project_id}/scenario/release"
+        };
+    }
+    rpc GetScenarioByVersion (GetScenarioByVersionRequest) returns (GetScenarioByVersionResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/projects/{project_id}/scenario/versions/{version}"
+        };
+    }
+    rpc GetNodeCatalog (GetNodeCatalogRequest) returns (GetNodeCatalogResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/nodes/catalog"
+        };
+    }
+    rpc GetVersionHistory (GetVersionHistoryRequest) returns (GetVersionHistoryResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/projects/{project_id}/scenario/versions"
+        };
+    }
+}
+
+// Запрос на обновление черновика сценария.
+message UpdateScenarioDraftRequest {
+    // Идентификатор проекта.
+    string project_id = 1;
+    // Граф сценария в формате JSON.
+    string graph_json = 2;
+}
+
+// Запрос на публикацию черновика в релиз.
+message PromoteToReleaseRequest {
+    // Идентификатор проекта.
+    string project_id = 1;
+}
+
+// Запрос на откат релиза до указанной версии.
+message RollbackReleaseRequest {
+    // Идентификатор проекта.
+    string project_id = 1;
+    // Номер версии для отката.
+    int32 target_version = 2;
+}
+
+// Запрос на удаление версии сценария.
+// Запрещено удалять текущую активную версию релиза.
+// Запрещено удалять версию, на которой есть привязанные боты.
+message DeleteScenarioVersionRequest {
+    // Идентификатор проекта.
+    string project_id = 1;
+    // Номер удаляемой версии.
+    int32 version = 2;
+}
+
+// Запрос на получение черновика сценария.
+message GetScenarioDraftRequest {
+    // Идентификатор проекта.
+    string project_id = 1;
+}
+
+// Ответ с данными черновика сценария.
+message GetScenarioDraftResponse {
+    // Идентификатор графа сценария.
+    string scenario_graph_id = 1;
+    // Граф сценария в формате JSON.
+    string graph_json = 2;
+    // Зарезервировано для совместимости с предыдущей версией API. Всегда равно 0.
+    int32 version = 3;
+}
+
+// Запрос на получение опубликованного сценария.
+// Не требует owner_account_id — используется внутренними сервисами (движок сценариев).
+message GetReleasedScenarioRequest {
+    // Идентификатор проекта.
+    string project_id = 1;
+}
+
+// Ответ с данными опубликованного сценария.
+message GetReleasedScenarioResponse {
+    // Идентификатор графа сценария.
+    string scenario_graph_id = 1;
+    // Граф сценария в формате JSON.
+    string graph_json = 2;
+    // Номер опубликованной версии.
+    int32 version = 3;
+}
+
+// Запрос на получение конкретной версии сценария.
+// Используется UI для просмотра истории и движком для исполнения версии, на которую назначен бот.
+message GetScenarioByVersionRequest {
+    // Идентификатор проекта.
+    string project_id = 1;
+    // Номер запрашиваемой версии.
+    int32 version = 2;
+}
+
+// Ответ с данными конкретной версии сценария.
+message GetScenarioByVersionResponse {
+    // Идентификатор графа сценария.
+    string scenario_graph_id = 1;
+    // Граф сценария в формате JSON.
+    string graph_json = 2;
+    // Номер версии.
+    int32 version = 3;
+}
+
+// Запрос на получение каталога узлов.
+message GetNodeCatalogRequest {
+    // Тип платформы для фильтрации доступных узлов.
+    PlatformType platform_type = 1;
+}
+
+// Ответ с каталогом узлов
+message GetNodeCatalogResponse {
+    // Список доступных типов узлов
+    repeated NodeCatalogItem nodes = 1;
+}
+
+// Элемент каталога узлов (один тип узла)
+message NodeCatalogItem {
+    // Тип узла (уникальный идентификатор, например "send_message")
+    string type = 1;
+    // Схема параметров узла
+    repeated NodeParamItem schema = 2;
+}
+
+// Описание одного параметра узла
+message NodeParamItem {
+    // Ключ параметра (например "text", "variable")
+    string key = 1;
+    // Тип параметра (строго типизирован через enum)
+    NodeParamType type = 2;
+    // Является ли параметр обязательным
+    bool is_required = 3;
+    // Описание параметра (для UI/подсказок, можно не заполнять)
+    optional string description = 4;
+    // Вложенные поля (используется для object / objectlist / objectmatrix)
+    repeated NodeParamItem fields = 5;
+    // Допустимые значения (используется только для enum)
+    repeated string enum_values = 6;
+}
+
+// Тип параметра узла
+enum NodeParamType {
+    // Не задано
+    NODE_PARAM_TYPE_UNSPECIFIED = 0;
+    // Строка
+    NODE_PARAM_TYPE_STRING = 1;
+    // Число (int)
+    NODE_PARAM_TYPE_INT = 2;
+    // Логическое значение
+    NODE_PARAM_TYPE_BOOL = 3;
+    // Словарь строк (key-value)
+    NODE_PARAM_TYPE_STRING_DICTIONARY = 4;
+    // Список строк
+    NODE_PARAM_TYPE_STRING_LIST = 5;
+    // Объект с фиксированными полями (использует fields)
+    NODE_PARAM_TYPE_OBJECT = 6;
+    // Значение из списка (использует enum_values)
+    NODE_PARAM_TYPE_ENUM = 7;
+    // Список объектов (использует fields)
+    NODE_PARAM_TYPE_OBJECT_LIST = 8;
+    // Двумерный список объектов (матрица)
+    NODE_PARAM_TYPE_OBJECT_MATRIX = 9;
+}
+
+// Запрос на получение истории версий релизов.
+message GetVersionHistoryRequest {
+    // Идентификатор проекта.
+    string project_id = 1;
+}
+
+// Ответ с историей версий.
+message GetVersionHistoryResponse {
+    // Список версий, отсортированных по убыванию номера.
+    repeated VersionItem versions = 1;
+}
+
+// Элемент истории версий.
+message VersionItem {
+    // Номер версии.
+    int32 version = 1;
+    // Дата и время создания версии (Unix timestamp, секунды).
+    int64 created_at = 2;
+    // Является ли версия текущим активным релизом.
+    bool is_current = 3;
+}

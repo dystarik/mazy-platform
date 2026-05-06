@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MazyPlatform.Service.Scenario.Engine/MazyPlatform.Service.Scenario.Engine.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,649 @@
+{
+  "format": "mazy-editor-scenario",
+  "formatVersion": 1,
+  "startNodeId": "096e9e74-2dcf-4d2c-9538-d42256c95499",
+  "nodes": [
+    {
+      "id": "096e9e74-2dcf-4d2c-9538-d42256c95499",
+      "type": "send_message",
+      "params": {
+        "messageIdVariable": "message_096e9e74_id",
+        "buttonPayloadVariable": "button_payload_096e9e74",
+        "buttons": [
+          [
+            {
+              "label": "📋 Меню",
+              "payload": "button_1"
+            }
+          ],
+          [
+            {
+              "label": "🛒 Заказать",
+              "payload": "button_2"
+            }
+          ],
+          [
+            {
+              "label": "🔎 Проверить заказ",
+              "payload": "button_3"
+            }
+          ]
+        ],
+        "deleteAfterButtonPress": true,
+        "text": "🍽 Мини-кафе «Вкусно и быстро»\n\nПривет! Я помогу посмотреть меню, оформить заказ, проверить статус заказа или оставить отзыв.\n\nВыберите действие 👇"
+      },
+      "ui": {
+        "textHeight": 120
+      },
+      "position": {
+        "x": -72,
+        "y": -36
+      }
+    },
+    {
+      "id": "3b7a4259-154c-4829-9a1a-e997039c4c90",
+      "type": "send_message",
+      "params": {
+        "messageIdVariable": "message_3b7a4259_id",
+        "buttonPayloadVariable": "button_payload_3b7a4259",
+        "buttons": [
+          [
+            {
+              "label": "🛒 Заказать",
+              "payload": "button_1"
+            }
+          ],
+          [
+            {
+              "label": "⬅️ Назад",
+              "payload": "button_2"
+            }
+          ]
+        ],
+        "deleteAfterButtonPress": true,
+        "text": "📋 Сегодня в меню\n\n🍕 Пицца Маргарита — 550 ₽\nМоцарелла, томатный соус и базилик.\n\n🍔 Классический бургер — 390 ₽\nСочная котлета, сыр, овощи и фирменный соус.\n\n🍝 Паста Карбонара — 470 ₽\nСливочный соус, бекон и пармезан.\n\n🥤 Домашний лимонад — 180 ₽\nЛимон, мята и газированная вода.\n\nЧто делаем дальше?"
+      },
+      "ui": {
+        "textHeight": 24
+      },
+      "position": {
+        "x": 204,
+        "y": -156
+      }
+    },
+    {
+      "id": "a17d570d-43f1-4c38-ae73-5a52bc40509b",
+      "type": "send_message",
+      "params": {
+        "messageIdVariable": "message_a17d570d_id",
+        "buttonPayloadVariable": "button_payload_a17d570d",
+        "buttons": [
+          [
+            {
+              "label": "⬅️ Назад",
+              "payload": "button_1",
+              "style": "success"
+            }
+          ]
+        ],
+        "deleteAfterButtonPress": true,
+        "text": "✅ Заказ создан!\n\nБлюдо: {блюдо}\nСумма: {цена} ₽\nАдрес: {адрес}\nТелефон: {телефон}\n\nНомер заказа: {record_809cc946_id}"
+      },
+      "ui": {
+        "textHeight": 156
+      },
+      "position": {
+        "x": 492,
+        "y": 24
+      }
+    },
+    {
+      "id": "abb6cac8-c298-4d77-9a63-1b8c3551bf12",
+      "type": "send_message",
+      "params": {
+        "messageIdVariable": "message_abb6cac8_id",
+        "buttonPayloadVariable": "button_payload_abb6cac8",
+        "buttons": [
+          [
+            {
+              "label": "⬅️ Назад",
+              "payload": "button_1"
+            }
+          ]
+        ],
+        "deleteAfterButtonPress": true,
+        "text": "Заказ {номер_заказа_для_проверки}\n\n{заказ_данные}"
+      },
+      "ui": {
+        "textHeight": 24
+      },
+      "position": {
+        "x": 492,
+        "y": 408
+      }
+    },
+    {
+      "id": "9af8d59a-4c8f-40a9-b769-fa7d886f80b9",
+      "type": "goto_node",
+      "params": {
+        "targetNodeId": "096e9e74-2dcf-4d2c-9538-d42256c95499"
+      },
+      "position": {
+        "x": 756,
+        "y": -60
+      }
+    },
+    {
+      "id": "41b8b30a-823d-4123-b243-acf0c6890a2d",
+      "type": "goto_node",
+      "params": {
+        "targetNodeId": "4c506135-4c9e-4734-84d5-df9f6d005647"
+      },
+      "position": {
+        "x": 504,
+        "y": -108
+      }
+    },
+    {
+      "id": "4c506135-4c9e-4734-84d5-df9f6d005647",
+      "type": "group_node",
+      "params": {
+        "title": "Ветка «🛒 Заказать»",
+        "nodeCount": 16,
+        "boundaryPositions": {
+          "exit": {
+            "x": 2832,
+            "y": 408
+          },
+          "entry": {
+            "x": 132,
+            "y": 264
+          }
+        },
+        "entryNodeId": "e19af442-62e5-4a54-a45d-36076a4a52de",
+        "exitNodeId": "809cc946-bd98-4250-a502-d170943be187",
+        "subgraph": {
+          "nodes": [
+            {
+              "id": "e19af442-62e5-4a54-a45d-36076a4a52de",
+              "ui": {
+                "textHeight": 24
+              },
+              "type": "send_message",
+              "params": {
+                "text": "🛒 Оформление заказа\n\nВыберите блюдо:",
+                "buttons": [
+                  [
+                    {
+                      "label": "🍕 Пицца",
+                      "payload": "button_1"
+                    }
+                  ],
+                  [
+                    {
+                      "label": "🍔 Бургер",
+                      "payload": "button_2"
+                    }
+                  ],
+                  [
+                    {
+                      "label": "🍝 Паста",
+                      "payload": "button_3"
+                    }
+                  ],
+                  [
+                    {
+                      "label": "🥤 Лимонад",
+                      "payload": "button_4"
+                    }
+                  ]
+                ],
+                "messageIdVariable": "message_e19af442_id",
+                "buttonPayloadVariable": "button_payload_e19af442",
+                "deleteAfterButtonPress": true,
+                "__buttonBranchingNodeIds": {
+                  "switch": "e19af442-62e5-4a54-a45d-5643cd064eb8",
+                  "sendButtons": "e19af442-62e5-4a54-a45d-4eaff132eb1e",
+                  "deleteMessage": "e19af442-62e5-4a54-a45d-502a414c6d00",
+                  "receiveButtonPress": "e19af442-62e5-4a54-a45d-03ff02405b9b"
+                }
+              },
+              "position": {
+                "x": 288,
+                "y": 228
+              }
+            },
+            {
+              "id": "36e95f44-888c-4dd1-8616-cc60c11c7b16",
+              "type": "set_variable",
+              "params": {
+                "value": "Пицца",
+                "variable": "блюдо"
+              },
+              "position": {
+                "x": 600,
+                "y": 264
+              }
+            },
+            {
+              "id": "f846063a-3591-414f-907f-c3493e05f7fd",
+              "type": "set_variable",
+              "params": {
+                "value": "Пицца",
+                "variable": "блюдо"
+              },
+              "position": {
+                "x": 600,
+                "y": 348
+              }
+            },
+            {
+              "id": "1072bfb4-dc7e-4d99-a378-9e9903c74c92",
+              "type": "set_variable",
+              "params": {
+                "value": "Пицца",
+                "variable": "блюдо"
+              },
+              "position": {
+                "x": 600,
+                "y": 432
+              }
+            },
+            {
+              "id": "a2a9eab7-f7ae-49ea-9d4e-c2db520b1d97",
+              "type": "set_variable",
+              "params": {
+                "value": "Пицца",
+                "variable": "блюдо"
+              },
+              "position": {
+                "x": 600,
+                "y": 516
+              }
+            },
+            {
+              "id": "34bf29a8-e754-4e99-9565-23594e15185f",
+              "type": "set_variable",
+              "params": {
+                "value": "550",
+                "variable": "цена"
+              },
+              "position": {
+                "x": 852,
+                "y": 264
+              }
+            },
+            {
+              "id": "f651d27d-adc3-4302-8dfc-42ccae9e7a61",
+              "type": "set_variable",
+              "params": {
+                "value": "390",
+                "variable": "цена"
+              },
+              "position": {
+                "x": 852,
+                "y": 348
+              }
+            },
+            {
+              "id": "1eee1c6c-dcfb-4ac2-a4d1-9d002da8ae4d",
+              "type": "set_variable",
+              "params": {
+                "value": "470",
+                "variable": "цена"
+              },
+              "position": {
+                "x": 852,
+                "y": 432
+              }
+            },
+            {
+              "id": "f8d8483c-aa73-4928-9e0a-368b1d4e3c8f",
+              "type": "set_variable",
+              "params": {
+                "value": "180",
+                "variable": "цена"
+              },
+              "position": {
+                "x": 852,
+                "y": 516
+              }
+            },
+            {
+              "id": "b71d37b3-2b1a-4f1e-a315-a09291bedac3",
+              "ui": {
+                "textHeight": 60
+              },
+              "type": "send_message",
+              "params": {
+                "text": "Отлично, вы выбрали: {блюдо}\n\nУкажите адрес доставки:",
+                "buttons": [],
+                "messageIdVariable": "message_b71d37b3_id",
+                "buttonPayloadVariable": "button_payload_b71d37b3",
+                "__buttonBranchingNodeIds": {
+                  "switch": "b71d37b3-2b1a-4f1e-a315-247dc2cbb5a5",
+                  "sendButtons": "b71d37b3-2b1a-4f1e-a315-2afc71b7a99d",
+                  "deleteMessage": "b71d37b3-2b1a-4f1e-a315-7b9988458e66",
+                  "receiveButtonPress": "b71d37b3-2b1a-4f1e-a315-56e207dd8c15"
+                }
+              },
+              "position": {
+                "x": 1116,
+                "y": 372
+              }
+            },
+            {
+              "id": "9605d7d1-bebc-485e-a97a-2bfd58d59634",
+              "type": "receive_message",
+              "params": {
+                "validatorType": "",
+                "deleteAfterReceive": true,
+                "messageTextVariable": "адрес"
+              },
+              "position": {
+                "x": 1392,
+                "y": 372
+              }
+            },
+            {
+              "id": "98598966-f8c8-4b56-b862-7b847f679b60",
+              "type": "delete_message",
+              "params": {
+                "messageIdVariable": "message_b71d37b3_id",
+                "targetMessageNodeId": "b71d37b3-2b1a-4f1e-a315-a09291bedac3"
+              },
+              "position": {
+                "x": 1620,
+                "y": 372
+              }
+            },
+            {
+              "id": "dae3899f-a72d-4fb7-822c-9c41bf2b23a9",
+              "type": "send_message",
+              "params": {
+                "text": "Теперь оставьте номер телефона для связи:",
+                "buttons": [],
+                "messageIdVariable": "message_dae3899f_id",
+                "buttonPayloadVariable": "button_payload_dae3899f",
+                "__buttonBranchingNodeIds": {
+                  "switch": "dae3899f-a72d-4fb7-822c-9c8d4329db2a",
+                  "sendButtons": "dae3899f-a72d-4fb7-822c-253629d5cf11",
+                  "deleteMessage": "dae3899f-a72d-4fb7-822c-e492777bd3d6",
+                  "receiveButtonPress": "dae3899f-a72d-4fb7-822c-584a6cf3c0e8"
+                }
+              },
+              "position": {
+                "x": 1860,
+                "y": 372
+              }
+            },
+            {
+              "id": "43e1ed46-fcf8-4c44-ba7c-3b5e2937fa0c",
+              "type": "receive_message",
+              "params": {
+                "errorMessage": "Номер телефона введён неверно. Попробуйте ещё раз.",
+                "validatorType": "phone",
+                "deleteAfterReceive": true,
+                "messageTextVariable": "телефон"
+              },
+              "position": {
+                "x": 2124,
+                "y": 372
+              }
+            },
+            {
+              "id": "33e5770e-491a-46ae-9f20-5a454742b961",
+              "type": "delete_message",
+              "params": {
+                "messageIdVariable": "message_dae3899f_id",
+                "targetMessageNodeId": "dae3899f-a72d-4fb7-822c-9c41bf2b23a9"
+              },
+              "position": {
+                "x": 2352,
+                "y": 372
+              }
+            },
+            {
+              "id": "809cc946-bd98-4250-a502-d170943be187",
+              "type": "data_record",
+              "params": {
+                "action": "create",
+                "fields": {
+                  "цена": "{цена}",
+                  "адрес": "{адрес}",
+                  "блюдо": "{блюдо}",
+                  "статус": "новый",
+                  "телефон": "{телефон}"
+                },
+                "entityName": "Заказ",
+                "recordIdVariable": "record_809cc946_id"
+              },
+              "position": {
+                "x": 2592,
+                "y": 372
+              }
+            }
+          ],
+          "connections": [
+            {
+              "to": "36e95f44-888c-4dd1-8616-cc60c11c7b16",
+              "from": "e19af442-62e5-4a54-a45d-36076a4a52de",
+              "branch": "button_1"
+            },
+            {
+              "to": "f846063a-3591-414f-907f-c3493e05f7fd",
+              "from": "e19af442-62e5-4a54-a45d-36076a4a52de",
+              "branch": "button_2"
+            },
+            {
+              "to": "1072bfb4-dc7e-4d99-a378-9e9903c74c92",
+              "from": "e19af442-62e5-4a54-a45d-36076a4a52de",
+              "branch": "button_3"
+            },
+            {
+              "to": "a2a9eab7-f7ae-49ea-9d4e-c2db520b1d97",
+              "from": "e19af442-62e5-4a54-a45d-36076a4a52de",
+              "branch": "button_4"
+            },
+            {
+              "to": "34bf29a8-e754-4e99-9565-23594e15185f",
+              "from": "36e95f44-888c-4dd1-8616-cc60c11c7b16"
+            },
+            {
+              "to": "f651d27d-adc3-4302-8dfc-42ccae9e7a61",
+              "from": "f846063a-3591-414f-907f-c3493e05f7fd"
+            },
+            {
+              "to": "1eee1c6c-dcfb-4ac2-a4d1-9d002da8ae4d",
+              "from": "1072bfb4-dc7e-4d99-a378-9e9903c74c92"
+            },
+            {
+              "to": "f8d8483c-aa73-4928-9e0a-368b1d4e3c8f",
+              "from": "a2a9eab7-f7ae-49ea-9d4e-c2db520b1d97"
+            },
+            {
+              "to": "b71d37b3-2b1a-4f1e-a315-a09291bedac3",
+              "from": "34bf29a8-e754-4e99-9565-23594e15185f"
+            },
+            {
+              "to": "b71d37b3-2b1a-4f1e-a315-a09291bedac3",
+              "from": "f651d27d-adc3-4302-8dfc-42ccae9e7a61"
+            },
+            {
+              "to": "b71d37b3-2b1a-4f1e-a315-a09291bedac3",
+              "from": "1eee1c6c-dcfb-4ac2-a4d1-9d002da8ae4d"
+            },
+            {
+              "to": "b71d37b3-2b1a-4f1e-a315-a09291bedac3",
+              "from": "f8d8483c-aa73-4928-9e0a-368b1d4e3c8f"
+            },
+            {
+              "to": "9605d7d1-bebc-485e-a97a-2bfd58d59634",
+              "from": "b71d37b3-2b1a-4f1e-a315-a09291bedac3"
+            },
+            {
+              "to": "98598966-f8c8-4b56-b862-7b847f679b60",
+              "from": "9605d7d1-bebc-485e-a97a-2bfd58d59634"
+            },
+            {
+              "to": "dae3899f-a72d-4fb7-822c-9c41bf2b23a9",
+              "from": "98598966-f8c8-4b56-b862-7b847f679b60"
+            },
+            {
+              "to": "33e5770e-491a-46ae-9f20-5a454742b961",
+              "from": "43e1ed46-fcf8-4c44-ba7c-3b5e2937fa0c"
+            },
+            {
+              "to": "43e1ed46-fcf8-4c44-ba7c-3b5e2937fa0c",
+              "from": "dae3899f-a72d-4fb7-822c-9c41bf2b23a9"
+            },
+            {
+              "to": "809cc946-bd98-4250-a502-d170943be187",
+              "from": "33e5770e-491a-46ae-9f20-5a454742b961"
+            }
+          ],
+          "startNodeId": "e19af442-62e5-4a54-a45d-36076a4a52de"
+        }
+      },
+      "position": {
+        "x": 228,
+        "y": 144
+      }
+    },
+    {
+      "id": "2b446896-7869-4534-873a-b4ab56f7aa6e",
+      "type": "group_node",
+      "params": {
+        "title": "Ветка «🔎 Проверить заказ»",
+        "nodeCount": 3,
+        "boundaryPositions": {
+          "exit": {
+            "x": 984,
+            "y": 576
+          },
+          "entry": {
+            "x": 36,
+            "y": 576
+          }
+        },
+        "entryNodeId": "61716166-4716-4538-a06d-5c6a371cfd26",
+        "exitNodeId": "178a1bac-2074-48c4-96de-ec85cec39fd5",
+        "subgraph": {
+          "nodes": [
+            {
+              "id": "61716166-4716-4538-a06d-5c6a371cfd26",
+              "ui": {
+                "textHeight": 60
+              },
+              "type": "send_message",
+              "params": {
+                "text": "🔎 Проверка статуса заказа\n\nВведите номер заказа:",
+                "buttons": [],
+                "messageIdVariable": "message_61716166_id",
+                "buttonPayloadVariable": "button_payload_61716166",
+                "__buttonBranchingNodeIds": {
+                  "switch": "61716166-4716-4538-a06d-07dd93464bcf",
+                  "sendButtons": "61716166-4716-4538-a06d-501dc9725834",
+                  "deleteMessage": "61716166-4716-4538-a06d-2167b98c611e",
+                  "receiveButtonPress": "61716166-4716-4538-a06d-a124b9808517"
+                }
+              },
+              "position": {
+                "x": 204,
+                "y": 576
+              }
+            },
+            {
+              "id": "f9d82d86-cfc0-43a0-b5b7-bd3b4f696109",
+              "type": "receive_message",
+              "params": {
+                "validatorType": "",
+                "deleteAfterReceive": true,
+                "messageTextVariable": "номер_заказа_для_проверки"
+              },
+              "position": {
+                "x": 480,
+                "y": 576
+              }
+            },
+            {
+              "id": "178a1bac-2074-48c4-96de-ec85cec39fd5",
+              "type": "data_record",
+              "params": {
+                "action": "get",
+                "fields": {},
+                "entityName": "",
+                "recordVariable": "заказ_данные",
+                "recordIdVariable": "номер_заказа_для_проверки"
+              },
+              "position": {
+                "x": 708,
+                "y": 576
+              }
+            }
+          ],
+          "connections": [
+            {
+              "to": "f9d82d86-cfc0-43a0-b5b7-bd3b4f696109",
+              "from": "61716166-4716-4538-a06d-5c6a371cfd26"
+            },
+            {
+              "to": "178a1bac-2074-48c4-96de-ec85cec39fd5",
+              "from": "f9d82d86-cfc0-43a0-b5b7-bd3b4f696109"
+            }
+          ],
+          "startNodeId": "61716166-4716-4538-a06d-5c6a371cfd26"
+        }
+      },
+      "position": {
+        "x": 228,
+        "y": 264
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "096e9e74-2dcf-4d2c-9538-d42256c95499",
+      "to": "3b7a4259-154c-4829-9a1a-e997039c4c90",
+      "branch": "button_1"
+    },
+    {
+      "from": "096e9e74-2dcf-4d2c-9538-d42256c95499",
+      "to": "4c506135-4c9e-4734-84d5-df9f6d005647",
+      "branch": "button_2"
+    },
+    {
+      "from": "4c506135-4c9e-4734-84d5-df9f6d005647",
+      "to": "a17d570d-43f1-4c38-ae73-5a52bc40509b"
+    },
+    {
+      "from": "096e9e74-2dcf-4d2c-9538-d42256c95499",
+      "to": "2b446896-7869-4534-873a-b4ab56f7aa6e",
+      "branch": "button_3"
+    },
+    {
+      "from": "2b446896-7869-4534-873a-b4ab56f7aa6e",
+      "to": "abb6cac8-c298-4d77-9a63-1b8c3551bf12"
+    },
+    {
+      "from": "3b7a4259-154c-4829-9a1a-e997039c4c90",
+      "to": "9af8d59a-4c8f-40a9-b769-fa7d886f80b9",
+      "branch": "button_2"
+    },
+    {
+      "from": "a17d570d-43f1-4c38-ae73-5a52bc40509b",
+      "to": "9af8d59a-4c8f-40a9-b769-fa7d886f80b9",
+      "branch": "button_1"
+    },
+    {
+      "from": "abb6cac8-c298-4d77-9a63-1b8c3551bf12",
+      "to": "9af8d59a-4c8f-40a9-b769-fa7d886f80b9",
+      "branch": "button_1"
+    },
+    {
+      "from": "3b7a4259-154c-4829-9a1a-e997039c4c90",
+      "to": "41b8b30a-823d-4123-b243-acf0c6890a2d",
+      "branch": "button_1"
+    }
+  ]
+}

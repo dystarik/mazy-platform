@@ -1,0 +1,7 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <PackageId>MazyPlatform.SharedKernel.Domain</PackageId>
+    </PropertyGroup>
+
+</Project>

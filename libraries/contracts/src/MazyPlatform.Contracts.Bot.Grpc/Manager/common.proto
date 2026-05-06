@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package mazy_platform.bot.manager.v1;
+
+option csharp_namespace = "MazyPlatform.Contracts.Bot.Grpc.Manager";
+
+// Платформа, на которой работает бот.
+enum BotPlatformType  {
+    // Не указано. Не должно использоваться в запросах.
+    Bot_PLATFORM_TYPE_UNSPECIFIED = 0;
+    // ВКонтакте.
+    Bot_PLATFORM_TYPE_VK = 1;
+    // Telegram.
+    Bot_PLATFORM_TYPE_TELEGRAM = 2;
+}
+
+// Текущий статус бота.
+enum BotStatus {
+    // Не указано. Не должно использоваться в запросах.
+    BOT_STATUS_UNSPECIFIED = 0;
+    // Бот неактивен — конфигурация сохранена, но не работает.
+    BOT_STATUS_INACTIVE = 1;
+    // Бот активен — service-bot-integration поллит платформу для этого бота.
+    BOT_STATUS_ACTIVE = 2;
+}
+
+// Полиморфные credentials бота.
+// Конкретный набор полей зависит от платформы.
+message BotCredentials {
+    // Платформа, к которой относятся credentials.
+    BotPlatformType  platform_type = 1;
+    // Платформо-зависимые credentials.
+    oneof platform {
+        // Credentials для VK.
+        VkCredentials vk = 2;
+        // Credentials для Telegram.
+        TelegramCredentials telegram = 3;
+    }
+}
+
+// Credentials бота для платформы ВКонтакте.
+message VkCredentials {
+    // Токен доступа сообщества. В internal API возвращается в открытом виде.
+    string access_token = 1;
+    // Идентификатор сообщества VK.
+    string community_id = 2;
+}
+
+// Credentials бота для платформы Telegram.
+message TelegramCredentials {
+    // Токен Telegram-бота. В internal API возвращается в открытом виде.
+    string access_token = 1;
+}

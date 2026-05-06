@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package mazy_platform.scenario.repository.v1;
+
+option csharp_namespace = "MazyPlatform.Contracts.Scenario.Repository.Grpc";
+
+// Тип платформы мессенджера.
+enum PlatformType {
+    // Не указан (зарезервирован protobuf).
+    PLATFORM_TYPE_UNSPECIFIED = 0;
+    // Универсальная платформа (не привязано к конкретному мессенджеру).
+    PLATFORM_TYPE_UNIVERSAL = 1;
+    // ВКонтакте.
+    PLATFORM_TYPE_VK = 2;
+    // Telegram.
+    PLATFORM_TYPE_TELEGRAM = 3;
+}
+
+// Тип поля схемы сущности.
+enum FieldType {
+    // Не указан (зарезервирован protobuf).
+    FIELD_TYPE_UNSPECIFIED = 0;
+    // Строка.
+    FIELD_TYPE_STRING = 1;
+    // Число.
+    FIELD_TYPE_NUMBER = 2;
+    // Булево.
+    FIELD_TYPE_BOOLEAN = 3;
+    // Дата и время.
+    FIELD_TYPE_DATE_TIME = 4;
+    // Ссылка на другую сущность.
+    FIELD_TYPE_REFERENCE = 5;
+    // Перечисление.
+    FIELD_TYPE_ENUM = 6;
+}

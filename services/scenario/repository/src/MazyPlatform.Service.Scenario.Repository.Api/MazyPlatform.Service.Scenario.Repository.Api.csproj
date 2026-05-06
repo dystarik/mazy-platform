@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+	  <UserSecretsId>50b2c028-8561-4ad8-9c19-27e8a1c76c1a</UserSecretsId>
+	  <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+	  <DockerfileContext>..\..</DockerfileContext>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Grpc.AspNetCore" />
+		<PackageReference Include="MazyPlatform.Contracts.Scenario.Grpc" />  
+		<PackageReference Include="MazyPlatform.SharedKernel.Api" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
+		<PackageReference Include="prometheus-net.AspNetCore" />
+		<PackageReference Include="prometheus-net.AspNetCore.Grpc" />
+		<PackageReference Include="Serilog" />
+		<PackageReference Include="Serilog.AspNetCore" />
+		<PackageReference Include="Serilog.Enrichers.Environment" />
+		<PackageReference Include="Serilog.Enrichers.Thread" />
+		<PackageReference Include="Serilog.Settings.Configuration" />
+		<PackageReference Include="Serilog.Sinks.Async" />
+		<PackageReference Include="Serilog.Sinks.Console" />
+		<PackageReference Include="Serilog.Sinks.Grafana.Loki" />
+	</ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MazyPlatform.Service.Scenario.Repository.Application\MazyPlatform.Service.Scenario.Repository.Application.csproj" />
+        <ProjectReference Include="..\MazyPlatform.Service.Scenario.Repository.Domain\MazyPlatform.Service.Scenario.Repository.Domain.csproj" />
+        <ProjectReference Include="..\MazyPlatform.Service.Scenario.Repository.Infrastructure\MazyPlatform.Service.Scenario.Repository.Infrastructure.csproj" />
+    </ItemGroup>
+
+</Project>

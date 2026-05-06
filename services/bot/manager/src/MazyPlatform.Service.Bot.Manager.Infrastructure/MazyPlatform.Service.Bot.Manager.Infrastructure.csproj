@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <PackageReference Include="Grpc.AspNetCore" />
+        <PackageReference Include="MazyPlatform.Contracts.Scenario.Grpc" />
+        <PackageReference Include="MazyPlatform.Contracts.User" />
+        <PackageReference Include="MazyPlatform.SharedKernel.Infrastructure" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+        <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+        <PackageReference Include="RabbitMQ.Client" />
+        <PackageReference Include="Scrutor" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MazyPlatform.Service.Bot.Manager.Application\MazyPlatform.Service.Bot.Manager.Application.csproj" />
+        <ProjectReference Include="..\MazyPlatform.Service.Bot.Manager.Domain\MazyPlatform.Service.Bot.Manager.Domain.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,24 @@
+{
+    "profiles": {
+        "http": {
+            "commandName": "Project",
+            "environmentVariables": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "MetricsPort": "9091"
+            },
+            "dotnetRunMessages": true,
+            "applicationUrl": "http://localhost:5001"
+        },
+        "Container (Dockerfile)": {
+            "commandName": "Docker",
+            "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+            "environmentVariables": {
+                "ASPNETCORE_HTTP_PORTS": "8081",
+                "MetricsPort": "9090"
+            },
+            "publishAllPorts": true,
+            "useSSL": false
+        }
+    },
+    "$schema": "https://json.schemastore.org/launchsettings.json"
+}

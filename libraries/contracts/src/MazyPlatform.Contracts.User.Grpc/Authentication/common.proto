@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package mazy_platform.user.authentication.v1;
+
+option csharp_namespace = "MazyPlatform.Contracts.User.Grpc.Authentication";
+
+// Тип MFA фактора.
+enum MfaFactorType {
+    MFA_FACTOR_TYPE_UNSPECIFIED = 0;
+    // Одноразовый пароль на основе времени (TOTP).
+    MFA_FACTOR_TYPE_TOTP = 1;
+    // Подтверждение по email.
+    MFA_FACTOR_TYPE_EMAIL = 2;
+    // Резервный код.
+    MFA_FACTOR_TYPE_BACKUP_CODE = 3;
+}
+
+// Действие для которого создаётся MFA сессия.
+enum MfaSessionAction {
+    MFA_SESSION_ACTION_UNSPECIFIED = 0;
+    // Вход в аккаунт.
+    MFA_SESSION_ACTION_LOGIN = 1;
+    // Удаление MFA фактора.
+    MFA_SESSION_ACTION_REMOVE_FACTOR = 2;
+    // Перегенерация резервных кодов.
+    MFA_SESSION_ACTION_REGENERATE_BACKUP_CODES = 3;
+    // Смена пароля.
+    MFA_SESSION_ACTION_CHANGE_PASSWORD = 4;
+}
+
+// Внешний провайдер аутентификации.
+enum ExternalProvider {
+    EXTERNAL_PROVIDER_UNSPECIFIED = 0;
+    // Яндекс.
+    EXTERNAL_PROVIDER_YANDEX = 1;
+}
+
+// Пара токенов доступа.
+message TokenPair {
+    // Access токен.
+    string access_token = 1;
+    // Refresh токен.
+    string refresh_token = 2;
+}
+
+// MFA challenge — данные для прохождения MFA.
+message MfaChallenge {
+    // ID MFA сессии.
+    string mfa_session_id = 1;
+    // Количество факторов которые нужно подтвердить.
+    int32 required_factor_count = 2;
+    // Доступные факторы для подтверждения.
+    repeated MfaFactorType available_factors = 3;
+}

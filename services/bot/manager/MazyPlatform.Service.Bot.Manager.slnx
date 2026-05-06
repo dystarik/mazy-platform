@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MazyPlatform.Service.Bot.Manager.Api/MazyPlatform.Service.Bot.Manager.Api.csproj" />
+    <Project Path="src/MazyPlatform.Service.Bot.Manager.Application/MazyPlatform.Service.Bot.Manager.Application.csproj" />
+    <Project Path="src/MazyPlatform.Service.Bot.Manager.Domain/MazyPlatform.Service.Bot.Manager.Domain.csproj" />
+    <Project Path="src/MazyPlatform.Service.Bot.Manager.Infrastructure/MazyPlatform.Service.Bot.Manager.Infrastructure.csproj" />
+  </Folder>
+</Solution>

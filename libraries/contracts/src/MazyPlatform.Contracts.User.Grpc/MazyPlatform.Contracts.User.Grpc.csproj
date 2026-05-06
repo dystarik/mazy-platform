@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IncludeHttpRuleProtos>true</IncludeHttpRuleProtos>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Google.Api.CommonProtos" />
+        <PackageReference Include="Google.Protobuf" />
+        <PackageReference Include="Grpc.Net.Client" />
+        <PackageReference Include="Microsoft.AspNetCore.Grpc.JsonTranscoding">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>build</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Grpc.Tools">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Protobuf Include="Authentication/**/*.proto" GrpcServices="Both" ProtoRoot="Authentication" />
+    </ItemGroup>
+
+</Project>

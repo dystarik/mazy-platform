@@ -1,0 +1,3816 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "MazyPlatform.Service.Gateway",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/v1/auth/login/password": {
+      "post": {
+        "tags": [
+          "AuthenticationService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginByPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginByPasswordResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login/external-provider": {
+      "post": {
+        "tags": [
+          "AuthenticationService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginByExternalProviderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginByExternalProviderResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bots": {
+      "post": {
+        "tags": [
+          "BotService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBotRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateBotResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "BotService"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetBotsByUserIdResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bots/standalone": {
+      "post": {
+        "tags": [
+          "BotService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBotWithoutProjectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateBotResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bots/{botInstanceId}": {
+      "get": {
+        "tags": [
+          "BotService"
+        ],
+        "parameters": [
+          {
+            "name": "botInstanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetBotResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "BotService"
+        ],
+        "parameters": [
+          {
+            "name": "botInstanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectId}/bots": {
+      "get": {
+        "tags": [
+          "BotService"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetBotsByProjectResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bots/{botInstanceId}/bind": {
+      "post": {
+        "tags": [
+          "BotService"
+        ],
+        "parameters": [
+          {
+            "name": "botInstanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BindBotToProjectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bots/{botInstanceId}/unbind": {
+      "post": {
+        "tags": [
+          "BotService"
+        ],
+        "parameters": [
+          {
+            "name": "botInstanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnbindBotFromProjectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bots/{botInstanceId}/activate": {
+      "post": {
+        "tags": [
+          "BotService"
+        ],
+        "parameters": [
+          {
+            "name": "botInstanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivateBotRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bots/{botInstanceId}/deactivate": {
+      "post": {
+        "tags": [
+          "BotService"
+        ],
+        "parameters": [
+          {
+            "name": "botInstanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeactivateBotRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bots/{botInstanceId}/token": {
+      "put": {
+        "tags": [
+          "BotService"
+        ],
+        "parameters": [
+          {
+            "name": "botInstanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBotTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bots/{botInstanceId}/scenario-version": {
+      "put": {
+        "tags": [
+          "BotService"
+        ],
+        "parameters": [
+          {
+            "name": "botInstanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeBotScenarioVersionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectId}/schemas": {
+      "post": {
+        "tags": [
+          "EntitySchemaService"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEntitySchemaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateEntitySchemaResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "EntitySchemaService"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetEntitySchemaListResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/schemas/{schemaId}": {
+      "delete": {
+        "tags": [
+          "EntitySchemaService"
+        ],
+        "parameters": [
+          {
+            "name": "schemaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "EntitySchemaService"
+        ],
+        "parameters": [
+          {
+            "name": "schemaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEntitySchemaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "EntitySchemaService"
+        ],
+        "parameters": [
+          {
+            "name": "schemaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetEntitySchemaResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/linked-providers": {
+      "post": {
+        "tags": [
+          "LinkedProviderService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkProviderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "LinkedProviderService"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetLinkedProvidersResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/linked-providers/{provider}": {
+      "delete": {
+        "tags": [
+          "LinkedProviderService"
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExternalProvider"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mfa/factors": {
+      "post": {
+        "tags": [
+          "MfaService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddFactorRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddFactorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "MfaService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveFactorRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "MfaService"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetFactorsResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mfa/factors/confirm": {
+      "post": {
+        "tags": [
+          "MfaService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmFactorRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmFactorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mfa/backup-codes/regenerate": {
+      "post": {
+        "tags": [
+          "MfaService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegenerateBackupCodesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegenerateBackupCodesResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mfa/sessions": {
+      "post": {
+        "tags": [
+          "MfaSessionService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mfa/sessions/{mfaSessionId}/status": {
+      "get": {
+        "tags": [
+          "MfaSessionService"
+        ],
+        "parameters": [
+          {
+            "name": "mfaSessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetStatusResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mfa/sessions/{mfaSessionId}/email/send": {
+      "post": {
+        "tags": [
+          "MfaSessionService"
+        ],
+        "parameters": [
+          {
+            "name": "mfaSessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendEmailCodeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mfa/sessions/{mfaSessionId}/verify": {
+      "post": {
+        "tags": [
+          "MfaSessionService"
+        ],
+        "parameters": [
+          {
+            "name": "mfaSessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyCodeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyCodeResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mfa/sessions/{mfaSessionId}/email/send-unauthenticated": {
+      "post": {
+        "tags": [
+          "MfaSessionService"
+        ],
+        "parameters": [
+          {
+            "name": "mfaSessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendUnauthenticatedEmailCodeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mfa/sessions/{mfaSessionId}/verify-unauthenticated": {
+      "post": {
+        "tags": [
+          "MfaSessionService"
+        ],
+        "parameters": [
+          {
+            "name": "mfaSessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyUnauthenticatedCodeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyUnauthenticatedCodeResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/password/change": {
+      "post": {
+        "tags": [
+          "PasswordService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangePasswordResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/password/set": {
+      "post": {
+        "tags": [
+          "PasswordService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetPasswordResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/password/reset": {
+      "post": {
+        "tags": [
+          "PasswordService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetPasswordResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/password/reset/confirm": {
+      "post": {
+        "tags": [
+          "PasswordService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmResetPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects": {
+      "post": {
+        "tags": [
+          "ProjectService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProjectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateProjectResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "ProjectService"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetProjectListResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectId}": {
+      "delete": {
+        "tags": [
+          "ProjectService"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "ProjectService"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetProjectResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/registration/password": {
+      "post": {
+        "tags": [
+          "RegistrationService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterByPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterByPasswordResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/registration/complete": {
+      "post": {
+        "tags": [
+          "RegistrationService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteRegistrationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompleteRegistrationResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/registration/resend": {
+      "post": {
+        "tags": [
+          "RegistrationService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendConfirmationCodeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResendConfirmationCodeResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectId}/scenario/draft": {
+      "put": {
+        "tags": [
+          "ScenarioGraphService"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateScenarioDraftRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "ScenarioGraphService"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetScenarioDraftResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectId}/scenario/promote": {
+      "post": {
+        "tags": [
+          "ScenarioGraphService"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromoteToReleaseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectId}/scenario/rollback": {
+      "post": {
+        "tags": [
+          "ScenarioGraphService"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RollbackReleaseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectId}/scenario/versions/{version}": {
+      "delete": {
+        "tags": [
+          "ScenarioGraphService"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "ScenarioGraphService"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetScenarioByVersionResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectId}/scenario/release": {
+      "get": {
+        "tags": [
+          "ScenarioGraphService"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetReleasedScenarioResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/nodes/catalog": {
+      "get": {
+        "tags": [
+          "ScenarioGraphService"
+        ],
+        "parameters": [
+          {
+            "name": "platformType",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PlatformType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetNodeCatalogResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectId}/scenario/versions": {
+      "get": {
+        "tags": [
+          "ScenarioGraphService"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetVersionHistoryResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectId}/user-data/records": {
+      "get": {
+        "tags": [
+          "UserDataService"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "schemaId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scenarioVersion",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "botId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "platformUserId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeArchived",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageOffset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetUserDataRecordsResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/refresh": {
+      "post": {
+        "tags": [
+          "UserSessionService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshSessionResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/logout": {
+      "post": {
+        "tags": [
+          "UserSessionService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/logout-all": {
+      "post": {
+        "tags": [
+          "UserSessionService"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutAllRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Empty"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions": {
+      "get": {
+        "tags": [
+          "UserSessionService"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetSessionsResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActivateBotRequest": {
+        "type": "object",
+        "properties": {
+          "botInstanceId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AddFactorRequest": {
+        "type": "object",
+        "properties": {
+          "factor": {
+            "$ref": "#/components/schemas/MfaFactorType"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AddFactorResponse": {
+        "type": "object",
+        "properties": {
+          "totp": {
+            "$ref": "#/components/schemas/TotpSetup"
+          },
+          "email": {
+            "$ref": "#/components/schemas/EmailMfaSetup"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Any": {
+        "required": [
+          "@type"
+        ],
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": {
+          "$ref": "#/components/schemas/Value"
+        }
+      },
+      "BindBotToProjectRequest": {
+        "type": "object",
+        "properties": {
+          "botInstanceId": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "scenarioVersion": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "BotListItem": {
+        "type": "object",
+        "properties": {
+          "botInstanceId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "platformType": {
+            "$ref": "#/components/schemas/BotPlatformType"
+          },
+          "maskedAccessToken": {
+            "type": "string"
+          },
+          "communityId": {
+            "type": "string"
+          },
+          "scenarioVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BotStatus"
+          },
+          "projectId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "BotPlatformType": {
+        "enum": [
+          "Bot_PLATFORM_TYPE_UNSPECIFIED",
+          "Bot_PLATFORM_TYPE_VK",
+          "Bot_PLATFORM_TYPE_TELEGRAM"
+        ],
+        "type": "string"
+      },
+      "BotStatus": {
+        "enum": [
+          "BOT_STATUS_UNSPECIFIED",
+          "BOT_STATUS_INACTIVE",
+          "BOT_STATUS_ACTIVE"
+        ],
+        "type": "string"
+      },
+      "ChangeBotScenarioVersionRequest": {
+        "type": "object",
+        "properties": {
+          "botInstanceId": {
+            "type": "string"
+          },
+          "newScenarioVersion": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string"
+          },
+          "mfaSessionId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChangePasswordResponse": {
+        "type": "object",
+        "properties": {
+          "challenge": {
+            "$ref": "#/components/schemas/MfaChallenge"
+          },
+          "success": {
+            "$ref": "#/components/schemas/Empty"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CompleteRegistrationRequest": {
+        "type": "object",
+        "properties": {
+          "otpId": {
+            "type": "string"
+          },
+          "otpCode": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CompleteRegistrationResponse": {
+        "type": "object",
+        "properties": {
+          "tokens": {
+            "$ref": "#/components/schemas/TokenPair"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmEmail": {
+        "type": "object",
+        "properties": {
+          "otpId": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmFactorRequest": {
+        "type": "object",
+        "properties": {
+          "factor": {
+            "$ref": "#/components/schemas/MfaFactorType"
+          },
+          "totp": {
+            "$ref": "#/components/schemas/ConfirmTotp"
+          },
+          "email": {
+            "$ref": "#/components/schemas/ConfirmEmail"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmFactorResponse": {
+        "type": "object",
+        "properties": {
+          "backupCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmResetPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "newPassword": {
+            "type": "string"
+          },
+          "otp": {
+            "$ref": "#/components/schemas/OtpConfirmation"
+          },
+          "mfa": {
+            "$ref": "#/components/schemas/MfaConfirmation"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmTotp": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateBotRequest": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "platformType": {
+            "$ref": "#/components/schemas/BotPlatformType"
+          },
+          "accessToken": {
+            "type": "string"
+          },
+          "communityId": {
+            "type": "string"
+          },
+          "scenarioVersion": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateBotResponse": {
+        "type": "object",
+        "properties": {
+          "botInstanceId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateBotWithoutProjectRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "platformType": {
+            "$ref": "#/components/schemas/BotPlatformType"
+          },
+          "accessToken": {
+            "type": "string"
+          },
+          "communityId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateEntitySchemaRequest": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateEntitySchemaResponse": {
+        "type": "object",
+        "properties": {
+          "schemaId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateProjectRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "platformType": {
+            "$ref": "#/components/schemas/PlatformType"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateProjectResponse": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DeactivateBotRequest": {
+        "type": "object",
+        "properties": {
+          "botInstanceId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EmailMfaSetup": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "$ref": "#/components/schemas/EmailMfaSetupSuccess"
+          },
+          "otpId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EmailMfaSetupSuccess": {
+        "type": "object",
+        "properties": {
+          "backupCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "Empty": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "EntityFieldItem": {
+        "type": "object",
+        "properties": {
+          "fieldId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "fieldType": {
+            "$ref": "#/components/schemas/FieldType"
+          },
+          "isRequired": {
+            "type": "boolean"
+          },
+          "defaultValue": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EntitySchemaListItem": {
+        "type": "object",
+        "properties": {
+          "schemaId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ExternalProvider": {
+        "enum": [
+          "EXTERNAL_PROVIDER_UNSPECIFIED",
+          "EXTERNAL_PROVIDER_YANDEX"
+        ],
+        "type": "string"
+      },
+      "FieldType": {
+        "enum": [
+          "FIELD_TYPE_UNSPECIFIED",
+          "FIELD_TYPE_STRING",
+          "FIELD_TYPE_NUMBER",
+          "FIELD_TYPE_BOOLEAN",
+          "FIELD_TYPE_DATE_TIME",
+          "FIELD_TYPE_REFERENCE",
+          "FIELD_TYPE_ENUM"
+        ],
+        "type": "string"
+      },
+      "GetBotResponse": {
+        "type": "object",
+        "properties": {
+          "botInstanceId": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "platformType": {
+            "$ref": "#/components/schemas/BotPlatformType"
+          },
+          "maskedAccessToken": {
+            "type": "string"
+          },
+          "communityId": {
+            "type": "string"
+          },
+          "scenarioVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BotStatus"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetBotsByProjectResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BotListItem"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetBotsByUserIdResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BotListItem"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetEntitySchemaListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EntitySchemaListItem"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetEntitySchemaResponse": {
+        "type": "object",
+        "properties": {
+          "schemaId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EntityFieldItem"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetFactorsResponse": {
+        "type": "object",
+        "properties": {
+          "factors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MfaFactorType"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetLinkedProvidersResponse": {
+        "type": "object",
+        "properties": {
+          "providers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExternalProvider"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetNodeCatalogResponse": {
+        "type": "object",
+        "properties": {
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NodeCatalogItem"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetProjectListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectListItem"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetProjectResponse": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "platformType": {
+            "$ref": "#/components/schemas/PlatformType"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetReleasedScenarioResponse": {
+        "type": "object",
+        "properties": {
+          "scenarioGraphId": {
+            "type": "string"
+          },
+          "graphJson": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetScenarioByVersionResponse": {
+        "type": "object",
+        "properties": {
+          "scenarioGraphId": {
+            "type": "string"
+          },
+          "graphJson": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetScenarioDraftResponse": {
+        "type": "object",
+        "properties": {
+          "scenarioGraphId": {
+            "type": "string"
+          },
+          "graphJson": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetSessionsResponse": {
+        "type": "object",
+        "properties": {
+          "sessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionInfo"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetStatusResponse": {
+        "type": "object",
+        "properties": {
+          "isCompleted": {
+            "type": "boolean"
+          },
+          "isExpired": {
+            "type": "boolean"
+          },
+          "availableFactors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MfaFactorType"
+            }
+          },
+          "completedFactors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MfaFactorType"
+            }
+          },
+          "requiredFactorCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetUserDataRecordsResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserDataRecordItem"
+            }
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetVersionHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VersionItem"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "KindOneofCase": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "LinkProviderRequest": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "$ref": "#/components/schemas/ExternalProvider"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ListValue": {
+        "type": "object",
+        "properties": {
+          "values": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Value"
+            },
+            "nullable": true,
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "LoginByExternalProviderRequest": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "$ref": "#/components/schemas/ExternalProvider"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LoginByExternalProviderResponse": {
+        "type": "object",
+        "properties": {
+          "tokens": {
+            "$ref": "#/components/schemas/TokenPair"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LoginByPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "mfaSessionId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LoginByPasswordResponse": {
+        "type": "object",
+        "properties": {
+          "challenge": {
+            "$ref": "#/components/schemas/MfaChallenge"
+          },
+          "tokens": {
+            "$ref": "#/components/schemas/TokenPair"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LogoutAllRequest": {
+        "type": "object",
+        "properties": {
+          "excludeCurrentSession": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LogoutRequest": {
+        "type": "object",
+        "properties": {
+          "refreshTokenId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MfaChallenge": {
+        "type": "object",
+        "properties": {
+          "mfaSessionId": {
+            "type": "string"
+          },
+          "requiredFactorCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "availableFactors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MfaFactorType"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "MfaConfirmation": {
+        "type": "object",
+        "properties": {
+          "mfaSessionId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MfaFactorType": {
+        "enum": [
+          "MFA_FACTOR_TYPE_UNSPECIFIED",
+          "MFA_FACTOR_TYPE_TOTP",
+          "MFA_FACTOR_TYPE_EMAIL",
+          "MFA_FACTOR_TYPE_BACKUP_CODE"
+        ],
+        "type": "string"
+      },
+      "MfaSessionAction": {
+        "enum": [
+          "MFA_SESSION_ACTION_UNSPECIFIED",
+          "MFA_SESSION_ACTION_LOGIN",
+          "MFA_SESSION_ACTION_REMOVE_FACTOR",
+          "MFA_SESSION_ACTION_REGENERATE_BACKUP_CODES",
+          "MFA_SESSION_ACTION_CHANGE_PASSWORD"
+        ],
+        "type": "string"
+      },
+      "NodeCatalogItem": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NodeParamItem"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "NodeParamItem": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/NodeParamType"
+          },
+          "isRequired": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NodeParamItem"
+            }
+          },
+          "enumValues": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "NodeParamType": {
+        "enum": [
+          "NODE_PARAM_TYPE_UNSPECIFIED",
+          "NODE_PARAM_TYPE_STRING",
+          "NODE_PARAM_TYPE_INT",
+          "NODE_PARAM_TYPE_BOOL",
+          "NODE_PARAM_TYPE_STRING_DICTIONARY",
+          "NODE_PARAM_TYPE_STRING_LIST",
+          "NODE_PARAM_TYPE_OBJECT",
+          "NODE_PARAM_TYPE_ENUM",
+          "NODE_PARAM_TYPE_OBJECT_LIST",
+          "NODE_PARAM_TYPE_OBJECT_MATRIX"
+        ],
+        "type": "string"
+      },
+      "NullValue": {
+        "enum": [
+          0
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "OtpChallenge": {
+        "type": "object",
+        "properties": {
+          "otpId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OtpConfirmation": {
+        "type": "object",
+        "properties": {
+          "otpId": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlatformType": {
+        "enum": [
+          "PLATFORM_TYPE_UNSPECIFIED",
+          "PLATFORM_TYPE_UNIVERSAL",
+          "PLATFORM_TYPE_VK",
+          "PLATFORM_TYPE_TELEGRAM"
+        ],
+        "type": "string"
+      },
+      "ProjectListItem": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "platformType": {
+            "$ref": "#/components/schemas/PlatformType"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PromoteToReleaseRequest": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RefreshSessionRequest": {
+        "type": "object",
+        "properties": {
+          "refreshTokenId": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RefreshSessionResponse": {
+        "type": "object",
+        "properties": {
+          "tokens": {
+            "$ref": "#/components/schemas/TokenPair"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegenerateBackupCodesRequest": {
+        "type": "object",
+        "properties": {
+          "mfaSessionId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegenerateBackupCodesResponse": {
+        "type": "object",
+        "properties": {
+          "backupCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegisterByPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegisterByPasswordResponse": {
+        "type": "object",
+        "properties": {
+          "otpId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RemoveFactorRequest": {
+        "type": "object",
+        "properties": {
+          "mfaSessionId": {
+            "type": "string"
+          },
+          "factor": {
+            "$ref": "#/components/schemas/MfaFactorType"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResendConfirmationCodeRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResendConfirmationCodeResponse": {
+        "type": "object",
+        "properties": {
+          "otpId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResetPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResetPasswordResponse": {
+        "type": "object",
+        "properties": {
+          "otp": {
+            "$ref": "#/components/schemas/OtpChallenge"
+          },
+          "mfa": {
+            "$ref": "#/components/schemas/MfaChallenge"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RollbackReleaseRequest": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string"
+          },
+          "targetVersion": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SendEmailCodeRequest": {
+        "type": "object",
+        "properties": {
+          "mfaSessionId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SendUnauthenticatedEmailCodeRequest": {
+        "type": "object",
+        "properties": {
+          "mfaSessionId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SessionInfo": {
+        "type": "object",
+        "properties": {
+          "refreshTokenId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SetPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "newPassword": {
+            "type": "string"
+          },
+          "mfaSessionId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SetPasswordResponse": {
+        "type": "object",
+        "properties": {
+          "challenge": {
+            "$ref": "#/components/schemas/MfaChallenge"
+          },
+          "success": {
+            "$ref": "#/components/schemas/Empty"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StartRequest": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/MfaSessionAction"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StartResponse": {
+        "type": "object",
+        "properties": {
+          "mfaSessionId": {
+            "type": "string"
+          },
+          "requiredFactorCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "availableFactors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MfaFactorType"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "Status": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Any"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "Struct": {
+        "type": "object",
+        "properties": {
+          "fields": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Value"
+            },
+            "nullable": true,
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TokenPair": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TotpSetup": {
+        "type": "object",
+        "properties": {
+          "provisioningUri": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UnbindBotFromProjectRequest": {
+        "type": "object",
+        "properties": {
+          "botInstanceId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateBotTokenRequest": {
+        "type": "object",
+        "properties": {
+          "botInstanceId": {
+            "type": "string"
+          },
+          "accessToken": {
+            "type": "string"
+          },
+          "communityId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateEntitySchemaRequest": {
+        "type": "object",
+        "properties": {
+          "schemaId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "fieldType": {
+            "$ref": "#/components/schemas/FieldType"
+          },
+          "isRequired": {
+            "type": "boolean"
+          },
+          "defaultValue": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateScenarioDraftRequest": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string"
+          },
+          "graphJson": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UserDataRecordItem": {
+        "type": "object",
+        "properties": {
+          "recordId": {
+            "type": "string"
+          },
+          "schemaId": {
+            "type": "string"
+          },
+          "schemaSnapshotId": {
+            "type": "string"
+          },
+          "schemaName": {
+            "type": "string"
+          },
+          "scenarioVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "botId": {
+            "type": "string"
+          },
+          "platformUserId": {
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "isArchived": {
+            "type": "boolean"
+          },
+          "dataJson": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "updatedAt": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Value": {
+        "type": "object",
+        "properties": {
+          "nullValue": {
+            "$ref": "#/components/schemas/NullValue"
+          },
+          "hasNullValue": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "numberValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "hasNumberValue": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "stringValue": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasStringValue": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "boolValue": {
+            "type": "boolean"
+          },
+          "hasBoolValue": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "structValue": {
+            "$ref": "#/components/schemas/Struct"
+          },
+          "listValue": {
+            "$ref": "#/components/schemas/ListValue"
+          },
+          "kindCase": {
+            "$ref": "#/components/schemas/KindOneofCase"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VerifyCodeRequest": {
+        "type": "object",
+        "properties": {
+          "mfaSessionId": {
+            "type": "string"
+          },
+          "factor": {
+            "$ref": "#/components/schemas/MfaFactorType"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VerifyCodeResponse": {
+        "type": "object",
+        "properties": {
+          "isCompleted": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VerifyUnauthenticatedCodeRequest": {
+        "type": "object",
+        "properties": {
+          "mfaSessionId": {
+            "type": "string"
+          },
+          "factor": {
+            "$ref": "#/components/schemas/MfaFactorType"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VerifyUnauthenticatedCodeResponse": {
+        "type": "object",
+        "properties": {
+          "isCompleted": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VersionItem": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

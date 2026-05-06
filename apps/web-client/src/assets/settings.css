@@ -1,0 +1,270 @@
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-section__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 4px;
+}
+
+/* Карточки */
+.settings-card {
+  background: var(--color-bg-card);
+  border: 0.5px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.settings-card__header {
+  padding: 18px 20px;
+  border-bottom: 0.5px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-card__header--row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-card__header--row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-card__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.settings-card__desc {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.settings-card__body {
+  padding: 18px 20px;
+}
+
+.settings-card__body--form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 340px;
+}
+
+.settings-card__body--list {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.settings-card__action-btn {
+  width: auto;
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.settings-card__action-btn--danger {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.settings-card__action-btn--danger:hover {
+  background: color-mix(in srgb, var(--color-danger) 6%, transparent);
+}
+
+/* Ошибки и успех */
+.settings-error {
+  font-size: 13px;
+  color: var(--color-error);
+  margin: 0;
+}
+
+.settings-success {
+  font-size: 13px;
+  color: #2d9a5f;
+  margin: 0;
+}
+
+/* Провайдеры */
+.settings-provider-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-provider-row__info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.settings-provider-row__btn {
+  width: auto;
+  padding: 7px 14px;
+  font-size: 12px;
+}
+
+/* Бейджи */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.badge--on {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+}
+
+.badge--off {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+}
+
+.badge--current {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+}
+
+/* MFA */
+.mfa-factors {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.factor-btn {
+  background: var(--color-bg-secondary);
+  border: 0.5px solid var(--color-border-input);
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.factor-btn:hover:not(:disabled) {
+  border-color: var(--color-primary);
+}
+
+.factor-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.factor-btn--secondary {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.factor-btn--secondary:hover:not(:disabled) {
+  color: var(--color-text);
+}
+
+.mfa-progress {
+  font-size: 13px;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.mfa-hint {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.mfa-actions {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 8px;
+}
+
+/* TOTP QR */
+.totp-qr {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.totp-qr img {
+  border-radius: 8px;
+  border: 0.5px solid var(--color-border);
+}
+
+/* Резервные коды */
+.backup-codes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.backup-code {
+  background: var(--color-bg-secondary);
+  border: 0.5px solid var(--color-border);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-family: monospace;
+  color: var(--color-text);
+  letter-spacing: 0.1em;
+}
+
+/* Сессии */
+.session-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 0.5px solid var(--color-border);
+}
+
+.session-row:last-child {
+  border-bottom: none;
+}
+
+.session-row__icon {
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.session-row__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.session-row__name {
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.session-row__date {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.session-row__logout {
+  color: var(--color-danger);
+  font-size: 12px;
+}

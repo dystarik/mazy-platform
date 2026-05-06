@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+import "common.proto";
+
+package mazy_platform.bot.manager.v1;
+
+option csharp_namespace = "MazyPlatform.Contracts.Bot.Grpc.Manager";
+
+// Внутренний сервис для service-bot-integration и service-scenario-engine.
+// Предоставляет доступ к credentials ботов и списку активных ботов.
+// НЕ доступен через публичный gateway. Защищён сервисным токеном в metadata.
+service BotInternalService {
+    // Возвращает поток активных ботов указанной платформы.
+    // Используется service-bot-integration на старте для синхронизации списка ботов,
+    // которые нужно поллить.
+    // Стрим завершается после отдачи всех найденных ботов.
+    // В выборку попадают только боты, привязанные к проекту и имеющие версию сценария.
+    rpc GetActiveBots (GetActiveBotsRequest) returns (stream ActiveBotInfo);
+
+    // Возвращает credentials конкретного бота.
+    // Используется service-scenario-engine при отправке сообщений в платформу,
+    // и service-bot-integration при обработке push-событий BotInstanceTokenChanged
+    // и BotInstanceActivated.
+    // Возвращает токен в открытом виде — каналы между сервисами считаются доверенными.
+    rpc GetBotCredentials (GetBotCredentialsRequest) returns (GetBotCredentialsResponse);
+
+    // Проверяет, есть ли хотя бы один бот, привязанный к указанной версии сценария проекта.
+    // Используется service-scenario-repository перед удалением версии сценария:
+    // если на версии есть привязанные боты — удаление запрещается, чтобы избежать
+    // рассинхрона между сервисами.
+    rpc HasBotsOnScenarioVersion (HasBotsOnScenarioVersionRequest) returns (HasBotsOnScenarioVersionResponse);
+}
+
+// Запрос на получение потока активных ботов.
+message GetActiveBotsRequest {
+    // Платформа, ботов которой нужно получить.
+    BotPlatformType platform_type = 1;
+}
+
+// Информация об активном боте, отдаваемая в потоке.
+message ActiveBotInfo {
+    // Идентификатор бота.
+    string bot_instance_id = 1;
+    // Идентификатор проекта, к которому привязан бот.
+    string project_id = 2;
+    // Назначенная версия сценария.
+    int32 scenario_version = 3;
+    // Credentials бота с открытым токеном.
+    BotCredentials credentials = 4;
+}
+
+// Запрос на получение credentials бота.
+message GetBotCredentialsRequest {
+    // Идентификатор бота.
+    string bot_instance_id = 1;
+}
+
+// Ответ с credentials бота.
+message GetBotCredentialsResponse {
+    // Credentials бота с открытым токеном.
+    BotCredentials credentials = 1;
+}
+
+// Запрос на проверку наличия ботов на указанной версии сценария проекта.
+message HasBotsOnScenarioVersionRequest {
+    // Идентификатор проекта.
+    string project_id = 1;
+    // Версия сценария, наличие ботов на которой нужно проверить.
+    int32 scenario_version = 2;
+}
+
+// Ответ с результатом проверки.
+message HasBotsOnScenarioVersionResponse {
+    // True, если хотя бы один бот привязан к указанной версии сценария проекта.
+    bool has_bots = 1;
+}

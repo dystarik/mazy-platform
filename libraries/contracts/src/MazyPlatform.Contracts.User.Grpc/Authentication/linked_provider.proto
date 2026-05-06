@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "common.proto";
+
+package mazy_platform.user.authentication.v1;
+
+option csharp_namespace = "MazyPlatform.Contracts.User.Grpc.Authentication";
+
+// Сервис управления привязанными внешними провайдерами.
+service LinkedProviderService {
+    // Привязка внешнего провайдера к аккаунту.
+    rpc LinkProvider (LinkProviderRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/linked-providers"
+            body: "*"
+        };
+    }
+
+    // Отвязка внешнего провайдера от аккаунта.
+    rpc UnlinkProvider (UnlinkProviderRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/api/v1/linked-providers/{provider}"
+        };
+    }
+
+    // Получение списка привязанных провайдеров.
+    rpc GetLinkedProviders (google.protobuf.Empty) returns (GetLinkedProvidersResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/linked-providers"
+        };
+    }
+}
+
+// Запрос на привязку провайдера.
+message LinkProviderRequest {
+    // Внешний провайдер.
+    ExternalProvider provider = 1;
+    // Код авторизации от провайдера.
+    string code = 2;
+}
+
+// Запрос на отвязку провайдера.
+message UnlinkProviderRequest {
+    // Внешний провайдер.
+    ExternalProvider provider = 1;
+}
+
+// Ответ на получение списка привязанных провайдеров.
+message GetLinkedProvidersResponse {
+    // Список привязанных провайдеров.
+    repeated ExternalProvider providers = 1;
+}

@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+import "common.proto";
+
+package mazy_platform.user.authentication.v1;
+
+option csharp_namespace = "MazyPlatform.Contracts.User.Grpc.Authentication";
+
+// Сервис аутентификации пользователей.
+service AuthenticationService {
+    // Вход по email и паролю.
+    // Возвращает токены при успешном входе или MFA challenge если требуется дополнительная аутентификация.
+    rpc LoginByPassword (LoginByPasswordRequest) returns (LoginByPasswordResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/auth/login/password"
+            body: "*"
+        };
+    }
+
+    // Вход через внешнего провайдера.
+    // Возвращает токены при успешном входе.
+    rpc LoginByExternalProvider (LoginByExternalProviderRequest) returns (LoginByExternalProviderResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/auth/login/external-provider"
+            body: "*"
+        };
+    }
+}
+
+// Запрос на вход по email и паролю.
+message LoginByPasswordRequest {
+    // Email пользователя.
+    string email = 1;
+    // Пароль пользователя.
+    string password = 2;
+    // ID MFA сессии. Передаётся при повторном запросе после прохождения MFA.
+    optional string mfa_session_id = 3;
+}
+
+// Ответ на вход по email и паролю.
+message LoginByPasswordResponse {
+    oneof result {
+        // MFA challenge если требуется дополнительная аутентификация.
+        MfaChallenge challenge = 1;
+        // Токены при успешном входе.
+        TokenPair tokens = 2;
+    }
+}
+
+// Запрос на вход через внешнего провайдера.
+message LoginByExternalProviderRequest {
+    // Внешний провайдер.
+    ExternalProvider provider = 1;
+    // Код авторизации от провайдера.
+    string code = 2;
+}
+
+// Ответ на вход через внешнего провайдера.
+message LoginByExternalProviderResponse {
+    // Токены при успешном входе.
+    TokenPair tokens = 1;
+}

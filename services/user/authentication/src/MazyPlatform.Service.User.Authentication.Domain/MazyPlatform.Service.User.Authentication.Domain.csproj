@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <PackageReference Include="MazyPlatform.SharedKernel.Domain" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+        <PackageReference Include="Scrutor" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="MazyPlatform.Service.User.Authentication.Domain.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="**\*Output.cs">
+            <DependentUpon>$([System.String]::Copy('%(Filename)').Replace('Output', 'Service')).cs</DependentUpon>
+        </Compile>
+    </ItemGroup>
+
+</Project>

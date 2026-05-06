@@ -1,0 +1,19 @@
+{
+    "profiles": {
+        "MazyPlatform.Service.Notification": {
+            "commandName": "Project",
+            "environmentVariables": {
+                "DOTNET_ENVIRONMENT": "Development",
+                "MetricsPort": "9092"
+            },
+            "dotnetRunMessages": true
+        },
+        "Container (Dockerfile)": {
+            "commandName": "Docker",
+            "environmentVariables": {
+                "MetricsPort": "9090"
+            }
+        }
+    },
+    "$schema": "https://json.schemastore.org/launchsettings.json"
+}

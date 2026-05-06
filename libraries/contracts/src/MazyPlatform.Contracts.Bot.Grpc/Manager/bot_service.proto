@@ -1,0 +1,276 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "common.proto";
+
+package mazy_platform.bot.manager.v1;
+
+option csharp_namespace = "MazyPlatform.Contracts.Bot.Grpc.Manager";
+
+// Сервис управления ботами.
+// Предоставляет публичный API для создания, чтения, изменения и удаления ботов,
+// привязанных к проектам пользователя.
+service BotService {
+    // Создаёт нового бота и привязывает его к указанному проекту с указанной версией сценария.
+    // Токен доступа сохраняется в зашифрованном виде. Бот создаётся в статусе Inactive.
+    rpc CreateBot (CreateBotRequest) returns (CreateBotResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/bots"
+            body: "*"
+        };
+    }
+
+    // Создаёт нового бота без привязки к проекту и версии сценария.
+    // Токен доступа сохраняется в зашифрованном виде. Бот создаётся в статусе Inactive.
+    rpc CreateBotWithoutProject (CreateBotWithoutProjectRequest) returns (CreateBotResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/bots/standalone"
+            body: "*"
+        };
+    }
+
+    // Возвращает информацию о боте по его идентификатору.
+    // Токен доступа возвращается в маскированном виде.
+    // Если бот не принадлежит запрашивающему пользователю — возвращает NotFound.
+    rpc GetBot (GetBotRequest) returns (GetBotResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/bots/{bot_instance_id}"
+        };
+    }
+
+    // Возвращает список ботов, привязанных к указанному проекту.
+    // Возвращаются только боты, принадлежащие запрашивающему пользователю.
+    // Токены в ответе маскированы.
+    rpc GetBotsByProject (GetBotsByProjectRequest) returns (GetBotsByProjectResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/projects/{project_id}/bots"
+        };
+    }
+
+    // Возвращает список всех ботов текущего пользователя,
+    // включая непривязанных к проекту.
+    rpc GetBotsByUserId (google.protobuf.Empty) returns (GetBotsByUserIdResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/bots"
+        };
+    }
+
+    // Привязывает существующего бота к проекту и версии сценария.
+    // Используется для ранее созданных ботов без проекта.
+    rpc BindBotToProject (BindBotToProjectRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/bots/{bot_instance_id}/bind"
+            body: "*"
+        };
+    }
+
+    // Отвязывает бота от проекта и версии сценария.
+    // Если бот был активен, он автоматически деактивируется.
+    rpc UnbindBotFromProject (UnbindBotFromProjectRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/bots/{bot_instance_id}/unbind"
+            body: "*"
+        };
+    }
+
+    // Активирует бота.
+    // Бот должен быть привязан к проекту и иметь заданную версию сценария.
+    // После активации service-bot-integration начинает поллить платформу для получения событий.
+    rpc ActivateBot (ActivateBotRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/bots/{bot_instance_id}/activate"
+            body: "*"
+        };
+    }
+
+    // Деактивирует бота.
+    // После деактивации service-bot-integration перестаёт поллить платформу.
+    // Конфигурация бота (токен, проект, версия) сохраняется и может быть активирована повторно.
+    rpc DeactivateBot (DeactivateBotRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/bots/{bot_instance_id}/deactivate"
+            body: "*"
+        };
+    }
+
+    // Обновляет credentials бота — токен доступа и платформо-зависимые данные (community_id для VK).
+    // Статус бота не меняется: активный бот остаётся активным, неактивный — неактивным.
+    // service-bot-integration получает уведомление и инвалидирует свой кеш токена для этого бота.
+    rpc UpdateBotToken (UpdateBotTokenRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            put: "/api/v1/bots/{bot_instance_id}/token"
+            body: "*"
+        };
+    }
+
+    // Изменяет назначенную боту версию сценария.
+    // Версия валидируется в service-scenario-repository — должна существовать в проекте бота.
+    // Бот должен быть привязан к проекту.
+    rpc ChangeBotScenarioVersion (ChangeBotScenarioVersionRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            put: "/api/v1/bots/{bot_instance_id}/scenario-version"
+            body: "*"
+        };
+    }
+
+    // Удаляет бота.
+    // Перед физическим удалением публикует BotInstanceDeletedIntegrationEvent,
+    // чтобы service-bot-integration и service-scenario-engine удалили бота из своих кешей.
+    rpc DeleteBot (DeleteBotRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/api/v1/bots/{bot_instance_id}"
+        };
+    }
+}
+
+// Запрос на создание бота.
+message CreateBotRequest {
+    // Идентификатор проекта, к которому привязывается бот.
+    string project_id = 1;
+    // Отображаемое название бота. Длина до 256 символов.
+    string name = 2;
+    // Платформа, на которой работает бот.
+    BotPlatformType platform_type = 3;
+    // Токен доступа к API платформы. Будет сохранён в зашифрованном виде.
+    string access_token = 4;
+    // Идентификатор сообщества на платформе. Обязателен для VK.
+    optional string community_id = 5;
+    // Версия сценария, с которой будет работать бот.
+    int32 scenario_version = 6;
+}
+
+// Запрос на создание бота без привязки к проекту.
+message CreateBotWithoutProjectRequest {
+    // Отображаемое название бота. Длина до 256 символов.
+    string name = 1;
+    // Платформа, на которой работает бот.
+    BotPlatformType platform_type = 2;
+    // Токен доступа к API платформы. Будет сохранён в зашифрованном виде.
+    string access_token = 3;
+    // Идентификатор сообщества на платформе. Обязателен для VK.
+    optional string community_id = 4;
+}
+
+// Ответ на создание бота.
+message CreateBotResponse {
+    // Идентификатор созданного бота.
+    string bot_instance_id = 1;
+}
+
+// Запрос на получение информации о боте.
+message GetBotRequest {
+    // Идентификатор бота.
+    string bot_instance_id = 1;
+}
+
+// Ответ с информацией о боте.
+// Токен доступа возвращается в маскированном виде.
+message GetBotResponse {
+    // Идентификатор бота.
+    string bot_instance_id = 1;
+    // Идентификатор проекта. Null если бот отвязан от проекта.
+    optional string project_id = 2;
+    // Отображаемое название бота.
+    string name = 3;
+    // Платформа, на которой работает бот.
+    BotPlatformType platform_type = 4;
+    // Маскированный токен доступа в формате "vk1.a.****wxyz".
+    string masked_access_token = 5;
+    // Идентификатор сообщества на платформе. Заполнен только для VK.
+    optional string community_id = 6;
+    // Назначенная версия сценария. Null если бот отвязан от проекта.
+    optional int32 scenario_version = 7;
+    // Текущий статус бота.
+    BotStatus status = 8;
+}
+
+// Запрос на получение списка ботов проекта.
+message GetBotsByProjectRequest {
+    // Идентификатор проекта.
+    string project_id = 1;
+}
+
+// Ответ со списком ботов проекта.
+message GetBotsByProjectResponse {
+    // Список ботов, привязанных к проекту.
+    repeated BotListItem items = 1;
+}
+
+// Ответ со списком всех ботов текущего пользователя.
+message GetBotsByUserIdResponse {
+    // Список ботов пользователя, включая непривязанных к проекту.
+    repeated BotListItem items = 1;
+}
+
+// Запрос на привязку бота к проекту.
+message BindBotToProjectRequest {
+    // Идентификатор бота.
+    string bot_instance_id = 1;
+    // Идентификатор проекта, к которому привязывается бот.
+    string project_id = 2;
+    // Версия сценария, с которой будет работать бот.
+    int32 scenario_version = 3;
+}
+
+// Запрос на отвязку бота от проекта.
+message UnbindBotFromProjectRequest {
+    // Идентификатор бота.
+    string bot_instance_id = 1;
+}
+
+// Элемент списка ботов.
+message BotListItem {
+    // Идентификатор бота.
+    string bot_instance_id = 1;
+    // Отображаемое название бота.
+    string name = 2;
+    // Платформа, на которой работает бот.
+    BotPlatformType platform_type = 3;
+    // Маскированный токен доступа.
+    string masked_access_token = 4;
+    // Идентификатор сообщества. Заполнен только для VK.
+    optional string community_id = 5;
+    // Назначенная версия сценария.
+    optional int32 scenario_version = 6;
+    // Текущий статус бота.
+    BotStatus status = 7;
+    // Идентификатор проекта. Null если бот не привязан к проекту.
+    optional string project_id = 8;
+}
+
+// Запрос на активацию бота.
+message ActivateBotRequest {
+    // Идентификатор бота.
+    string bot_instance_id = 1;
+}
+
+// Запрос на деактивацию бота.
+message DeactivateBotRequest {
+    // Идентификатор бота.
+    string bot_instance_id = 1;
+}
+
+// Запрос на обновление токена доступа бота.
+message UpdateBotTokenRequest {
+    // Идентификатор бота.
+    string bot_instance_id = 1;
+    // Новый токен доступа.
+    string access_token = 2;
+    // Новый идентификатор сообщества. Обязателен для ботов на платформе VK.
+    optional string community_id = 3;
+}
+
+// Запрос на изменение версии сценария бота.
+message ChangeBotScenarioVersionRequest {
+    // Идентификатор бота.
+    string bot_instance_id = 1;
+    // Новая версия сценария. Должна существовать в проекте, к которому привязан бот.
+    int32 new_scenario_version = 2;
+}
+
+// Запрос на удаление бота.
+message DeleteBotRequest {
+    // Идентификатор бота.
+    string bot_instance_id = 1;
+}

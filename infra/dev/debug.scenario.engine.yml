@@ -1,0 +1,8 @@
+services:
+  mongodb:
+    ports:
+      - "27017:27017"
+
+  scenario-engine:
+    profiles:
+      - disabled

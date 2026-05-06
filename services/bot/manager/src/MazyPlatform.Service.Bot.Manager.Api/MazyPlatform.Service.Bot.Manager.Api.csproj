@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <DockerfileContext>..\..</DockerfileContext>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Grpc.AspNetCore" />
+        <PackageReference Include="MazyPlatform.Contracts.Bot.Grpc" />
+        <PackageReference Include="MazyPlatform.SharedKernel.Api" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
+        <PackageReference Include="prometheus-net.AspNetCore" />
+        <PackageReference Include="prometheus-net.AspNetCore.Grpc" />
+        <PackageReference Include="Serilog" />
+        <PackageReference Include="Serilog.AspNetCore" />
+        <PackageReference Include="Serilog.Enrichers.Environment" />
+        <PackageReference Include="Serilog.Enrichers.Thread" />
+        <PackageReference Include="Serilog.Settings.Configuration" />
+        <PackageReference Include="Serilog.Sinks.Async" />
+        <PackageReference Include="Serilog.Sinks.Console" />
+        <PackageReference Include="Serilog.Sinks.Grafana.Loki" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MazyPlatform.Service.Bot.Manager.Application\MazyPlatform.Service.Bot.Manager.Application.csproj" />
+        <ProjectReference Include="..\MazyPlatform.Service.Bot.Manager.Domain\MazyPlatform.Service.Bot.Manager.Domain.csproj" />
+        <ProjectReference Include="..\MazyPlatform.Service.Bot.Manager.Infrastructure\MazyPlatform.Service.Bot.Manager.Infrastructure.csproj" />
+    </ItemGroup>
+
+</Project>

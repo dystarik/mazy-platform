@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MazyPlatform.Service.User.Authentication.Api/MazyPlatform.Service.User.Authentication.Api.csproj" />
+    <Project Path="src/MazyPlatform.Service.User.Authentication.Application/MazyPlatform.Service.User.Authentication.Application.csproj" />
+    <Project Path="src/MazyPlatform.Service.User.Authentication.Domain/MazyPlatform.Service.User.Authentication.Domain.csproj" />
+    <Project Path="src/MazyPlatform.Service.User.Authentication.Infrastructure/MazyPlatform.Service.User.Authentication.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MazyPlatform.Service.User.Authentication.Domain.Tests/MazyPlatform.Service.User.Authentication.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

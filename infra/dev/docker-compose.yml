@@ -1,0 +1,361 @@
+name: mazy-platform-dev
+
+networks:
+  mazy-network:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB_AUTH}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: "local"
+    networks:
+      - mazy-network
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: "local"
+    networks:
+      - mazy-network
+
+  mongodb:
+    image: mongo:8
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    logging:
+      driver: "local"
+    networks:
+      - mazy-network
+
+  loki:
+    image: grafana/loki:3.6.7
+    volumes:
+      - ./monitoring/loki-config.yaml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    logging:
+      driver: "local"
+    networks:
+      - mazy-network
+
+  prometheus:
+    image: prom/prometheus:v3
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    logging:
+      driver: "local"
+    networks:
+      - mazy-network
+
+  docker-stats-exporter:
+    build:
+      context: ./monitoring/docker-stats-exporter
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    logging:
+      driver: "local"
+    networks:
+      - mazy-network
+
+  grafana:
+    image: grafana/grafana:13.0.1
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+    volumes:
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
+      - docker-stats-exporter
+    logging:
+      driver: "local"
+    networks:
+      - mazy-network
+
+  authentication-migration:
+    build:
+      context: ../../services/user/authentication
+      dockerfile: Dockerfile
+      target: migration
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB_AUTH};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      TotpEncryption__Key: ${TOTP_ENCRYPTION_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - mazy-network
+
+  authentication:
+    build:
+      context: ../../services/user/authentication
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      MetricsPort: "9090"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB_AUTH};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      Jwt__SecretKey: ${JWT_SECRET_KEY}
+      TotpEncryption__Key: ${TOTP_ENCRYPTION_KEY}
+      ExternalProviders__Yandex__ClientId: ${ExternalProviders_Yandex_ClientId}
+      ExternalProviders__Yandex__ClientSecret: ${ExternalProviders_Yandex_ClientSecret}
+      ExternalProviders__Yandex__RedirectUri: ${ExternalProviders_Yandex_RedirectUri}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      authentication-migration:
+        condition: service_completed_successfully
+    logging:
+      driver: "local"
+    networks:
+      - mazy-network
+
+  notification:
+    build:
+      context: ../../services/notification
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      MetricsPort: "9090"
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      Email__Username: ${EMAIL_USERNAME}
+      Email__Password: ${EMAIL_PASSWORD}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    logging:
+      driver: "local"
+    networks:
+      - mazy-network
+
+  scenario-engine:
+    build:
+      context: ../../services/scenario/engine
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      MetricsPort: "9090"
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      MongoDb__ConnectionString: "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017"
+      MongoDb__DatabaseName: ${MONGO_DB_SCENARIO}
+      Vk__ApiVersion: ${VK_API_VERSION}
+      BotManager__Address: "http://bot-manager:5102"
+      BotManager__AccessToken: ${INTERNAL_API_TOKEN_BOT_MANAGER}
+      ScenarioRepository__Address: "http://scenario-repository:6101"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+      bot-manager:
+        condition: service_started
+      scenario-repository:
+        condition: service_started
+    logging:
+      driver: "local"
+    networks:
+      - mazy-network
+
+  bot-integration:
+    build:
+      context: ../../services/bot/integration
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      MetricsPort: "9090"
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      BotManager__Address: "http://bot-manager:5102"
+      BotManager__AccessToken: ${INTERNAL_API_TOKEN_BOT_MANAGER}
+      Vk__ApiVersion: ${VK_API_VERSION}
+      Vk__WaitSeconds: ${VK_WAIT_SECONDS}
+      Telegram__TimeoutSeconds: "30"
+      Telegram__RetryDelaySeconds: "5"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      bot-manager:
+        condition: service_started
+    logging:
+      driver: "local"
+    networks:
+      - mazy-network
+
+  scenario-repository-migration:
+    build:
+      context: ../../services/scenario/repository
+      dockerfile: Dockerfile
+      target: migration
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB_SCENARIO};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - mazy-network
+
+  scenario-repository:
+    build:
+      context: ../../services/scenario/repository
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      MetricsPort: "9090"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB_SCENARIO};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      MongoDb__ConnectionString: "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017"
+      MongoDb__DatabaseName: ${MONGO_DB_SCENARIO}
+      InternalApi__AccessToken: ${INTERNAL_API_TOKEN_SCENARIO_REPOSITORY}
+      BotManager__Address: "http://bot-manager:5102"
+      BotManager__AccessToken: ${INTERNAL_API_TOKEN_BOT_MANAGER}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+      scenario-repository-migration:
+        condition: service_completed_successfully
+    logging:
+      driver: "local"
+    networks:
+      - mazy-network
+
+  bot-manager-migration:
+    build:
+      context: ../../services/bot/manager
+      dockerfile: Dockerfile
+      target: migration
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB_BOT};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      BotTokenEncryption__Key: ${BOT_TOKEN_ENCRYPTION_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - mazy-network
+
+  bot-manager:
+    build:
+      context: ../../services/bot/manager
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      MetricsPort: "9090"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB_BOT};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      InternalApi__AccessToken: ${INTERNAL_API_TOKEN_BOT_MANAGER}
+      BotTokenEncryption__Key: ${BOT_TOKEN_ENCRYPTION_KEY}
+      ScenarioRepository__Address: "http://scenario-repository:6102"
+      ScenarioRepository__AccessToken: ${INTERNAL_API_TOKEN_SCENARIO_REPOSITORY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      bot-manager-migration:
+        condition: service_completed_successfully
+      scenario-repository:
+        condition: service_started
+    logging:
+      driver: "local"
+    networks:
+      - mazy-network
+
+  gateway:
+    build:
+      context: ../../edge/gateway
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      Jwt__SecretKey: ${JWT_SECRET_KEY}
+      Cors__AllowedOrigins__0: ${CORS_ALLOWED_ORIGIN}
+      Services__Authentication: "http://authentication:8081"
+      Services__ScenarioRepository: "http://scenario-repository:6101"
+      Services__BotManager: "http://bot-manager:5101"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - authentication
+      - scenario-repository
+      - bot-manager
+    volumes:
+      - gateway_data_protection:/root/.aspnet/DataProtection-Keys
+    logging:
+      driver: "local"
+    networks:
+      - mazy-network
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  mongodb_data:
+  loki_data:
+  prometheus_data:
+  grafana_data:
+  gateway_data_protection:

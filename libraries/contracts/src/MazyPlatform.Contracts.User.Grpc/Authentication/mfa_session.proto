@@ -1,0 +1,142 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "common.proto";
+
+package mazy_platform.user.authentication.v1;
+
+option csharp_namespace = "MazyPlatform.Contracts.User.Grpc.Authentication";
+
+// Сервис управления MFA сессиями.
+service MfaSessionService {
+    // Создание MFA сессии для указанного действия.
+    // Возвращает ID сессии и доступные факторы.
+    rpc Start (StartRequest) returns (StartResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/mfa/sessions"
+            body: "*"
+        };
+    }
+
+    // Получение статуса MFA сессии.
+    rpc GetStatus (GetStatusRequest) returns (GetStatusResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/mfa/sessions/{mfa_session_id}/status"
+        };
+    }
+
+    // Отправка кода на email для прохождения MFA.
+    rpc SendEmailCode (SendEmailCodeRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/mfa/sessions/{mfa_session_id}/email/send"
+            body: "*"
+        };
+    }
+
+    // Верификация кода для прохождения MFA фактора.
+    // Возвращает статус завершения сессии.
+    rpc VerifyCode (VerifyCodeRequest) returns (VerifyCodeResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/mfa/sessions/{mfa_session_id}/verify"
+            body: "*"
+        };
+    }
+
+    // Отправка кода на email для неаутентифицированного пользователя.
+    rpc SendUnauthenticatedEmailCode (SendUnauthenticatedEmailCodeRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/mfa/sessions/{mfa_session_id}/email/send-unauthenticated"
+            body: "*"
+        };
+    }
+
+    // Верификация кода для неаутентифицированного пользователя.
+    // Возвращает статус завершения сессии.
+    rpc VerifyUnauthenticatedCode (VerifyUnauthenticatedCodeRequest) returns (VerifyUnauthenticatedCodeResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/mfa/sessions/{mfa_session_id}/verify-unauthenticated"
+            body: "*"
+        };
+    }
+}
+
+// Запрос на создание MFA сессии.
+message StartRequest {
+    // Действие для которого создаётся MFA сессия.
+    MfaSessionAction action = 1;
+}
+
+// Ответ на создание MFA сессии.
+message StartResponse {
+    // ID созданной MFA сессии.
+    string mfa_session_id = 1;
+    // Количество факторов которые нужно подтвердить.
+    int32 required_factor_count = 2;
+    // Доступные факторы для подтверждения.
+    repeated MfaFactorType available_factors = 3;
+}
+
+// Запрос на отправку кода на email.
+message SendEmailCodeRequest {
+    // ID MFA сессии.
+    string mfa_session_id = 1;
+}
+
+// Запрос на отправку кода на email для неаутентифицированного пользователя.
+message SendUnauthenticatedEmailCodeRequest {
+    // ID MFA сессии.
+    string mfa_session_id = 1;
+}
+
+// Запрос на верификацию кода MFA фактора.
+message VerifyCodeRequest {
+    // ID MFA сессии.
+    string mfa_session_id = 1;
+    // Тип подтверждаемого фактора.
+    MfaFactorType factor = 2;
+    // Код подтверждения.
+    string code = 3;
+}
+
+// Ответ на верификацию кода MFA фактора.
+message VerifyCodeResponse {
+    // true если все факторы подтверждены.
+    bool is_completed = 1;
+}
+
+// Запрос на верификацию кода для неаутентифицированного пользователя.
+message VerifyUnauthenticatedCodeRequest {
+    // ID MFA сессии.
+    string mfa_session_id = 1;
+    // Тип подтверждаемого фактора.
+    MfaFactorType factor = 2;
+    // Код подтверждения.
+    string code = 3;
+}
+
+// Ответ на верификацию кода для неаутентифицированного пользователя.
+message VerifyUnauthenticatedCodeResponse {
+    // true если все факторы подтверждены.
+    bool is_completed = 1;
+}
+
+// Запрос на получение статуса MFA сессии.
+message GetStatusRequest {
+    // ID MFA сессии.
+    string mfa_session_id = 1;
+}
+
+// Ответ на получение статуса MFA сессии.
+message GetStatusResponse {
+    // true если все факторы подтверждены.
+    bool is_completed = 1;
+    // true если сессия истекла.
+    bool is_expired = 2;
+    // Доступные факторы для подтверждения.
+    repeated MfaFactorType available_factors = 3;
+    // Уже подтверждённые факторы.
+    repeated MfaFactorType completed_factors = 4;
+    // Количество факторов которые нужно подтвердить.
+    int32 required_factor_count = 5;
+}

@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <PackageReference Include="FluentValidation" />
+        <PackageReference Include="MazyPlatform.Contracts.Bot" />
+        <PackageReference Include="MazyPlatform.Contracts.Scenario" />
+        <PackageReference Include="MazyPlatform.Contracts.User" />
+        <PackageReference Include="MazyPlatform.SharedKernel.Application" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+        <PackageReference Include="Scrutor" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MazyPlatform.Service.Bot.Manager.Domain\MazyPlatform.Service.Bot.Manager.Domain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="**\*Command.cs">
+            <DependentUpon>$([System.String]::Copy('%(Filename)').Replace('Command', 'Handler')).cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\*Query.cs">
+            <DependentUpon>$([System.String]::Copy('%(Filename)').Replace('Query', 'Handler')).cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\*Result.cs">
+            <DependentUpon>$([System.String]::Copy('%(Filename)').Replace('Result', 'Handler')).cs</DependentUpon>
+        </Compile>
+        <Compile Update="**\*Validator.cs">
+            <DependentUpon>$([System.String]::Copy('%(Filename)').Replace('Validator', 'Handler')).cs</DependentUpon>
+        </Compile>
+    </ItemGroup>
+
+</Project>

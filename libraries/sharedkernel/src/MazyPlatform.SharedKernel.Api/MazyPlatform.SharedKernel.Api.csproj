@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <PackageId>MazyPlatform.SharedKernel.Api</PackageId>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Grpc.AspNetCore" />
+      <PackageReference Include="Grpc.StatusProto" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\MazyPlatform.SharedKernel.Application\MazyPlatform.SharedKernel.Application.csproj" />
+      <ProjectReference Include="..\MazyPlatform.SharedKernel.Domain\MazyPlatform.SharedKernel.Domain.csproj" />
+      <ProjectReference Include="..\MazyPlatform.SharedKernel.Infrastructure\MazyPlatform.SharedKernel.Infrastructure.csproj" />
+    </ItemGroup>
+
+</Project>

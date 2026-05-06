@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MazyPlatform.Contracts.Bot.Grpc/MazyPlatform.Contracts.Bot.Grpc.csproj" />
+    <Project Path="src/MazyPlatform.Contracts.Bot/MazyPlatform.Contracts.Bot.csproj" />
+    <Project Path="src/MazyPlatform.Contracts.Core/MazyPlatform.Contracts.Core.csproj" />
+    <Project Path="src/MazyPlatform.Contracts.Scenario/MazyPlatform.Contracts.Scenario.csproj" />
+    <Project Path="src/MazyPlatform.Contracts.Scenario.Grpc/MazyPlatform.Contracts.Scenario.Grpc.csproj" />
+    <Project Path="src/MazyPlatform.Contracts.User.Grpc/MazyPlatform.Contracts.User.Grpc.csproj" />
+    <Project Path="src/MazyPlatform.Contracts.User/MazyPlatform.Contracts.User.csproj" />
+  </Folder>
+</Solution>

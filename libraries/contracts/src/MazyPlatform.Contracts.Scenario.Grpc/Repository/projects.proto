@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package mazy_platform.scenario.repository.v1;
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "common.proto";
+
+option csharp_namespace = "MazyPlatform.Contracts.Scenario.Repository.Grpc";
+
+service ProjectService {
+    rpc CreateProject (CreateProjectRequest) returns (CreateProjectResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/projects"
+            body: "*"
+        };
+    }
+    rpc DeleteProject (DeleteProjectRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/api/v1/projects/{project_id}"
+        };
+    }
+    rpc GetProject (GetProjectRequest) returns (GetProjectResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/projects/{project_id}"
+        };
+    }
+    rpc GetProjectList (google.protobuf.Empty) returns (GetProjectListResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/projects"
+        };
+    }
+}
+
+// Запрос на создание проекта.
+message CreateProjectRequest {
+    // Название проекта. Максимум 256 символов.
+    string name = 1;
+    // Тип платформы мессенджера.
+    PlatformType platform_type = 2;
+}
+
+// Ответ на создание проекта.
+message CreateProjectResponse {
+    // Идентификатор созданного проекта.
+    string project_id = 1;
+}
+
+// Запрос на удаление проекта.
+message DeleteProjectRequest {
+    // Идентификатор проекта.
+    string project_id = 1;
+}
+
+// Запрос на получение проекта.
+message GetProjectRequest {
+    // Идентификатор проекта.
+    string project_id = 1;
+}
+
+// Ответ с данными проекта.
+message GetProjectResponse {
+    // Идентификатор проекта.
+    string project_id = 1;
+    // Название проекта.
+    string name = 2;
+    // Тип платформы мессенджера.
+    PlatformType platform_type = 3;
+}
+
+// Ответ со списком проектов текущего пользователя.
+message GetProjectListResponse {
+    // Список проектов.
+    repeated ProjectListItem items = 1;
+}
+
+// Элемент списка проектов.
+message ProjectListItem {
+    // Идентификатор проекта.
+    string project_id = 1;
+    // Название проекта.
+    string name = 2;
+    // Тип платформы мессенджера.
+    PlatformType platform_type = 3;
+}

@@ -1,0 +1,52 @@
+* text=auto
+
+# .NET / Windows scripts
+*.sln text eol=crlf
+*.cs text eol=crlf
+*.csproj text eol=crlf
+*.fsproj text eol=crlf
+*.vbproj text eol=crlf
+*.props text eol=crlf
+*.targets text eol=crlf
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Frontend
+apps/web-client/**/*.js text eol=lf
+apps/web-client/**/*.jsx text eol=lf
+apps/web-client/**/*.mjs text eol=lf
+apps/web-client/**/*.cjs text eol=lf
+apps/web-client/**/*.ts text eol=lf
+apps/web-client/**/*.tsx text eol=lf
+apps/web-client/**/*.mts text eol=lf
+apps/web-client/**/*.cts text eol=lf
+apps/web-client/**/*.vue text eol=lf
+apps/web-client/**/*.css text eol=lf
+apps/web-client/**/*.scss text eol=lf
+apps/web-client/**/*.sass text eol=lf
+apps/web-client/**/*.less text eol=lf
+apps/web-client/**/*.styl text eol=lf
+apps/web-client/**/*.json text eol=lf
+apps/web-client/**/*.md text eol=lf
+apps/web-client/**/*.html text eol=lf
+
+# Unix scripts / containers
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.dockerfile text eol=lf
+
+# Binary assets
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.zip binary
+*.7z binary
+*.gz binary
+*.dll binary
+*.exe binary
+*.pdb binary

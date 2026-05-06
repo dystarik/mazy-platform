@@ -1,0 +1,8 @@
+﻿<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MazyPlatform.Service.Scenario.Repository.Api/MazyPlatform.Service.Scenario.Repository.Api.csproj" />
+    <Project Path="src/MazyPlatform.Service.Scenario.Repository.Application/MazyPlatform.Service.Scenario.Repository.Application.csproj" />
+    <Project Path="src/MazyPlatform.Service.Scenario.Repository.Domain/MazyPlatform.Service.Scenario.Repository.Domain.csproj" />
+    <Project Path="src/MazyPlatform.Service.Scenario.Repository.Infrastructure/MazyPlatform.Service.Scenario.Repository.Infrastructure.csproj" />
+  </Folder>
+</Solution>

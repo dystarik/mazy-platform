@@ -1,0 +1,49 @@
+{
+  "title": "RabbitMQ",
+  "uid": "mazy-rabbitmq",
+  "schemaVersion": 42,
+  "refresh": "10s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Сообщений в очереди",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "targets": [
+        { "expr": "rabbitmq_queue_messages{job=\"rabbitmq\"}", "legendFormat": "{{queue}}", "refId": "A" }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Сообщений готово к доставке",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "targets": [
+        { "expr": "rabbitmq_queue_messages_ready{job=\"rabbitmq\"}", "legendFormat": "{{queue}}", "refId": "A" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Опубликовано сообщений/с",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "targets": [
+        { "expr": "rate(rabbitmq_channel_messages_published_total{job=\"rabbitmq\"}[1m])", "legendFormat": "{{queue}}", "refId": "A" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Обработано сообщений/с",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "targets": [
+        { "expr": "rate(rabbitmq_channel_messages_delivered_total{job=\"rabbitmq\"}[1m])", "legendFormat": "{{queue}}", "refId": "A" }
+      ]
+    }
+  ]
+}

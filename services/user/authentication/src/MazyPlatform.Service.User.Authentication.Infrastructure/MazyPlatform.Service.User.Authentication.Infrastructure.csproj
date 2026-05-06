@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <PackageReference Include="Konscious.Security.Cryptography.Argon2" />
+        <PackageReference Include="MazyPlatform.SharedKernel.Infrastructure" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+        <PackageReference Include="Microsoft.Extensions.Http" />
+        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+        <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+        <PackageReference Include="Otp.NET" />
+        <PackageReference Include="RabbitMQ.Client" />
+        <PackageReference Include="Scrutor" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MazyPlatform.Service.User.Authentication.Application\MazyPlatform.Service.User.Authentication.Application.csproj" />
+        <ProjectReference Include="..\MazyPlatform.Service.User.Authentication.Domain\MazyPlatform.Service.User.Authentication.Domain.csproj" />
+    </ItemGroup>
+
+</Project>

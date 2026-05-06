@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MazyPlatform.Service.Notification/MazyPlatform.Service.Notification.csproj" />
+  </Folder>
+</Solution>

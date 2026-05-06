@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package mazy_platform.scenario.repository.v1;
+
+import "google/api/annotations.proto";
+
+option csharp_namespace = "MazyPlatform.Contracts.Scenario.Repository.Grpc";
+
+service UserDataService {
+    rpc GetUserDataRecords (GetUserDataRecordsRequest) returns (GetUserDataRecordsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/projects/{project_id}/user-data/records"
+        };
+    }
+}
+
+// Запрос на получение runtime-записей пользователей проекта.
+message GetUserDataRecordsRequest {
+    // Идентификатор проекта.
+    string project_id = 1;
+    // Фильтр по стабильному идентификатору схемы.
+    optional string schema_id = 2;
+    // Фильтр по версии сценария.
+    optional int32 scenario_version = 3;
+    // Фильтр по боту.
+    optional string bot_id = 4;
+    // Фильтр по пользователю платформы.
+    optional string platform_user_id = 5;
+    // Включать архивные legacy-записи.
+    bool include_archived = 6;
+    // Размер страницы. 0 означает значение по умолчанию. Рекомендуемый диапазон: 1..200.
+    int32 page_size = 7;
+    // Смещение страницы.
+    int32 page_offset = 8;
+}
+
+// Ответ со списком runtime-записей пользователей проекта.
+message GetUserDataRecordsResponse {
+    // Записи текущей страницы.
+    repeated UserDataRecordItem items = 1;
+    // Общее количество записей с учётом фильтров.
+    int32 total_count = 2;
+}
+
+// Runtime-запись пользователя бота.
+message UserDataRecordItem {
+    // Идентификатор записи.
+    string record_id = 1;
+    // Стабильный идентификатор схемы.
+    string schema_id = 2;
+    // Идентификатор snapshot-а схемы.
+    string schema_snapshot_id = 3;
+    // Название схемы на момент snapshot-а.
+    string schema_name = 4;
+    // Версия сценария, создавшая/использующая запись.
+    int32 scenario_version = 5;
+    // Идентификатор бота.
+    string bot_id = 6;
+    // Идентификатор пользователя на платформе.
+    string platform_user_id = 7;
+    // Идентификатор runtime-сессии, если он есть.
+    optional string session_id = 8;
+    // Архивная запись не отдаётся обычным user-scoped запросам.
+    bool is_archived = 9;
+    // Данные записи в формате JSON.
+    string data_json = 10;
+    // Дата создания (Unix timestamp, секунды).
+    int64 created_at = 11;
+    // Дата обновления (Unix timestamp, секунды).
+    int64 updated_at = 12;
+}

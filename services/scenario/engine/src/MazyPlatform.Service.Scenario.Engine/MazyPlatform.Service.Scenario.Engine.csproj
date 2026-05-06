@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-MazyPlatform.Service.Scenario.Engine-5e1d83c2-d564-4324-a97d-a0aa0346685b</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..</DockerfileContext>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.Net.ClientFactory" />
+    <PackageReference Include="MazyPlatform.Contracts.Bot" />
+    <PackageReference Include="MazyPlatform.Contracts.Bot.Grpc" />
+    <PackageReference Include="MazyPlatform.Contracts.Scenario.Grpc" />
+    <PackageReference Include="MazyPlatform.Scenario" />
+    <PackageReference Include="MazyPlatform.Scenario.Abstractions" />
+    <PackageReference Include="MazyPlatform.Scenario.Storage.Mongo" />
+    <PackageReference Include="MazyPlatform.Scenario.Telegram" />
+    <PackageReference Include="MazyPlatform.Scenario.Vk" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
+    <PackageReference Include="prometheus-net.AspNetCore" />
+    <PackageReference Include="RabbitMQ.Client" />
+    <PackageReference Include="Scrutor" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Enrichers.Environment" />
+    <PackageReference Include="Serilog.Enrichers.Thread" />
+    <PackageReference Include="Serilog.Extensions.Hosting" />
+    <PackageReference Include="Serilog.Extensions.Logging" />
+    <PackageReference Include="Serilog.Settings.Configuration" />
+    <PackageReference Include="Serilog.Sinks.Async" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.Grafana.Loki" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+</Project>

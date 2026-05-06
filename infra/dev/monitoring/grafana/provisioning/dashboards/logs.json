@@ -1,0 +1,249 @@
+{
+  "title": "Logs",
+  "uid": "mazy-logs",
+  "schemaVersion": 42,
+  "refresh": "10s",
+  "time": { "from": "now-15m", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "app",
+        "type": "query",
+        "datasource": { "type": "loki", "uid": "loki-mazy" },
+        "definition": "label_values({app=~\".+\"}, app)",
+        "includeAll": true,
+        "multi": true,
+        "allValue": "user-authentication|notification|gateway|scenario-repository|bot-manager|scenario-engine|bot-integration"
+      },
+      {
+        "name": "level",
+        "type": "query",
+        "datasource": { "type": "loki", "uid": "loki-mazy" },
+        "definition": "label_values({app=~\"${app:regex}\"}, level)",
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*"
+      },
+      {
+        "name": "traceId",
+        "label": "trace id",
+        "type": "textbox",
+        "query": "",
+        "current": {
+          "selected": true,
+          "text": "",
+          "value": ""
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Все логи",
+      "type": "logs",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "loki", "uid": "loki-mazy" },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Ascending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "expr": "{app=~\"${app:regex}\", level=~\"${level:regex}\"} |= \"${traceId}\" | json | line_format \"{{.Application}} | {{.Message}}\"",
+          "maxLines": 200,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Ошибки и варнинги",
+      "type": "logs",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 10 },
+      "datasource": { "type": "loki", "uid": "loki-mazy" },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Ascending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "expr": "{app=~\"${app:regex}\", level=~\"warning|WARN|Warning|WRN|error|ERROR|Error|ERR|critical|CRITICAL|Critical|CRIT|FTL|Fatal\"} |= \"${traceId}\" | json | line_format \"{{.Application}} | {{.Message}}\"",
+          "maxLines": 200,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "gateway",
+      "type": "logs",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 18 },
+      "datasource": { "type": "loki", "uid": "loki-mazy" },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Ascending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "expr": "{app=\"gateway\", level=~\"${level:regex}\"} |= \"${traceId}\" | json | line_format \"{{.Message}}\"",
+          "maxLines": 100,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "user-authentication",
+      "type": "logs",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 25 },
+      "datasource": { "type": "loki", "uid": "loki-mazy" },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Ascending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "expr": "{app=\"user-authentication\", level=~\"${level:regex}\"} |= \"${traceId}\" | json | line_format \"{{.Message}}\"",
+          "maxLines": 100,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "scenario-repository",
+      "type": "logs",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 32 },
+      "datasource": { "type": "loki", "uid": "loki-mazy" },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Ascending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "expr": "{app=\"scenario-repository\", level=~\"${level:regex}\"} |= \"${traceId}\" | json | line_format \"{{.Message}}\"",
+          "maxLines": 100,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "bot-manager",
+      "type": "logs",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 39 },
+      "datasource": { "type": "loki", "uid": "loki-mazy" },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Ascending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "expr": "{app=\"bot-manager\", level=~\"${level:regex}\"} |= \"${traceId}\" | json | line_format \"{{.Message}}\"",
+          "maxLines": 100,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "scenario-engine",
+      "type": "logs",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 46 },
+      "datasource": { "type": "loki", "uid": "loki-mazy" },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Ascending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "expr": "{app=\"scenario-engine\", level=~\"${level:regex}\"} |= \"${traceId}\" | json | line_format \"{{.Message}}\"",
+          "maxLines": 100,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "bot-integration",
+      "type": "logs",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 53 },
+      "datasource": { "type": "loki", "uid": "loki-mazy" },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Ascending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "expr": "{app=\"bot-integration\", level=~\"${level:regex}\"} |= \"${traceId}\" | json | line_format \"{{.Message}}\"",
+          "maxLines": 100,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "notification",
+      "type": "logs",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 60 },
+      "datasource": { "type": "loki", "uid": "loki-mazy" },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Ascending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "expr": "{app=\"notification\", level=~\"${level:regex}\"} |= \"${traceId}\" | json | line_format \"{{.Message}}\"",
+          "maxLines": 100,
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

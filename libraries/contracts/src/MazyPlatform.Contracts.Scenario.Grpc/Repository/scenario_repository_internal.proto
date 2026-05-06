@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package mazy_platform.scenario.repository.v1;
+
+import "google/protobuf/empty.proto";
+import "common.proto";
+
+option csharp_namespace = "MazyPlatform.Contracts.Scenario.Repository.Grpc";
+
+// Внутренний сервис для service-bot-manager.
+// Предоставляет методы для валидации проекта при назначении бота на версию сценария.
+// НЕ доступен через публичный gateway. Защищён сервисным токеном в metadata.
+service ScenarioRepositoryInternalService {
+    // Проверяет возможность назначения бота на указанную версию сценария проекта.
+    // Проверяет: существование проекта и его владельца, совместимость платформы, наличие версии сценария.
+    rpc ValidateProjectForBot (ValidateProjectForBotRequest) returns (google.protobuf.Empty);
+}
+
+// Запрос на валидацию проекта для назначения бота.
+message ValidateProjectForBotRequest {
+    // Идентификатор проекта.
+    string project_id = 1;
+    // Идентификатор аккаунта владельца проекта.
+    string owner_account_id = 2;
+    // Тип платформы бота, которого назначают.
+    PlatformType platform_type = 3;
+    // Версия сценария, на которую назначается бот.
+    int32 scenario_version = 4;
+}

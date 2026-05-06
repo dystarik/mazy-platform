@@ -1,0 +1,152 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "common.proto";
+
+package mazy_platform.user.authentication.v1;
+
+option csharp_namespace = "MazyPlatform.Contracts.User.Grpc.Authentication";
+
+// Сервис управления MFA факторами.
+service MfaService {
+    // Добавление нового MFA фактора.
+    // Возвращает данные для настройки фактора.
+    rpc AddFactor (AddFactorRequest) returns (AddFactorResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/mfa/factors"
+            body: "*"
+        };
+    }
+
+    // Подтверждение добавленного MFA фактора.
+    // Возвращает резервные коды при успешном подтверждении.
+    rpc ConfirmFactor (ConfirmFactorRequest) returns (ConfirmFactorResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/mfa/factors/confirm"
+            body: "*"
+        };
+    }
+
+    // Удаление MFA фактора.
+    rpc RemoveFactor (RemoveFactorRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/api/v1/mfa/factors"
+            body: "*"
+        };
+    }
+
+    // Получение списка активных MFA факторов.
+    rpc GetFactors (google.protobuf.Empty) returns (GetFactorsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/mfa/factors"
+        };
+    }
+
+    // Перегенерация резервных кодов.
+    // Возвращает новые резервные коды.
+    rpc RegenerateBackupCodes (RegenerateBackupCodesRequest) returns (RegenerateBackupCodesResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/mfa/backup-codes/regenerate"
+            body: "*"
+        };
+    }
+}
+
+// Запрос на добавление MFA фактора.
+message AddFactorRequest {
+    // Тип добавляемого фактора.
+    MfaFactorType factor = 1;
+    // Email для Email MFA фактора. Если не указан — используется email аккаунта.
+    optional string email = 2;
+}
+
+// Ответ на добавление MFA фактора.
+message AddFactorResponse {
+    oneof setup {
+        // Данные для настройки TOTP.
+        TotpSetup totp = 1;
+        // Данные для настройки Email MFA.
+        EmailMfaSetup email = 2;
+    }
+}
+
+// Данные для настройки TOTP фактора.
+message TotpSetup {
+    // URI для добавления в приложение аутентификатор.
+    string provisioning_uri = 1;
+}
+
+// Данные для настройки Email MFA фактора.
+message EmailMfaSetup {
+    oneof result {
+        // Email совпадает с текущим — фактор добавлен сразу, возвращаются резервные коды.
+        EmailMfaSetupSuccess success = 1;
+        // Email отличается — требуется подтверждение.
+        string otp_id = 2;
+    }
+}
+
+// Успешная настройка Email MFA фактора.
+message EmailMfaSetupSuccess {
+    // Резервные коды для восстановления доступа.
+    repeated string backup_codes = 1;
+}
+
+// Запрос на подтверждение MFA фактора.
+message ConfirmFactorRequest {
+    // Тип подтверждаемого фактора.
+    MfaFactorType factor = 1;
+    oneof confirmation {
+        // Подтверждение через TOTP.
+        ConfirmTotp totp = 2;
+        // Подтверждение через Email.
+        ConfirmEmail email = 3;
+    }
+}
+
+// Подтверждение TOTP фактора.
+message ConfirmTotp {
+    // Код из приложения аутентификатора.
+    string code = 1;
+}
+
+// Подтверждение Email фактора.
+message ConfirmEmail {
+    // ID OTP сессии.
+    string otp_id = 1;
+    // Код из письма.
+    string code = 2;
+}
+
+// Ответ на подтверждение MFA фактора.
+message ConfirmFactorResponse {
+    // Резервные коды для восстановления доступа.
+    repeated string backup_codes = 1;
+}
+
+// Запрос на удаление MFA фактора.
+message RemoveFactorRequest {
+    // ID MFA сессии для подтверждения удаления.
+    string mfa_session_id = 1;
+    // Тип удаляемого фактора.
+    MfaFactorType factor = 2;
+}
+
+// Ответ на получение списка MFA факторов.
+message GetFactorsResponse {
+    // Список активных MFA факторов.
+    repeated MfaFactorType factors = 1;
+}
+
+// Запрос на перегенерацию резервных кодов.
+message RegenerateBackupCodesRequest {
+    // ID MFA сессии для подтверждения операции.
+    string mfa_session_id = 1;
+}
+
+// Ответ на перегенерацию резервных кодов.
+message RegenerateBackupCodesResponse {
+    // Новые резервные коды.
+    repeated string backup_codes = 1;
+}

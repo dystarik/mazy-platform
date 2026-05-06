@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MazyPlatform.Scenario.Abstractions/MazyPlatform.Scenario.Abstractions.csproj" />
+    <Project Path="src/MazyPlatform.Scenario/MazyPlatform.Scenario.csproj" />
+    <Project Path="src/MazyPlatform.Scenario.Storage.Mongo/MazyPlatform.Scenario.Storage.Mongo.csproj" />
+  </Folder>
+  <Folder Name="/src/Platforms/">
+    <Project Path="src/Platforms/MazyPlatform.Scenario.Telegram/MazyPlatform.Scenario.Telegram.csproj" />
+    <Project Path="src/Platforms/MazyPlatform.Scenario.Vk/MazyPlatform.Scenario.Vk.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MazyPlatform.Scenario.Tests/MazyPlatform.Scenario.Tests.csproj" />
+  </Folder>
+</Solution>

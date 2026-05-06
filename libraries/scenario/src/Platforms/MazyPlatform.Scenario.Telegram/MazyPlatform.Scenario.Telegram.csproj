@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\MazyPlatform.Scenario.Abstractions\MazyPlatform.Scenario.Abstractions.csproj" />
+        <ProjectReference Include="..\..\MazyPlatform.Scenario\MazyPlatform.Scenario.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="**\*NodeDescriptor.cs">
+            <DependentUpon>$([System.String]::Copy('%(Filename)').Replace('NodeDescriptor', 'Node')).cs</DependentUpon>
+        </Compile>
+    </ItemGroup>
+    
+</Project>

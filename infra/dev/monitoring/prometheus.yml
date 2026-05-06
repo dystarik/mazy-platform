@@ -1,0 +1,39 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'authentication'
+    static_configs:
+      - targets: ['authentication:9090']
+
+  - job_name: 'notification'
+    static_configs:
+      - targets: ['notification:9090']
+
+  - job_name: 'scenario-engine'
+    static_configs:
+      - targets: ['scenario-engine:9090']
+
+  - job_name: 'bot-integration'
+    static_configs:
+      - targets: ['bot-integration:9090']
+
+  - job_name: 'scenario-repository'
+    static_configs:
+      - targets: ['scenario-repository:9090']
+
+  - job_name: 'bot-manager'
+    static_configs:
+      - targets: ['bot-manager:9090']
+
+  - job_name: 'gateway'
+    static_configs:
+      - targets: ['gateway:8080']
+
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq:15692']
+
+  - job_name: 'docker-stats-exporter'
+    static_configs:
+      - targets: ['docker-stats-exporter:9487']

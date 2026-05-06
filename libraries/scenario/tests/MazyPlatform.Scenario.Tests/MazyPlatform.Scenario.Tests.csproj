@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="TUnit" />
+        <PackageReference Include="NSubstitute" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\MazyPlatform.Scenario.Abstractions\MazyPlatform.Scenario.Abstractions.csproj" />
+        <ProjectReference Include="..\..\src\MazyPlatform.Scenario\MazyPlatform.Scenario.csproj" />
+        <ProjectReference Include="..\..\src\MazyPlatform.Scenario.Storage.Mongo\MazyPlatform.Scenario.Storage.Mongo.csproj" />
+        <ProjectReference Include="..\..\src\Platforms\MazyPlatform.Scenario.Telegram\MazyPlatform.Scenario.Telegram.csproj" />
+        <ProjectReference Include="..\..\src\Platforms\MazyPlatform.Scenario.Vk\MazyPlatform.Scenario.Vk.csproj" />
+    </ItemGroup>
+
+</Project>
