@@ -1,5 +1,8 @@
 namespace MazyPlatform.Service.User.Authentication.Infrastructure.Database.Repositories;
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 using MazyPlatform.Service.User.Authentication.Domain.UserAccounts;
 using MazyPlatform.Service.User.Authentication.Domain.UserAccounts.LinkedProviders;
 using MazyPlatform.Service.User.Authentication.Domain.UserAccounts.Mfa;
@@ -36,14 +39,11 @@ internal class UserAccountRepository(ApplicationDbContext context) : RepositoryB
     {
         ArgumentNullException.ThrowIfNull(email);
 
-        var payload = new
-        {
-            type = (int)MfaMethodType.Email,
-            email = email.Value,
-        };
+        using var payload = JsonSerializer.SerializeToDocument(
+            new MfaEmailPayloadFilter((int)MfaMethodType.Email, email.Value));
 
         return await _context.MfaMethods
-            .AnyAsync(x => EF.Functions.JsonContains(x.Payload, payload), cancellationToken);
+            .AnyAsync(x => EF.Functions.JsonContains(x.Payload, payload.RootElement), cancellationToken);
     }
 
     /// <inheritdoc />
@@ -53,4 +53,8 @@ internal class UserAccountRepository(ApplicationDbContext context) : RepositoryB
         ArgumentNullException.ThrowIfNull(externalProvider);
         return await _context.UserAccounts.SingleOrDefaultAsync(x => x.UserLinkedProviders.LinkedProviders.Any(p => p.Type == externalProvider.Type && p.Email == externalProvider.Email), cancellationToken);
     }
+
+    private sealed record MfaEmailPayloadFilter(
+        [property: JsonPropertyName("type")] int Type,
+        [property: JsonPropertyName("email")] string Email);
 }
