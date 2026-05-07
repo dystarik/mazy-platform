@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MazyPlatform.Service.Bot.Manager.Infrastructure.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260507064039_InitialCreate")]
+    [Migration("20260507070759_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -51,8 +51,7 @@ namespace MazyPlatform.Service.Bot.Manager.Infrastructure.Database.Migrations
                         .HasColumnName("owner_account_id");
 
                     b.Property<Guid?>("ProjectId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("project_id");
+                        .HasColumnType("uuid");
 
                     b.Property<int?>("ScenarioVersion")
                         .HasColumnType("integer")
@@ -98,6 +97,15 @@ namespace MazyPlatform.Service.Bot.Manager.Infrastructure.Database.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("user_accounts", (string)null);
+                });
+
+            modelBuilder.Entity("MazyPlatform.Service.Bot.Manager.Domain.BotInstances.BotInstance", b =>
+                {
+                    b.HasOne("MazyPlatform.Service.Bot.Manager.Domain.UserAccounts.UserAccount", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

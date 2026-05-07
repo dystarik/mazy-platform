@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MazyPlatform.Service.Scenario.Repository.Infrastructure.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260507064022_InitialCreate")]
+    [Migration("20260507070820_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -229,6 +229,15 @@ namespace MazyPlatform.Service.Scenario.Repository.Infrastructure.Database.Migra
                         .WithMany("Versions")
                         .HasForeignKey("ScenarioGraphId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MazyPlatform.Service.Scenario.Repository.Domain.Projects.Project", b =>
+                {
+                    b.HasOne("MazyPlatform.Service.Scenario.Repository.Domain.UserAccounts.UserAccount", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

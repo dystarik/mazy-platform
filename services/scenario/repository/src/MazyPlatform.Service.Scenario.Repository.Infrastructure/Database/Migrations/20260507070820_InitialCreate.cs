@@ -27,22 +27,6 @@ namespace MazyPlatform.Service.Scenario.Repository.Infrastructure.Database.Migra
                 });
 
             migrationBuilder.CreateTable(
-                name: "projects",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    owner_account_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    name = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    platform_type = table.Column<int>(type: "integer", nullable: false),
-                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_projects", x => x.id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "scenario_graphs",
                 columns: table => new
                 {
@@ -117,6 +101,28 @@ namespace MazyPlatform.Service.Scenario.Repository.Infrastructure.Database.Migra
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "projects",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    owner_account_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    name = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    platform_type = table.Column<int>(type: "integer", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_projects", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_projects_user_accounts_owner_account_id",
+                        column: x => x.owner_account_id,
+                        principalTable: "user_accounts",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_entity_fields_schema_id",
                 table: "entity_fields",
@@ -158,10 +164,10 @@ namespace MazyPlatform.Service.Scenario.Repository.Infrastructure.Database.Migra
                 name: "scenario_versions");
 
             migrationBuilder.DropTable(
-                name: "user_accounts");
+                name: "entity_schemas");
 
             migrationBuilder.DropTable(
-                name: "entity_schemas");
+                name: "user_accounts");
 
             migrationBuilder.DropTable(
                 name: "scenario_graphs");

@@ -229,6 +229,15 @@ namespace MazyPlatform.Service.Scenario.Repository.Infrastructure.Database.Migra
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MazyPlatform.Service.Scenario.Repository.Domain.Projects.Project", b =>
+                {
+                    b.HasOne("MazyPlatform.Service.Scenario.Repository.Domain.UserAccounts.UserAccount", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MazyPlatform.Service.Scenario.Repository.Domain.Schemas.EntityField", b =>
                 {
                     b.HasOne("MazyPlatform.Service.Scenario.Repository.Domain.Schemas.EntitySchema", null)
