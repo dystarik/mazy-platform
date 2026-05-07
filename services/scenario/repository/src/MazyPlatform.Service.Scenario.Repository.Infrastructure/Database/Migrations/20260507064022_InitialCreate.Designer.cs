@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MazyPlatform.Service.Scenario.Repository.Infrastructure.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260428023211_InitialCreate")]
+    [Migration("20260507064022_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
