@@ -1,6 +1,7 @@
 namespace MazyPlatform.Service.Scenario.Repository.Infrastructure.Database.Configurations;
 
 using MazyPlatform.Service.Scenario.Repository.Domain.Projects;
+using MazyPlatform.Service.Scenario.Repository.Domain.UserAccounts;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -27,6 +28,10 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Property(x => x.OwnerAccountId)
             .HasColumnName("owner_account_id")
             .IsRequired();
+        builder.HasOne<UserAccount>()
+            .WithMany()
+            .HasForeignKey(x => x.OwnerAccountId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(x => x.Name)
             .HasColumnName("name")

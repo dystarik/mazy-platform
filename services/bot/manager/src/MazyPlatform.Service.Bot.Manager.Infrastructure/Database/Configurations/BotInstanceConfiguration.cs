@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using MazyPlatform.Service.Bot.Manager.Domain.BotInstances;
 using MazyPlatform.Service.Bot.Manager.Domain.BotInstances.Credentials;
 using MazyPlatform.Service.Bot.Manager.Domain.BotInstances.ValueObjects;
+using MazyPlatform.Service.Bot.Manager.Domain.UserAccounts;
 using MazyPlatform.Service.Bot.Manager.Infrastructure.Security;
 
 using Microsoft.EntityFrameworkCore;
@@ -29,7 +30,10 @@ internal sealed class BotInstanceConfiguration(IBotTokenEncryptor tokenEncryptor
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at").IsRequired(false);
 
         builder.Property(x => x.OwnerAccountId).HasColumnName("owner_account_id").IsRequired();
-        builder.Property(x => x.ProjectId).HasColumnName("project_id").IsRequired(false);
+        builder.HasOne<UserAccount>()
+            .WithMany()
+            .HasForeignKey(x => x.OwnerAccountId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(x => x.Name).HasColumnName("name").HasMaxLength(256).IsRequired();
         builder.Property(x => x.ScenarioVersion).HasColumnName("scenario_version").IsRequired(false);
