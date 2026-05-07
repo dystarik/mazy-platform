@@ -47,6 +47,7 @@ public sealed class BotInstance : AggregateRoot
     /// <param name="credentials">Учётные данные платформы.</param>
     /// <param name="scenarioVersion">Версия сценария.</param>
     /// <param name="now">Текущий момент времени.</param>
+    /// <param name="scenarioVersionUpdateMode">Режим обновления версии сценария.</param>
     /// <returns>Созданный агрегат экземпляра бота.</returns>
     public static BotInstance Create(
         Guid ownerAccountId,
@@ -154,6 +155,7 @@ public sealed class BotInstance : AggregateRoot
     /// <param name="projectId">Идентификатор проекта.</param>
     /// <param name="scenarioVersion">Версия сценария.</param>
     /// <param name="now">Текущий момент времени.</param>
+    /// <param name="scenarioVersionUpdateMode">Режим обновления версии сценария.</param>
     /// <returns>
     /// Успех, если привязка выполнена;
     /// сбой <see cref="ErrorCodes.BotInstance.AlreadyBound"/>, если бот уже привязан к проекту.
