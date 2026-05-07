@@ -1,57 +1,58 @@
 # web-client
 
-Vue 3 + Vite frontend Mazy Platform. Приложение дает пользователю UI для регистрации и входа, MFA, проектов, редактора сценариев, публикации release-версий, управления ботами и настройками.
+This template should help get you started developing with Vue 3 in Vite.
 
-## API
+## Recommended IDE Setup
 
-Frontend работает с gateway через HTTP JSON API `/api/v1/*`. В dev режиме Vite proxy отправляет `/api` на `http://localhost:8080`. В container режиме nginx проксирует API к compose service `gateway`.
+[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
 
-Основные API-группы:
+## Recommended Browser Setup
 
-- `/api/v1/auth/*` - registration и login;
-- `/api/v1/password/*` - set/change/reset password;
-- `/api/v1/mfa/*` - MFA factors и sessions;
-- `/api/v1/sessions/*` - refresh/logout/sessions;
-- `/api/v1/projects/*` - projects, scenario draft/release, schemas, user data;
-- `/api/v1/bots/*` - bot lifecycle и scenario version switching.
+- Chromium-based browsers (Chrome, Edge, Brave, etc.):
+  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
+  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
+- Firefox:
+  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
+  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
 
-## Зависимости
+## Type Support for `.vue` Imports in TS
 
-- Node.js версии из `package.json` engines.
-- npm.
-- Gateway на `http://localhost:8080` для локального API.
+TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
 
-## Env/settings
+## Customize configuration
 
-- `VITE_API_URL` - base URL API. Для dev proxy может быть пустым.
-- `VITE_YANDEX_CLIENT_ID` - public client id для provider login.
+See [Vite Configuration Reference](https://vite.dev/config/).
 
-Не храните в frontend env secrets. Все `VITE_*` значения попадают в client bundle.
+## Project Setup
 
-## Команды
-
-```powershell
+```sh
 npm install
+```
+
+### Compile and Hot-Reload for Development
+
+```sh
 npm run dev
+```
+
+### Type-Check, Compile and Minify for Production
+
+```sh
 npm run build
-npm run type-check
+```
+
+### Run In Dev Docker Compose
+
+From the repository root:
+
+```sh
+docker compose -f infra/dev/docker-compose.yml up --build web-client
+```
+
+The web client is available at http://localhost:5173 by default. API requests go through the container nginx proxy to the compose gateway service.
+
+### Lint with [ESLint](https://eslint.org/)
+
+```sh
 npm run lint
 ```
-
-## Запуск
-
-Локально:
-
-```powershell
-cd apps\web-client
-npm install
-npm run dev
-```
-
-Через compose:
-
-```powershell
-.\tools\start.cmd
-```
-
-Frontend доступен на `http://localhost:5173`.
