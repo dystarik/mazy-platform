@@ -8,7 +8,7 @@
     <PackageVersion Include="MazyPlatform.Contracts.Bot.Grpc" Version="0.6.16-preview" />
     <PackageVersion Include="MazyPlatform.Contracts.Scenario.Grpc" Version="0.6.16-preview" />
     <PackageVersion Include="MazyPlatform.Contracts.User.Grpc" Version="0.6.16-preview" />
-    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.61" />
+    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.75" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
     <PackageVersion Include="Microsoft.AspNetCore.Grpc.JsonTranscoding" Version="10.0.7" />
     <PackageVersion Include="Microsoft.AspNetCore.Grpc.Swagger" Version="0.10.7" />

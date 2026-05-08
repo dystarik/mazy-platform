@@ -8,12 +8,12 @@
     <PackageVersion Include="MazyPlatform.Contracts.Bot.Grpc" Version="0.6.16-preview" />
     <PackageVersion Include="MazyPlatform.Contracts.Scenario" Version="0.6.16-preview" />
     <PackageVersion Include="MazyPlatform.Contracts.Scenario.Grpc" Version="0.6.16-preview" />
-    <PackageVersion Include="MazyPlatform.Scenario" Version="0.3.10-preview" />
-    <PackageVersion Include="MazyPlatform.Scenario.Abstractions" Version="0.3.10-preview" />
-    <PackageVersion Include="MazyPlatform.Scenario.Storage.Mongo" Version="0.3.10-preview" />
-    <PackageVersion Include="MazyPlatform.Scenario.Telegram" Version="0.3.10-preview" />
-    <PackageVersion Include="MazyPlatform.Scenario.Vk" Version="0.3.10-preview" />
-    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.61" />
+    <PackageVersion Include="MazyPlatform.Scenario" Version="0.3.11-preview" />
+    <PackageVersion Include="MazyPlatform.Scenario.Abstractions" Version="0.3.11-preview" />
+    <PackageVersion Include="MazyPlatform.Scenario.Storage.Mongo" Version="0.3.11-preview" />
+    <PackageVersion Include="MazyPlatform.Scenario.Telegram" Version="0.3.11-preview" />
+    <PackageVersion Include="MazyPlatform.Scenario.Vk" Version="0.3.11-preview" />
+    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.75" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.7" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.7" />
     <PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.7" />

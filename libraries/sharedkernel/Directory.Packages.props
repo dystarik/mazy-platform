@@ -5,7 +5,7 @@
   <ItemGroup>
     <PackageVersion Include="Grpc.AspNetCore" Version="2.80.0" />
     <PackageVersion Include="Grpc.StatusProto" Version="2.80.0" />
-    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.61" />
+    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.75" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.7" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.7" />
     <PackageVersion Include="Roslynator.Analyzers" Version="4.15.0" />
