@@ -251,7 +251,7 @@ const selectedDataSchema = computed(() =>
 const selectedSchemaFields = computed(() =>
   (selectedDataSchema.value?.fields ?? []).filter(field => Boolean(field.name)),
 )
-const needsEntityName = computed(() => ['create', 'query', 'update'].includes(action.value))
+const needsEntityName = computed(() => ['create', 'get', 'query', 'update'].includes(action.value))
 const needsRecordId = computed(() => ['get', 'update', 'delete'].includes(action.value))
 const needsFields = computed(() => ['create', 'query', 'update'].includes(action.value))
 const shouldShowFieldsSection = computed(() =>

@@ -9,6 +9,13 @@ export interface VariableScope {
   future: string[]
 }
 
+export interface VariableSuggestion {
+  value: string
+  detail?: string
+  insertValue?: string
+  closeBrace?: boolean
+}
+
 const VARIABLE_PATTERN = /\{([^{}]+)\}/g
 
 export function buildVariableHighlightSegments(
@@ -72,9 +79,55 @@ export function normalizeVariableScope(variableScope: VariableScope | string[]):
 }
 
 export function variableSuggestions(variableScope: VariableScope | string[]): string[] {
+  return variableSuggestionItems(variableScope).map(suggestion => suggestion.value)
+}
+
+export function variableSuggestionItems(variableScope: VariableScope | string[], query = ''): VariableSuggestion[] {
   const scope = normalizeVariableScope(variableScope)
-  return [...new Set(scope.available.map(item => item.trim()).filter(isVisibleVariableSuggestion))]
-    .sort((a, b) => a.localeCompare(b))
+  const variables = [...new Set(scope.available.map(item => item.trim()).filter(isVisibleVariableSuggestion))]
+  const objectVariableNames = new Set(
+    variables
+      .map(variable => variable.split('.')[0]?.trim() ?? '')
+      .filter(variable => variable && variables.some(item => item.startsWith(`${variable}.`))),
+  )
+  const normalizedQuery = query.trim().toLowerCase()
+  const dotIndex = query.lastIndexOf('.')
+
+  if (dotIndex >= 0) {
+    const objectName = query.slice(0, dotIndex).trim()
+    if (!objectName) return []
+    const closeSuggestion = variables.includes(objectName)
+      ? [{
+          value: objectName,
+          detail: 'закрыть }',
+          insertValue: objectName,
+          closeBrace: true,
+        }]
+      : []
+
+    const fieldSuggestions = variables
+      .filter(variable => variable.startsWith(`${objectName}.`))
+      .filter(variable => variable.toLowerCase().includes(normalizedQuery))
+      .map(variable => ({ value: variable }))
+      .sort(compareVariableSuggestions)
+
+    return [...closeSuggestion, ...fieldSuggestions]
+  }
+
+  return variables
+    .filter(variable => !variable.includes('.'))
+    .filter(variable => variable.toLowerCase().includes(normalizedQuery))
+    .map(variable => ({
+      value: variable,
+      ...(objectVariableNames.has(variable)
+        ? {
+            detail: 'объект данных',
+            insertValue: `${variable}.`,
+            closeBrace: false,
+          }
+        : {}),
+    }))
+    .sort(compareVariableSuggestions)
 }
 
 function isVisibleVariableSuggestion(variableName: string): boolean {
@@ -82,4 +135,8 @@ function isVisibleVariableSuggestion(variableName: string): boolean {
   if (/^button_payload_/i.test(variableName)) return false
   if (/^message_.+_id$/i.test(variableName)) return false
   return true
+}
+
+function compareVariableSuggestions(a: VariableSuggestion, b: VariableSuggestion): number {
+  return a.value.localeCompare(b.value)
 }
