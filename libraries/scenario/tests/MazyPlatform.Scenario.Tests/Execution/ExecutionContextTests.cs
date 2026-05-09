@@ -64,6 +64,72 @@ public class ExecutionContextTests
         await Assert.That(result).IsEqualTo("Обычный текст");
     }
 
+    [Test]
+    public async Task ResolveVariables_DictionaryValue_ReplacesWithJson()
+    {
+        var context = CreateContext(
+            new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["record"] = new Dictionary<string, object?>(StringComparer.Ordinal)
+                {
+                    ["name"] = "Иван",
+                    ["age"] = 30,
+                },
+            });
+
+        var result = context.ResolveVariables("{record}");
+
+        await Assert.That(result).IsEqualTo("""{"name":"Иван","age":30}""");
+    }
+
+    [Test]
+    public async Task ResolveVariables_DictionaryField_ReplacesWithFieldValue()
+    {
+        var context = CreateContext(
+            new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["record"] = new Dictionary<string, object?>(StringComparer.Ordinal)
+                {
+                    ["name"] = "Иван",
+                },
+            });
+
+        var result = context.ResolveVariables("Клиент: {record.name}");
+
+        await Assert.That(result).IsEqualTo("Клиент: Иван");
+    }
+
+    [Test]
+    public async Task ResolveVariables_ListOfDictionaries_ReplacesWithJson()
+    {
+        var records = new List<IReadOnlyDictionary<string, object?>>
+        {
+            new Dictionary<string, object?>(StringComparer.Ordinal) { ["name"] = "Иван" },
+            new Dictionary<string, object?>(StringComparer.Ordinal) { ["name"] = "Мария" },
+        };
+        var context = CreateContext(
+            new Dictionary<string, object?>(StringComparer.Ordinal) { ["records"] = records });
+
+        var result = context.ResolveVariables("{records}");
+
+        await Assert.That(result).IsEqualTo("""[{"name":"Иван"},{"name":"Мария"}]""");
+    }
+
+    [Test]
+    public async Task ResolveVariables_EntityRecord_ReplacesWithDataJson()
+    {
+        var record = new EntityRecord(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new Dictionary<string, object?>(StringComparer.Ordinal) { ["name"] = "Иван" });
+        var context = CreateContext(
+            new Dictionary<string, object?>(StringComparer.Ordinal) { ["record"] = record });
+
+        var result = context.ResolveVariables("{record}");
+
+        await Assert.That(result).IsEqualTo("""{"name":"Иван"}""");
+    }
+
     private static ExecutionContext CreateContext(IDictionary<string, object?> variables)
     {
         var session = new TestSession();
