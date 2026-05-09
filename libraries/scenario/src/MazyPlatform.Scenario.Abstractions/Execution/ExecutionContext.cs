@@ -1,5 +1,11 @@
 namespace MazyPlatform.Scenario.Abstractions.Execution;
 
+using System.Collections;
+using System.Globalization;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+
 using MazyPlatform.Scenario.Abstractions.Data;
 using MazyPlatform.Scenario.Abstractions.Events;
 using MazyPlatform.Scenario.Abstractions.Sessions;
@@ -8,8 +14,13 @@ using MazyPlatform.Scenario.Abstractions.Sessions;
 /// Контекст выполнения сценария.
 /// Передаётся в каждый узел при выполнении.
 /// </summary>
-public sealed class ExecutionContext
+public sealed partial class ExecutionContext
 {
+    private static readonly JsonSerializerOptions _variableJsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    };
+
     /// <summary>
     /// Текущая сессия диалога.
     /// </summary>
@@ -55,6 +66,9 @@ public sealed class ExecutionContext
         Session.BotId,
         Session.PlatformUserId);
 
+    [GeneratedRegex(@"\{(?<path>[^{}]+)\}", RegexOptions.Compiled | RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 100)]
+    private static partial Regex VariablePattern { get; }
+
     /// <summary>
     /// Подставляет переменные из сессии в текст.
     /// "{client_name}" → значение из Session.Variables["client_name"].
@@ -63,16 +77,83 @@ public sealed class ExecutionContext
     /// <returns>Текст с подставленными значениями.</returns>
     public string ResolveVariables(string template)
     {
-        var result = template;
+        return VariablePattern.Replace(
+            template,
+            match =>
+            {
+                var path = match.Groups["path"].Value;
 
-        foreach (var (key, value) in Session.Variables)
+                return TryResolveVariableValue(path, out var value)
+                    ? FormatVariableValue(value)
+                    : match.Value;
+            });
+    }
+
+    private static bool TryGetNestedValue(object? source, string key, out object? value)
+    {
+        if (source is EntityRecord record)
+            source = record.Data;
+
+        switch (source)
         {
-            result = result.Replace(
-                $"{{{key}}}",
-                value?.ToString() ?? string.Empty,
-                StringComparison.Ordinal);
+            case IReadOnlyDictionary<string, object?> readOnlyDictionary:
+                return readOnlyDictionary.TryGetValue(key, out value);
+            case IDictionary<string, object?> dictionary:
+                return dictionary.TryGetValue(key, out value);
+            case IReadOnlyList<object?> readOnlyList when int.TryParse(key, NumberStyles.Integer, CultureInfo.InvariantCulture, out var index):
+                if (index < 0 || index >= readOnlyList.Count)
+                {
+                    value = null;
+                    return false;
+                }
+
+                value = readOnlyList[index];
+                return true;
+            case IList list when int.TryParse(key, NumberStyles.Integer, CultureInfo.InvariantCulture, out var index):
+                if (index < 0 || index >= list.Count)
+                {
+                    value = null;
+                    return false;
+                }
+
+                value = list[index];
+                return true;
+            default:
+                value = null;
+                return false;
+        }
+    }
+
+    private static string FormatVariableValue(object? value)
+    {
+        return value switch
+        {
+            null => string.Empty,
+            string stringValue => stringValue,
+            IFormattable formattableValue => formattableValue.ToString(null, CultureInfo.InvariantCulture),
+            EntityRecord record => JsonSerializer.Serialize(record.Data, _variableJsonOptions),
+            IReadOnlyDictionary<string, object?> or IDictionary<string, object?> => JsonSerializer.Serialize(value, _variableJsonOptions),
+            IEnumerable enumerableValue => JsonSerializer.Serialize(enumerableValue, _variableJsonOptions),
+            _ => value.ToString() ?? string.Empty,
+        };
+    }
+
+    private bool TryResolveVariableValue(string path, out object? value)
+    {
+        if (Session.Variables.TryGetValue(path, out value))
+            return true;
+
+        var pathParts = path.Split('.');
+
+        if (pathParts.Length < 2 || !Session.Variables.TryGetValue(pathParts[0], out value))
+            return false;
+
+        for (var i = 1; i < pathParts.Length; i++)
+        {
+            if (!TryGetNestedValue(value, pathParts[i], out value))
+                return false;
         }
 
-        return result;
+        return true;
     }
 }
