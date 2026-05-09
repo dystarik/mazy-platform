@@ -18,6 +18,8 @@ internal sealed partial class VkPoller(
     VkOptions vkOptions,
     ILogger<VkPoller> logger) : IBotPoller
 {
+    private bool _longPollSettingsEnsured;
+
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         LogStarting(entry.BotInstanceId, entry.RequiredVkCommunityId);
@@ -53,16 +55,23 @@ internal sealed partial class VkPoller(
         }
     }
 
+    private bool IsSupportedUpdateType(string? updateType) =>
+        string.Equals(updateType, "message_new", StringComparison.Ordinal)
+        || string.Equals(updateType, "message_event", StringComparison.Ordinal);
+
     private async Task HandleUpdateAsync(System.Text.Json.JsonElement update, CancellationToken cancellationToken)
     {
         if (!update.TryGetProperty("type", out var typeProp))
             return;
 
-        if (!string.Equals(typeProp.GetString(), "message_new", StringComparison.Ordinal))
+        if (!IsSupportedUpdateType(typeProp.GetString()))
             return;
 
         var currentEntry = GetCurrentEntry();
         var rawPayload = update.GetRawText();
+        var answerTask = string.Equals(typeProp.GetString(), "message_event", StringComparison.Ordinal)
+            ? AnswerMessageEventAsync(update, currentEntry, cancellationToken)
+            : Task.CompletedTask;
 
         var @event = new BotIncomingEventIntegrationEvent(
             occurredAt: DateTimeOffset.UtcNow,
@@ -79,6 +88,43 @@ internal sealed partial class VkPoller(
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogPublishError(ex, currentEntry.BotInstanceId);
+        }
+
+        await answerTask;
+    }
+
+    private async Task AnswerMessageEventAsync(
+        System.Text.Json.JsonElement update,
+        BotInstanceCacheEntry currentEntry,
+        CancellationToken cancellationToken)
+    {
+        var eventObject = update.GetProperty("object");
+
+        if (!eventObject.TryGetProperty("event_id", out var eventIdElement)
+            || !eventObject.TryGetProperty("user_id", out var userIdElement)
+            || !eventObject.TryGetProperty("peer_id", out var peerIdElement))
+        {
+            return;
+        }
+
+        var eventId = eventIdElement.GetString();
+
+        if (string.IsNullOrEmpty(eventId))
+            return;
+
+        try
+        {
+            await longPollClient.SendMessageEventAnswerAsync(
+                eventId,
+                userIdElement.GetInt64(),
+                peerIdElement.GetInt64(),
+                currentEntry.AccessToken,
+                vkOptions.ApiVersion,
+                cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            LogCallbackAnswerError(ex, currentEntry.BotInstanceId);
         }
     }
 
@@ -104,6 +150,8 @@ internal sealed partial class VkPoller(
             try
             {
                 var currentEntry = GetCurrentEntry();
+                await EnsureLongPollSettingsAsync(currentEntry, cancellationToken);
+
                 var server = await longPollClient.GetServerAsync(
                     currentEntry.RequiredVkCommunityId,
                     currentEntry.AccessToken,
@@ -122,6 +170,30 @@ internal sealed partial class VkPoller(
 
         cancellationToken.ThrowIfCancellationRequested();
         throw new InvalidOperationException("Unreachable.");
+    }
+
+    private async Task EnsureLongPollSettingsAsync(
+        BotInstanceCacheEntry currentEntry,
+        CancellationToken cancellationToken)
+    {
+        if (_longPollSettingsEnsured)
+            return;
+
+        try
+        {
+            await longPollClient.EnsureLongPollSettingsAsync(
+                currentEntry.RequiredVkCommunityId,
+                currentEntry.AccessToken,
+                vkOptions.ApiVersion,
+                cancellationToken);
+
+            _longPollSettingsEnsured = true;
+            LogLongPollSettingsEnsured(currentEntry.RequiredVkCommunityId);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            LogLongPollSettingsEnsureError(ex, currentEntry.RequiredVkCommunityId);
+        }
     }
 
     private BotInstanceCacheEntry GetCurrentEntry()
@@ -154,4 +226,16 @@ internal sealed partial class VkPoller(
     [LoggerMessage(EventId = 6, Level = LogLevel.Error,
         Message = "Ошибка публикации события. BotInstanceId: {BotInstanceId}.")]
     private partial void LogPublishError(Exception exception, Guid botInstanceId);
+
+    [LoggerMessage(EventId = 7, Level = LogLevel.Information,
+        Message = "Настройки VK Long Poll обновлены. GroupId: {GroupId}.")]
+    private partial void LogLongPollSettingsEnsured(int groupId);
+
+    [LoggerMessage(EventId = 8, Level = LogLevel.Warning,
+        Message = "Не удалось обновить настройки VK Long Poll. GroupId: {GroupId}.")]
+    private partial void LogLongPollSettingsEnsureError(Exception exception, int groupId);
+
+    [LoggerMessage(EventId = 9, Level = LogLevel.Warning,
+        Message = "Не удалось ответить на VK message_event. BotInstanceId: {BotInstanceId}.")]
+    private partial void LogCallbackAnswerError(Exception exception, Guid botInstanceId);
 }
