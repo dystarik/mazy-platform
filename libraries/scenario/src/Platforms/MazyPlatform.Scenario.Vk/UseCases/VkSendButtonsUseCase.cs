@@ -51,9 +51,9 @@ public sealed class VkSendButtonsUseCase(VkApiClient apiClient) : ISendButtonsUs
                 {
                     action = new
                     {
-                        type = "text",
+                        type = "callback",
                         label = button.Label,
-                        payload = JsonSerializer.Serialize(new Dictionary<string, string>(StringComparer.Ordinal) { ["p"] = button.Payload }),
+                        payload = button.Payload,
                     },
                     color = MapStyle(button.Style),
                 });

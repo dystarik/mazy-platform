@@ -56,6 +56,82 @@ internal sealed class VkLongPollClient(IHttpClientFactory httpClientFactory)
     }
 
     /// <summary>
+    /// Включает обязательные события VK Long Poll для работы сценариев.
+    /// </summary>
+    /// <param name="groupId">Идентификатор сообщества VK.</param>
+    /// <param name="token">Токен доступа.</param>
+    /// <param name="apiVersion">Версия VK API.</param>
+    /// <param name="cancellationToken">Токен отмены.</param>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
+    public async Task EnsureLongPollSettingsAsync(
+        int groupId,
+        string token,
+        string apiVersion,
+        CancellationToken cancellationToken = default)
+    {
+        var parameters = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["group_id"] = groupId.ToString(CultureInfo.InvariantCulture),
+            ["enabled"] = "1",
+            ["message_new"] = "1",
+            ["message_event"] = "1",
+            ["access_token"] = token,
+            ["v"] = apiVersion,
+        };
+
+        using var client = httpClientFactory.CreateClient("VkApi");
+        using var content = new FormUrlEncodedContent(parameters);
+        using var response = await client.PostAsync(
+            $"{BaseApiUrl}groups.setLongPollSettings",
+            content,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        await EnsureVkApiSuccessAsync(response, cancellationToken);
+    }
+
+    /// <summary>
+    /// Подтверждает обработку VK callback-кнопки, чтобы клиент убрал индикатор загрузки.
+    /// </summary>
+    /// <param name="eventId">Идентификатор события нажатия.</param>
+    /// <param name="userId">Идентификатор пользователя, который нажал кнопку.</param>
+    /// <param name="peerId">Идентификатор диалога.</param>
+    /// <param name="token">Токен доступа сообщества.</param>
+    /// <param name="apiVersion">Версия VK API.</param>
+    /// <param name="cancellationToken">Токен отмены.</param>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
+    public async Task SendMessageEventAnswerAsync(
+        string eventId,
+        long userId,
+        long peerId,
+        string token,
+        string apiVersion,
+        CancellationToken cancellationToken = default)
+    {
+        var parameters = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["event_id"] = eventId,
+            ["user_id"] = userId.ToString(CultureInfo.InvariantCulture),
+            ["peer_id"] = peerId.ToString(CultureInfo.InvariantCulture),
+            ["event_data"] = string.Empty,
+            ["access_token"] = token,
+            ["v"] = apiVersion,
+        };
+
+        using var client = httpClientFactory.CreateClient("VkApi");
+        using var content = new FormUrlEncodedContent(parameters);
+        using var response = await client.PostAsync(
+            $"{BaseApiUrl}messages.sendMessageEventAnswer",
+            content,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        await EnsureVkApiSuccessAsync(response, cancellationToken);
+    }
+
+    /// <summary>
     /// Выполняет один Long Poll запрос.
     /// </summary>
     /// <param name="server">Данные Long Poll сервера.</param>
@@ -96,5 +172,18 @@ internal sealed class VkLongPollClient(IHttpClientFactory httpClientFactory)
             updates.Add(update.Clone());
 
         return new LongPollResponse(newTs, updates, null);
+    }
+
+    private static async Task EnsureVkApiSuccessAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+
+        if (document.RootElement.TryGetProperty("error", out var error))
+        {
+            var code = error.GetProperty("error_code").GetInt32();
+            var msg = error.GetProperty("error_msg").GetString() ?? "Unknown error";
+            throw new InvalidOperationException($"VK API error {code.ToString(CultureInfo.InvariantCulture)}: {msg}");
+        }
     }
 }

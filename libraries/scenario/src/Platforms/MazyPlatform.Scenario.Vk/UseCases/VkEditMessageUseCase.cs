@@ -52,10 +52,9 @@ public sealed class VkEditMessageUseCase(VkApiClient apiClient) : IEditMessageUs
                 {
                     action = new
                     {
-                        type = "text",
+                        type = "callback",
                         label = button.Label,
-                        payload = JsonSerializer.Serialize(
-                            new Dictionary<string, string>(StringComparer.Ordinal) { ["p"] = button.Payload }),
+                        payload = button.Payload,
                     },
                     color = MapStyle(button.Style),
                 });
