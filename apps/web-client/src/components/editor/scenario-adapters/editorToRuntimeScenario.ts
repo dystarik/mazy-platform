@@ -59,6 +59,7 @@ export function editorToRuntimeScenario(options: EditorToRuntimeOptions): Runtim
   const gotoIncomingConnections = new Map<string, GotoIncomingConnection[]>()
   const editorBlocks: EditorBlock[] = []
   const nodes: RuntimeNode[] = []
+  const editorNodeIds = new Set(options.nodes.map(node => node.id))
 
   for (const node of options.nodes) {
     const nodeData = (node.data ?? { type: '', params: {} }) as EditorNodeData
@@ -82,12 +83,13 @@ export function editorToRuntimeScenario(options: EditorToRuntimeOptions): Runtim
 
     if (nodeData.type === GOTO_NODE_TYPE) {
       const targetNodeId = readString(nodeData.params.targetNodeId)
-      if (targetNodeId) gotoTargets.set(node.id, targetNodeId)
+      const validTargetNodeId = targetNodeId && editorNodeIds.has(targetNodeId) ? targetNodeId : null
+      if (validTargetNodeId) gotoTargets.set(node.id, validTargetNodeId)
       editorBlocks.push({
         id: node.id,
         type: GOTO_NODE_TYPE,
         position: options.snapPosition(node.position),
-        ...(targetNodeId ? { targetNodeId } : {}),
+        ...(validTargetNodeId ? { targetNodeId: validTargetNodeId } : {}),
       })
       continue
     }
@@ -244,8 +246,13 @@ function expandGroupNodes(options: EditorToRuntimeOptions): {
 
   for (const groupNode of groupNodes) {
     const subgraph = readGroupSubgraph(groupNode)
-    const entryNodeId = readString(groupNode.data.params.entryNodeId) ?? subgraph.startNodeId
-    const exitNodeId = readString(groupNode.data.params.exitNodeId) ?? subgraph.nodes.at(-1)?.id ?? entryNodeId
+    const boundaryNodeIds = resolveGroupBoundaryNodeIds(
+      subgraph,
+      readString(groupNode.data.params.entryNodeId),
+      readString(groupNode.data.params.exitNodeId),
+    )
+    const entryNodeId = boundaryNodeIds.entryNodeId
+    const exitNodeId = boundaryNodeIds.exitNodeId
     groupEntryById.set(groupNode.id, entryNodeId)
     groupExitById.set(groupNode.id, exitNodeId)
 
@@ -380,6 +387,49 @@ function readGroupSubgraph(node: EditorFlowNode): {
 
   const startNodeId = readString(raw.startNodeId) ?? nodes[0]?.id ?? ''
   return { startNodeId, nodes, connections }
+}
+
+function resolveGroupBoundaryNodeIds(
+  subgraph: {
+    startNodeId: string
+    nodes: RuntimeNode[]
+    connections: RuntimeConnection[]
+  },
+  entryCandidateId: string | null,
+  exitCandidateId: string | null,
+): { entryNodeId: string; exitNodeId: string } {
+  const nodeIds = new Set(subgraph.nodes.map(node => node.id))
+  const fallbackEntryNodeId = nodeIds.has(subgraph.startNodeId)
+    ? subgraph.startNodeId
+    : inferGroupEntryNodeId(subgraph)
+  const entryNodeId = entryCandidateId && nodeIds.has(entryCandidateId)
+    ? entryCandidateId
+    : fallbackEntryNodeId
+  const exitNodeId = exitCandidateId && nodeIds.has(exitCandidateId)
+    ? exitCandidateId
+    : inferGroupExitNodeId(subgraph)
+
+  return { entryNodeId, exitNodeId }
+}
+
+function inferGroupEntryNodeId(subgraph: {
+  nodes: RuntimeNode[]
+  connections: RuntimeConnection[]
+}): string {
+  const targetIds = new Set(subgraph.connections.map(connection => connection.to))
+  return subgraph.nodes.find(node => !targetIds.has(node.id))?.id
+    ?? subgraph.nodes[0]?.id
+    ?? ''
+}
+
+function inferGroupExitNodeId(subgraph: {
+  nodes: RuntimeNode[]
+  connections: RuntimeConnection[]
+}): string {
+  const sourceIds = new Set(subgraph.connections.map(connection => connection.from))
+  return [...subgraph.nodes].reverse().find(node => !sourceIds.has(node.id))?.id
+    ?? subgraph.nodes.at(-1)?.id
+    ?? ''
 }
 
 function compileButtonBranchingNodes(

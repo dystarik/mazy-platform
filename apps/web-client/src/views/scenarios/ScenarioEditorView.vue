@@ -1294,7 +1294,7 @@ function clearGraph(): void {
 
 function applyGraphData(data: GraphData): void {
   nodeDragRouteSnapshot = null
-  const editorData = runtimeToEditorScenario(data)
+  const editorData = normalizeEditorScenarioGroups(runtimeToEditorScenario(data))
   graphData.value = editorData
   const shouldAutoLayout = editorData.nodes.some(node => !node.position)
 
@@ -1328,6 +1328,20 @@ function buildGraphJson(): string {
   return JSON.stringify(data)
 }
 
+function normalizeEditorScenarioGroups(data: GraphData): GraphData {
+  return {
+    ...data,
+    nodes: data.nodes.map(node =>
+      node.type === GROUP_NODE_TYPE
+        ? {
+            ...node,
+            params: normalizeAuthoringNodeParams(node.type, node.params),
+          }
+        : node,
+    ),
+  }
+}
+
 function buildAuthoringJson(): string {
   const source = getSerializationSource()
   const data = {
@@ -1337,7 +1351,7 @@ function buildAuthoringJson(): string {
     nodes: source.nodes.map(node => ({
       id: node.id,
       type: node.data.type,
-      params: stripAuthoringParams(node.data.params ?? {}),
+      params: stripAuthoringParams(normalizeAuthoringNodeParams(node.data.type, node.data.params ?? {})),
       ...(cloneNodeUi(node.data.ui) ? { ui: cloneNodeUi(node.data.ui) } : {}),
       position: snapEditorPosition(node.position),
     })),
@@ -1431,6 +1445,30 @@ function stripAuthoringParams(params: Record<string, unknown>): Record<string, u
   const next = cloneParams(params)
   delete next[BUTTON_BRANCHING_NODE_IDS_PARAM]
   return next
+}
+
+function normalizeAuthoringNodeParams(nodeType: string, params: Record<string, unknown>): Record<string, unknown> {
+  if (nodeType !== GROUP_NODE_TYPE) return params
+
+  const subgraph = readEditorSubgraph(params.subgraph)
+  if (!subgraph || subgraph.nodes.length === 0) return params
+
+  const boundaryNodeIds = resolveGroupBoundaryNodeIds(
+    subgraph,
+    readString(params.entryNodeId),
+    readString(params.exitNodeId),
+  )
+
+  return {
+    ...params,
+    nodeCount: subgraph.nodes.length,
+    entryNodeId: boundaryNodeIds.entryNodeId,
+    exitNodeId: boundaryNodeIds.exitNodeId,
+    subgraph: {
+      ...subgraph,
+      startNodeId: boundaryNodeIds.entryNodeId,
+    },
+  }
 }
 
 function describeAuthoringNodeOutputs(type: string, params: Record<string, unknown>) {
@@ -1973,7 +2011,9 @@ function createDefaultParamsForNode(type: string, nodeId: string): Record<string
 
 function deleteNode(id: string): void {
   if (isReadOnly.value) return
+  const removedIds = new Set([id])
   nodes.value = nodes.value.filter(n => n.id !== id)
+  clearGotoTargetsForRemovedNodes(removedIds)
   const nextEdges = [] as Edge[]
   for (const edge of edges.value as Edge[]) {
     if (edge.source !== id && edge.target !== id) {
@@ -2172,10 +2212,16 @@ function openGroupNode(groupId: string): void {
     rootGraphData: graphData.value ? cloneGraphData(graphData.value) : null,
   }
 
+  const boundaryNodeIds = resolveGroupBoundaryNodeIds(
+    subgraph,
+    readString(groupNode.data.params.entryNodeId),
+    readString(groupNode.data.params.exitNodeId),
+  )
+
   applyEditorScenarioToCanvas(subgraph)
   addGroupBoundaryMarkers(
-    readString(groupNode.data.params.entryNodeId) ?? subgraph.startNodeId,
-    readString(groupNode.data.params.exitNodeId) ?? subgraph.nodes.at(-1)?.id ?? subgraph.startNodeId,
+    boundaryNodeIds.entryNodeId,
+    boundaryNodeIds.exitNodeId,
     readGroupBoundaryPositions(groupNode.data.params.boundaryPositions),
   )
   selectedNodeId.value = null
@@ -2209,8 +2255,18 @@ function buildRootStateWithCurrentGroup(session: GroupEditSession): { nodes: Edi
   }
 
   const title = readString(groupNode.data.params.title) ?? session.title
-  const entryNodeId = readString(groupNode.data.params.entryNodeId) ?? subgraph.startNodeId
-  const exitNodeId = readString(groupNode.data.params.exitNodeId) ?? (subgraph.nodes.at(-1)?.id ?? entryNodeId)
+  const boundaryNodeIds = captureGroupBoundaryNodeIds()
+  const resolvedBoundaryNodeIds = resolveGroupBoundaryNodeIds(
+    subgraph,
+    boundaryNodeIds.entryNodeId ?? readString(groupNode.data.params.entryNodeId),
+    boundaryNodeIds.exitNodeId ?? readString(groupNode.data.params.exitNodeId),
+  )
+  const entryNodeId = resolvedBoundaryNodeIds.entryNodeId
+  const exitNodeId = resolvedBoundaryNodeIds.exitNodeId
+  const nextSubgraph = {
+    ...subgraph,
+    startNodeId: entryNodeId,
+  }
   const boundaryPositions = captureGroupBoundaryPositions()
 
   return {
@@ -2224,11 +2280,11 @@ function buildRootStateWithCurrentGroup(session: GroupEditSession): { nodes: Edi
           params: {
             ...cloneParams(node.data.params),
             title,
-            nodeCount: subgraph.nodes.length,
+            nodeCount: nextSubgraph.nodes.length,
             boundaryPositions,
             entryNodeId,
             exitNodeId,
-            subgraph,
+            subgraph: nextSubgraph,
           },
         },
       }
@@ -2319,6 +2375,39 @@ function addGroupBoundaryMarkers(
   ]
 }
 
+function resolveGroupBoundaryNodeIds(
+  subgraph: GraphData,
+  entryCandidateId: string | null,
+  exitCandidateId: string | null,
+): { entryNodeId: string; exitNodeId: string } {
+  const nodeIds = new Set(subgraph.nodes.map(node => node.id))
+  const fallbackEntryNodeId = nodeIds.has(subgraph.startNodeId)
+    ? subgraph.startNodeId
+    : inferGroupEntryNodeId(subgraph)
+  const entryNodeId = entryCandidateId && nodeIds.has(entryCandidateId)
+    ? entryCandidateId
+    : fallbackEntryNodeId
+  const exitNodeId = exitCandidateId && nodeIds.has(exitCandidateId)
+    ? exitCandidateId
+    : inferGroupExitNodeId(subgraph)
+
+  return { entryNodeId, exitNodeId }
+}
+
+function inferGroupEntryNodeId(subgraph: GraphData): string {
+  const targetIds = new Set(subgraph.connections.map(connection => connection.to))
+  return subgraph.nodes.find(node => !targetIds.has(node.id))?.id
+    ?? subgraph.nodes[0]?.id
+    ?? ''
+}
+
+function inferGroupExitNodeId(subgraph: GraphData): string {
+  const sourceIds = new Set(subgraph.connections.map(connection => connection.from))
+  return [...subgraph.nodes].reverse().find(node => !sourceIds.has(node.id))?.id
+    ?? subgraph.nodes.at(-1)?.id
+    ?? ''
+}
+
 function createGroupBoundaryNode(
   id: string,
   type: typeof GROUP_ENTRY_NODE_TYPE | typeof GROUP_EXIT_NODE_TYPE,
@@ -2366,6 +2455,22 @@ function captureGroupBoundaryPositions(): GroupBoundaryPositions {
   return {
     ...(readBoundaryNodePosition(GROUP_ENTRY_MARKER_ID) ? { entry: readBoundaryNodePosition(GROUP_ENTRY_MARKER_ID)! } : {}),
     ...(readBoundaryNodePosition(GROUP_EXIT_MARKER_ID) ? { exit: readBoundaryNodePosition(GROUP_EXIT_MARKER_ID)! } : {}),
+  }
+}
+
+function captureGroupBoundaryNodeIds(): { entryNodeId?: string; exitNodeId?: string } {
+  const entryEdge = [...edges.value].reverse().find(edge =>
+    edge.source === GROUP_ENTRY_MARKER_ID
+    && edge.target !== GROUP_EXIT_MARKER_ID
+  )
+  const exitEdge = [...edges.value].reverse().find(edge =>
+    edge.target === GROUP_EXIT_MARKER_ID
+    && edge.source !== GROUP_ENTRY_MARKER_ID
+  )
+
+  return {
+    ...(entryEdge?.target ? { entryNodeId: entryEdge.target } : {}),
+    ...(exitEdge?.source ? { exitNodeId: exitEdge.source } : {}),
   }
 }
 
@@ -2601,6 +2706,7 @@ function deleteNodesByIds(ids: string[]): void {
 
   const idSet = new Set(ids)
   nodes.value = nodes.value.filter((node) => !idSet.has(node.id))
+  clearGotoTargetsForRemovedNodes(idSet)
   const nextEdges: Edge[] = []
   for (const edge of edges.value as unknown[]) {
     const candidate = edge as Edge
@@ -2620,6 +2726,28 @@ function deleteNodesByIds(ids: string[]): void {
   contextMenu.value = null
 }
 
+function clearGotoTargetsForRemovedNodes(removedIds: Set<string>): void {
+  nodes.value = nodes.value.map((node) => {
+    if (
+      node.data.type !== GOTO_NODE_TYPE
+      || !removedIds.has(stringValue(node.data.params.targetNodeId))
+    ) {
+      return node
+    }
+
+    return {
+      ...node,
+      data: {
+        ...node.data,
+        params: {
+          ...node.data.params,
+          targetNodeId: '',
+        },
+      },
+    }
+  })
+}
+
 function deleteEdge(edgeId: string): void {
   if (isReadOnly.value) return
   const nextEdges: Edge[] = []
@@ -2637,6 +2765,12 @@ function validateScenarioBeforeSerialization(): boolean {
   const root = activeGroupSession.value
     ? buildRootStateWithCurrentGroup(activeGroupSession.value)
     : { nodes: nodes.value, edges: edges.value }
+  const rootNodeIds = new Set(root.nodes.map(node => node.id))
+
+  if (hasGotoOutsideNodeSet(root.nodes, rootNodeIds)) {
+    setEditorStatus('error', 'Переход указывает на несуществующий узел')
+    return false
+  }
 
   if (activeGroupSession.value && hasGotoOutsideNodeSet(nodes.value, new Set(nodes.value.map(node => node.id)))) {
     setEditorStatus('error', 'Переход внутри группы должен указывать на узел этой группы')
