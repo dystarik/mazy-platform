@@ -33,6 +33,10 @@ public class VkSendKeyboardUseCaseTests
         using var keyboard = ParseKeyboard(capture.Body);
         await Assert.That(keyboard.RootElement.GetProperty("inline").GetBoolean()).IsFalse();
         await Assert.That(keyboard.RootElement.GetProperty("one_time").GetBoolean()).IsTrue();
+        await Assert.That(keyboard.RootElement.GetProperty("buttons")[0][0].GetProperty("action").GetProperty("type").GetString())
+            .IsEqualTo("callback");
+        await Assert.That(keyboard.RootElement.GetProperty("buttons")[0][0].GetProperty("action").GetProperty("payload").GetString())
+            .IsEqualTo("yes");
     }
 
     [Test]
@@ -49,6 +53,10 @@ public class VkSendKeyboardUseCaseTests
         using var keyboard = ParseKeyboard(capture.Body);
         await Assert.That(keyboard.RootElement.GetProperty("inline").GetBoolean()).IsFalse();
         await Assert.That(keyboard.RootElement.GetProperty("one_time").GetBoolean()).IsFalse();
+        await Assert.That(keyboard.RootElement.GetProperty("buttons")[0][0].GetProperty("action").GetProperty("type").GetString())
+            .IsEqualTo("callback");
+        await Assert.That(keyboard.RootElement.GetProperty("buttons")[0][0].GetProperty("action").GetProperty("payload").GetString())
+            .IsEqualTo("yes");
     }
 
     private static JsonDocument ParseKeyboard(string? requestBody)

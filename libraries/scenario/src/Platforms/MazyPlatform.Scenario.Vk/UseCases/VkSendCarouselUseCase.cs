@@ -66,9 +66,6 @@ public sealed class VkSendCarouselUseCase(VkApiClient apiClient)
 
     private static object BuildCardButton(VkCarouselButton button)
     {
-        var serializedPayload = JsonSerializer.Serialize(
-            new Dictionary<string, string>(StringComparer.Ordinal) { ["p"] = button.Payload });
-
         if (button.Link is not null)
         {
             return new
@@ -77,7 +74,7 @@ public sealed class VkSendCarouselUseCase(VkApiClient apiClient)
                 {
                     type = "open_link",
                     label = button.Label,
-                    payload = serializedPayload,
+                    payload = button.Payload,
                     link = button.Link,
                 },
             };
@@ -87,9 +84,9 @@ public sealed class VkSendCarouselUseCase(VkApiClient apiClient)
         {
             action = new
             {
-                type = "text",
+                type = "callback",
                 label = button.Label,
-                payload = serializedPayload,
+                payload = button.Payload,
             },
         };
     }

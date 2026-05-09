@@ -2,6 +2,7 @@ namespace MazyPlatform.Scenario.Tests.Platforms.Vk;
 
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 
 using MazyPlatform.Scenario.Abstractions.Data;
 using MazyPlatform.Scenario.Tests.Helpers;
@@ -40,6 +41,37 @@ public class VkSendCarouselUseCaseTests
 
         await Assert.That(result.MessageId).IsNull();
         await Assert.That(result.Action).IsTypeOf<VkSendCarouselAction>();
+    }
+
+    [Test]
+    public async Task ExecuteAsync_ButtonPayload_IsPlainValue()
+    {
+        var useCase = CreateUseCase("""{"response": 12345}""");
+        var card = new VkCarouselCard(
+            "Title",
+            "Desc",
+            PhotoId: null,
+            Buttons: [new VkCarouselButton("Подробнее", "details")]);
+
+        var result = await useCase.ExecuteAsync(CreateContext(), [card], "Каталог:");
+        var action = (VkSendCarouselAction)result.Action;
+
+        using var template = JsonDocument.Parse(action.TemplateJson);
+        var payload = template.RootElement
+            .GetProperty("elements")[0]
+            .GetProperty("buttons")[0]
+            .GetProperty("action")
+            .GetProperty("payload")
+            .GetString();
+        var type = template.RootElement
+            .GetProperty("elements")[0]
+            .GetProperty("buttons")[0]
+            .GetProperty("action")
+            .GetProperty("type")
+            .GetString();
+
+        await Assert.That(type).IsEqualTo("callback");
+        await Assert.That(payload).IsEqualTo("details");
     }
 
     private static VkSendCarouselUseCase CreateUseCase(string vkResponseJson)

@@ -21,6 +21,12 @@ public static class VkEventParser
         using var document = JsonDocument.Parse(json);
         var root = document.RootElement;
 
+        if (root.TryGetProperty("type", out var typeElement)
+            && string.Equals(typeElement.GetString(), "message_event", StringComparison.Ordinal))
+        {
+            return ParseMessageEvent(root, json, botId);
+        }
+
         var message = root.GetProperty("object").GetProperty("message");
 
         var peerId = message.GetProperty("peer_id").GetInt64();
@@ -47,21 +53,33 @@ public static class VkEventParser
         };
     }
 
+    private static VkIncomingEvent ParseMessageEvent(JsonElement root, string json, Guid botId)
+    {
+        var eventObject = root.GetProperty("object");
+        var peerId = eventObject.GetProperty("peer_id").GetInt64();
+        var userId = eventObject.GetProperty("user_id").GetInt64();
+        var messageId = eventObject.TryGetProperty("conversation_message_id", out var conversationMessageId)
+            ? conversationMessageId.GetInt64().ToString(CultureInfo.InvariantCulture)
+            : null;
+
+        return new VkIncomingEvent
+        {
+            EventType = IncomingEventType.ButtonPress,
+            BotId = botId,
+            PlatformUserId = userId.ToString(CultureInfo.InvariantCulture),
+            ChatId = peerId.ToString(CultureInfo.InvariantCulture),
+            Payload = ReadPayload(eventObject),
+            MessageId = messageId,
+            RawJson = json,
+        };
+    }
+
     private static (
         IncomingEventType EventType,
         string? Payload,
         string? ImageUrl,
         string? ImageCaption) DetermineEventDetails(JsonElement message)
     {
-        if (message.TryGetProperty("payload", out var payloadProp))
-        {
-            var payload = payloadProp.ValueKind == JsonValueKind.String
-                ? payloadProp.GetString()
-                : payloadProp.GetRawText();
-
-            return (IncomingEventType.ButtonPress, NormalizePayload(payload), null, null);
-        }
-
         if (TryExtractPhoto(message, out var imageUrl))
         {
             var caption = message.TryGetProperty("text", out var captionProp)
@@ -75,24 +93,12 @@ public static class VkEventParser
         return (IncomingEventType.Message, null, null, null);
     }
 
-    private static string? NormalizePayload(string? payload)
-    {
-        if (string.IsNullOrWhiteSpace(payload))
-            return payload;
-
-        try
-        {
-            using var document = JsonDocument.Parse(payload);
-
-            if (document.RootElement.TryGetProperty("p", out var payloadValue))
-                return payloadValue.GetString() ?? payload;
-        }
-        catch (JsonException)
-        {
-        }
-
-        return payload;
-    }
+    private static string? ReadPayload(JsonElement eventObject) =>
+        eventObject.TryGetProperty("payload", out var payloadElement)
+            ? payloadElement.ValueKind == JsonValueKind.String
+                ? payloadElement.GetString()
+                : payloadElement.GetRawText()
+            : null;
 
     private static bool TryExtractPhoto(JsonElement message, out string? imageUrl)
     {

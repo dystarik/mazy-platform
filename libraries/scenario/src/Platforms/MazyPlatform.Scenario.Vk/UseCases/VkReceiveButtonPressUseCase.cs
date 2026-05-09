@@ -1,7 +1,5 @@
 namespace MazyPlatform.Scenario.Vk.UseCases;
 
-using System.Text.Json;
-
 using MazyPlatform.Scenario.Abstractions.Events;
 using MazyPlatform.Scenario.Abstractions.UseCases;
 
@@ -14,21 +12,5 @@ public sealed class VkReceiveButtonPressUseCase : IReceiveButtonPressUseCase
     public bool CanHandle(IIncomingEvent incomingEvent) => incomingEvent.EventType == IncomingEventType.ButtonPress;
 
     /// <inheritdoc />
-    public string ExtractPayload(IIncomingEvent incomingEvent)
-    {
-        var raw = incomingEvent.Payload ?? string.Empty;
-
-        try
-        {
-            using var doc = JsonDocument.Parse(raw);
-
-            if (doc.RootElement.TryGetProperty("p", out var p))
-                return p.GetString() ?? raw;
-        }
-        catch (JsonException)
-        {
-        }
-
-        return raw;
-    }
+    public string ExtractPayload(IIncomingEvent incomingEvent) => incomingEvent.Payload ?? string.Empty;
 }

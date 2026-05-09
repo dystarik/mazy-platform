@@ -60,10 +60,9 @@ public sealed class VkSendKeyboardUseCase(VkApiClient apiClient)
                 {
                     action = new
                     {
-                        type = "text",
+                        type = "callback",
                         label = button.Label,
-                        payload = JsonSerializer.Serialize(
-                            new Dictionary<string, string>(StringComparer.Ordinal) { ["p"] = button.Payload }),
+                        payload = button.Payload,
                     },
                     color = button.Color ?? "primary",
                 });

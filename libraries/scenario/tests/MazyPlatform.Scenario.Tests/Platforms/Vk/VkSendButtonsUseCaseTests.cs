@@ -44,7 +44,11 @@ public class VkSendButtonsUseCaseTests
         await Assert.That(root.GetProperty("inline").GetBoolean()).IsTrue();
         await Assert.That(root.TryGetProperty("one_time", out _)).IsFalse();
         await Assert.That(rows.GetArrayLength()).IsEqualTo(2);
+        await Assert.That(rows[0][0].GetProperty("action").GetProperty("type").GetString()).IsEqualTo("callback");
+        await Assert.That(rows[0][0].GetProperty("action").GetProperty("payload").GetString()).IsEqualTo("primary");
         await Assert.That(rows[0][0].GetProperty("color").GetString()).IsEqualTo("primary");
+        await Assert.That(rows[0][1].GetProperty("action").GetProperty("type").GetString()).IsEqualTo("callback");
+        await Assert.That(rows[0][1].GetProperty("action").GetProperty("payload").GetString()).IsEqualTo("success");
         await Assert.That(rows[0][1].GetProperty("color").GetString()).IsEqualTo("positive");
         await Assert.That(rows[1][0].GetProperty("color").GetString()).IsEqualTo("negative");
         await Assert.That(rows[1][1].GetProperty("color").GetString()).IsEqualTo("secondary");
