@@ -8,11 +8,11 @@
     <PackageVersion Include="MazyPlatform.Contracts.Bot.Grpc" Version="0.6.16-preview" />
     <PackageVersion Include="MazyPlatform.Contracts.Scenario" Version="0.6.16-preview" />
     <PackageVersion Include="MazyPlatform.Contracts.Scenario.Grpc" Version="0.6.16-preview" />
-    <PackageVersion Include="MazyPlatform.Scenario" Version="0.3.14-preview" />
-    <PackageVersion Include="MazyPlatform.Scenario.Abstractions" Version="0.3.14-preview" />
-    <PackageVersion Include="MazyPlatform.Scenario.Storage.Mongo" Version="0.3.14-preview" />
-    <PackageVersion Include="MazyPlatform.Scenario.Telegram" Version="0.3.14-preview" />
-    <PackageVersion Include="MazyPlatform.Scenario.Vk" Version="0.3.14-preview" />
+    <PackageVersion Include="MazyPlatform.Scenario" Version="0.3.18-preview" />
+    <PackageVersion Include="MazyPlatform.Scenario.Abstractions" Version="0.3.18-preview" />
+    <PackageVersion Include="MazyPlatform.Scenario.Storage.Mongo" Version="0.3.18-preview" />
+    <PackageVersion Include="MazyPlatform.Scenario.Telegram" Version="0.3.18-preview" />
+    <PackageVersion Include="MazyPlatform.Scenario.Vk" Version="0.3.18-preview" />
     <PackageVersion Include="Meziantou.Analyzer" Version="3.0.77" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.7" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.7" />
@@ -31,6 +31,7 @@
     <PackageVersion Include="Serilog.Sinks.Async" Version="2.1.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageVersion Include="Serilog.Sinks.Grafana.Loki" Version="8.3.2" />
+    <PackageVersion Include="SharpCompress" Version="0.48.0" />
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
   </ItemGroup>
 </Project>

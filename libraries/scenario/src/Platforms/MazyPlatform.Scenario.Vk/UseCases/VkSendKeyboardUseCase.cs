@@ -5,6 +5,7 @@ using System.Text.Json;
 
 using MazyPlatform.Scenario.Abstractions.Execution;
 using MazyPlatform.Scenario.Abstractions.UseCases;
+using MazyPlatform.Scenario.Vk;
 using MazyPlatform.Scenario.Vk.Actions;
 using MazyPlatform.Scenario.Vk.Api;
 
@@ -41,7 +42,7 @@ public sealed class VkSendKeyboardUseCase(VkApiClient apiClient)
         };
 
         var response = await apiClient.CallAsync("messages.send", parameters, context.BotToken, cancellationToken);
-        var messageId = response.ValueKind == JsonValueKind.Number ? response.ToString() : null;
+        var messageId = VkMessageId.FromSendResponse(response);
 
         return new SendResult(new VkSendKeyboardAction(text, keyboardJson), messageId);
     }
@@ -62,7 +63,7 @@ public sealed class VkSendKeyboardUseCase(VkApiClient apiClient)
                     {
                         type = "callback",
                         label = button.Label,
-                        payload = button.Payload,
+                        payload = VkButtonPayloadFormatter.Format(button.Payload),
                     },
                     color = button.Color ?? "primary",
                 });

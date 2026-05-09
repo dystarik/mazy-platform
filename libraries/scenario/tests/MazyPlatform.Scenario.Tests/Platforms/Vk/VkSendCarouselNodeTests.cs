@@ -33,7 +33,7 @@ public class VkSendCarouselNodeTests
 
         await node.ExecuteAsync(context);
 
-        await Assert.That(context.Session.Variables["lastCarouselId"]).IsEqualTo("99999");
+        await Assert.That(context.Session.Variables["lastCarouselId"]).IsEqualTo("vk:mid:99999");
     }
 
     [Test]

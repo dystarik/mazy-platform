@@ -5,6 +5,7 @@ using System.Text.Json;
 using MazyPlatform.Scenario.Abstractions.Actions;
 using MazyPlatform.Scenario.Abstractions.Execution;
 using MazyPlatform.Scenario.Abstractions.UseCases;
+using MazyPlatform.Scenario.Vk;
 using MazyPlatform.Scenario.Vk.Api;
 
 /// <summary>
@@ -24,9 +25,21 @@ public sealed class VkEditMessageUseCase(VkApiClient apiClient) : IEditMessageUs
         var parameters = new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["peer_id"] = context.IncomingEvent!.ChatId,
-            ["message_id"] = messageId,
             ["message"] = newText,
         };
+
+        if (VkMessageId.TryGetConversationMessageId(messageId, out var conversationMessageId))
+        {
+            parameters["conversation_message_id"] = conversationMessageId;
+        }
+        else if (VkMessageId.TryGetMessageId(messageId, out var vkMessageId))
+        {
+            parameters["message_id"] = vkMessageId;
+        }
+        else
+        {
+            parameters["message_id"] = messageId;
+        }
 
         if (buttons is not null)
         {
@@ -54,7 +67,7 @@ public sealed class VkEditMessageUseCase(VkApiClient apiClient) : IEditMessageUs
                     {
                         type = "callback",
                         label = button.Label,
-                        payload = button.Payload,
+                        payload = VkButtonPayloadFormatter.Format(button.Payload),
                     },
                     color = MapStyle(button.Style),
                 });

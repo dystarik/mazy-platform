@@ -35,20 +35,24 @@ public class VkSendButtonsUseCaseTests
             ],
         ]);
 
-        await useCase.ExecuteAsync(CreateContext(), "Выберите действие", layout);
+        var result = await useCase.ExecuteAsync(CreateContext(), "Выберите действие", layout);
 
+        var form = HttpUtility.ParseQueryString(capture.Body!);
         using var keyboard = ParseKeyboard(capture.Body);
         var root = keyboard.RootElement;
         var rows = root.GetProperty("buttons");
 
+        await Assert.That(form["peer_id"]).IsEqualTo("test_chat");
+        await Assert.That(form["peer_ids"]).IsNull();
+        await Assert.That(result.MessageId).IsEqualTo("vk:mid:123");
         await Assert.That(root.GetProperty("inline").GetBoolean()).IsTrue();
         await Assert.That(root.TryGetProperty("one_time", out _)).IsFalse();
         await Assert.That(rows.GetArrayLength()).IsEqualTo(2);
         await Assert.That(rows[0][0].GetProperty("action").GetProperty("type").GetString()).IsEqualTo("callback");
-        await Assert.That(rows[0][0].GetProperty("action").GetProperty("payload").GetString()).IsEqualTo("primary");
+        await Assert.That(rows[0][0].GetProperty("action").GetProperty("payload").GetString()).IsEqualTo("\"primary\"");
         await Assert.That(rows[0][0].GetProperty("color").GetString()).IsEqualTo("primary");
         await Assert.That(rows[0][1].GetProperty("action").GetProperty("type").GetString()).IsEqualTo("callback");
-        await Assert.That(rows[0][1].GetProperty("action").GetProperty("payload").GetString()).IsEqualTo("success");
+        await Assert.That(rows[0][1].GetProperty("action").GetProperty("payload").GetString()).IsEqualTo("\"success\"");
         await Assert.That(rows[0][1].GetProperty("color").GetString()).IsEqualTo("positive");
         await Assert.That(rows[1][0].GetProperty("color").GetString()).IsEqualTo("negative");
         await Assert.That(rows[1][1].GetProperty("color").GetString()).IsEqualTo("secondary");

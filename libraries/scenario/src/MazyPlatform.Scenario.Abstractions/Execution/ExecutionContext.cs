@@ -2,8 +2,6 @@ namespace MazyPlatform.Scenario.Abstractions.Execution;
 
 using System.Collections;
 using System.Globalization;
-using System.Text.Encodings.Web;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 
 using MazyPlatform.Scenario.Abstractions.Data;
@@ -16,11 +14,6 @@ using MazyPlatform.Scenario.Abstractions.Sessions;
 /// </summary>
 public sealed partial class ExecutionContext
 {
-    private static readonly JsonSerializerOptions _variableJsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-    };
-
     /// <summary>
     /// Текущая сессия диалога.
     /// </summary>
@@ -131,11 +124,42 @@ public sealed partial class ExecutionContext
             null => string.Empty,
             string stringValue => stringValue,
             IFormattable formattableValue => formattableValue.ToString(null, CultureInfo.InvariantCulture),
-            EntityRecord record => JsonSerializer.Serialize(record.Data, _variableJsonOptions),
-            IReadOnlyDictionary<string, object?> or IDictionary<string, object?> => JsonSerializer.Serialize(value, _variableJsonOptions),
-            IEnumerable enumerableValue => JsonSerializer.Serialize(enumerableValue, _variableJsonOptions),
+            EntityRecord record => FormatDictionary(record.Data),
+            IReadOnlyDictionary<string, object?> readOnlyDictionary => FormatDictionary(readOnlyDictionary),
+            IDictionary<string, object?> dictionary => FormatDictionary(dictionary),
+            IDictionary dictionary => FormatDictionary(dictionary),
+            IEnumerable enumerableValue => FormatEnumerable(enumerableValue),
             _ => value.ToString() ?? string.Empty,
         };
+    }
+
+    private static string FormatDictionary(IEnumerable<KeyValuePair<string, object?>> dictionary) =>
+        string.Join(
+            Environment.NewLine,
+            dictionary.Select(pair => $"{pair.Key}: {FormatVariableValue(pair.Value)}"));
+
+    private static string FormatDictionary(IDictionary dictionary)
+    {
+        var lines = new List<string>(dictionary.Count);
+
+        foreach (DictionaryEntry entry in dictionary)
+        {
+            lines.Add($"{entry.Key}: {FormatVariableValue(entry.Value)}");
+        }
+
+        return string.Join(Environment.NewLine, lines);
+    }
+
+    private static string FormatEnumerable(IEnumerable enumerable)
+    {
+        var values = new List<string>();
+
+        foreach (var item in enumerable)
+        {
+            values.Add(FormatVariableValue(item));
+        }
+
+        return string.Join(Environment.NewLine, values);
     }
 
     private bool TryResolveVariableValue(string path, out object? value)

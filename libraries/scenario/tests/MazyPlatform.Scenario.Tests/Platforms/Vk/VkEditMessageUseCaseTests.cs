@@ -29,19 +29,23 @@ public class VkEditMessageUseCaseTests
             [new ButtonDefinition("Нет", "no", ButtonStyle.Danger)],
         ]);
 
-        await useCase.ExecuteAsync(CreateContext(), "123", "Обновлено", layout);
+        await useCase.ExecuteAsync(CreateContext(), "vk:mid:123", "Обновлено", layout);
 
+        var form = HttpUtility.ParseQueryString(capture.Body!);
         using var keyboard = ParseKeyboard(capture.Body);
         var root = keyboard.RootElement;
         var rows = root.GetProperty("buttons");
 
+        await Assert.That(form["message_id"]).IsEqualTo("123");
+        await Assert.That(form["conversation_message_id"]).IsNull();
+        await Assert.That(form["peer_id"]).IsEqualTo("test_chat");
         await Assert.That(root.GetProperty("inline").GetBoolean()).IsTrue();
         await Assert.That(rows.GetArrayLength()).IsEqualTo(2);
         await Assert.That(rows[0][0].GetProperty("action").GetProperty("type").GetString()).IsEqualTo("callback");
-        await Assert.That(rows[0][0].GetProperty("action").GetProperty("payload").GetString()).IsEqualTo("ok");
+        await Assert.That(rows[0][0].GetProperty("action").GetProperty("payload").GetString()).IsEqualTo("\"ok\"");
         await Assert.That(rows[0][0].GetProperty("color").GetString()).IsEqualTo("positive");
         await Assert.That(rows[1][0].GetProperty("action").GetProperty("type").GetString()).IsEqualTo("callback");
-        await Assert.That(rows[1][0].GetProperty("action").GetProperty("payload").GetString()).IsEqualTo("no");
+        await Assert.That(rows[1][0].GetProperty("action").GetProperty("payload").GetString()).IsEqualTo("\"no\"");
         await Assert.That(rows[1][0].GetProperty("color").GetString()).IsEqualTo("negative");
     }
 
@@ -53,7 +57,22 @@ public class VkEditMessageUseCaseTests
         await useCase.ExecuteAsync(CreateContext(), "123", "Обновлено", buttons: null);
 
         var form = HttpUtility.ParseQueryString(capture.Body!);
+        await Assert.That(form["message_id"]).IsEqualTo("123");
+        await Assert.That(form["conversation_message_id"]).IsNull();
         await Assert.That(form["keyboard"]).IsNull();
+    }
+
+    [Test]
+    public async Task ExecuteAsync_WithConversationMessageId_UsesConversationMessageId()
+    {
+        var (useCase, capture) = CreateUseCase("""{"response": 1}""");
+
+        await useCase.ExecuteAsync(CreateContext(), "vk:cmid:42", "Обновлено", buttons: null);
+
+        var form = HttpUtility.ParseQueryString(capture.Body!);
+        await Assert.That(form["conversation_message_id"]).IsEqualTo("42");
+        await Assert.That(form["message_id"]).IsNull();
+        await Assert.That(form["peer_id"]).IsEqualTo("test_chat");
     }
 
     private static JsonDocument ParseKeyboard(string? requestBody)

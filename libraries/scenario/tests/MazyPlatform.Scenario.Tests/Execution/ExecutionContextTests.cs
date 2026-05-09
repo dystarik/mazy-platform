@@ -102,7 +102,7 @@ public class ExecutionContextTests
     }
 
     [Test]
-    public async Task ResolveVariables_DictionaryValue_ReplacesWithJson()
+    public async Task ResolveVariables_DictionaryValue_ReplacesWithReadableFields()
     {
         var context = CreateContext(
             new Dictionary<string, object?>(StringComparer.Ordinal)
@@ -116,7 +116,7 @@ public class ExecutionContextTests
 
         var result = context.ResolveVariables("{record}");
 
-        await Assert.That(result).IsEqualTo("""{"name":"Иван","age":30}""");
+        await Assert.That(result).IsEqualTo($"name: Иван{Environment.NewLine}age: 30");
     }
 
     [Test]
@@ -137,7 +137,7 @@ public class ExecutionContextTests
     }
 
     [Test]
-    public async Task ResolveVariables_ListOfDictionaries_ReplacesWithJson()
+    public async Task ResolveVariables_ListOfDictionaries_ReplacesWithReadableFields()
     {
         var records = new List<IReadOnlyDictionary<string, object?>>
         {
@@ -149,11 +149,11 @@ public class ExecutionContextTests
 
         var result = context.ResolveVariables("{records}");
 
-        await Assert.That(result).IsEqualTo("""[{"name":"Иван"},{"name":"Мария"}]""");
+        await Assert.That(result).IsEqualTo($"name: Иван{Environment.NewLine}name: Мария");
     }
 
     [Test]
-    public async Task ResolveVariables_EntityRecord_ReplacesWithDataJson()
+    public async Task ResolveVariables_EntityRecord_ReplacesWithReadableFields()
     {
         var record = new EntityRecord(
             Guid.NewGuid(),
@@ -164,7 +164,7 @@ public class ExecutionContextTests
 
         var result = context.ResolveVariables("{record}");
 
-        await Assert.That(result).IsEqualTo("""{"name":"Иван"}""");
+        await Assert.That(result).IsEqualTo("name: Иван");
     }
 
     private static ExecutionContext CreateContext(IDictionary<string, object?> variables)

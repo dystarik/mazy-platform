@@ -7,6 +7,7 @@ using System.Text.Json;
 using MazyPlatform.Scenario.Abstractions.Actions;
 using MazyPlatform.Scenario.Abstractions.Execution;
 using MazyPlatform.Scenario.Abstractions.UseCases;
+using MazyPlatform.Scenario.Vk;
 using MazyPlatform.Scenario.Vk.Api;
 
 /// <summary>
@@ -39,7 +40,7 @@ public sealed class VkSendImageUseCase(VkApiClient apiClient, IHttpClientFactory
         }
 
         var response = await apiClient.CallAsync("messages.send", parameters, botToken, cancellationToken);
-        var messageId = response.ValueKind == JsonValueKind.Number ? response.ToString() : null;
+        var messageId = VkMessageId.FromSendResponse(response);
 
         return new SendResult(new SendImageAction(imageUrl, caption), messageId);
     }

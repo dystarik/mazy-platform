@@ -3,6 +3,7 @@ namespace MazyPlatform.Scenario.Vk.UseCases;
 using MazyPlatform.Scenario.Abstractions.Actions;
 using MazyPlatform.Scenario.Abstractions.Execution;
 using MazyPlatform.Scenario.Abstractions.UseCases;
+using MazyPlatform.Scenario.Vk;
 using MazyPlatform.Scenario.Vk.Api;
 
 /// <summary>
@@ -22,7 +23,7 @@ public sealed class VkSendMessageUseCase(VkApiClient apiClient) : ISendMessageUs
         };
 
         var response = await apiClient.CallAsync("messages.send", parameters, context.BotToken, cancellationToken);
-        var messageId = response.ValueKind == System.Text.Json.JsonValueKind.Number ? response.ToString() : null;
+        var messageId = VkMessageId.FromSendResponse(response);
 
         return new SendResult(new SendTextAction(text), messageId);
     }

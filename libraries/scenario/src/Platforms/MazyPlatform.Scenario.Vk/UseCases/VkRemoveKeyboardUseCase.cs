@@ -5,6 +5,7 @@ using System.Text.Json;
 
 using MazyPlatform.Scenario.Abstractions.Execution;
 using MazyPlatform.Scenario.Abstractions.UseCases;
+using MazyPlatform.Scenario.Vk;
 using MazyPlatform.Scenario.Vk.Actions;
 using MazyPlatform.Scenario.Vk.Api;
 
@@ -38,7 +39,7 @@ public sealed class VkRemoveKeyboardUseCase(VkApiClient apiClient)
         };
 
         var response = await apiClient.CallAsync("messages.send", parameters, context.BotToken, cancellationToken);
-        var messageId = response.ValueKind == JsonValueKind.Number ? response.ToString() : null;
+        var messageId = VkMessageId.FromSendResponse(response);
 
         return new SendResult(new VkRemoveKeyboardAction(text), messageId);
     }

@@ -22,11 +22,14 @@ public class VkRemoveKeyboardUseCaseTests
     [Test]
     public async Task ExecuteAsync_ApiReturnsNumber_ReturnsMessageId()
     {
-        var (useCase, _) = CreateUseCase("""{"response": 12345}""");
+        var (useCase, capture) = CreateUseCase("""{"response": 12345}""");
 
         var result = await useCase.ExecuteAsync(CreateContext(), "Готово");
 
-        await Assert.That(result.MessageId).IsEqualTo("12345");
+        var form = HttpUtility.ParseQueryString(capture.Body!);
+        await Assert.That(form["peer_id"]).IsEqualTo("test_chat");
+        await Assert.That(form["peer_ids"]).IsNull();
+        await Assert.That(result.MessageId).IsEqualTo("vk:mid:12345");
         await Assert.That(result.Action).IsTypeOf<VkRemoveKeyboardAction>();
     }
 

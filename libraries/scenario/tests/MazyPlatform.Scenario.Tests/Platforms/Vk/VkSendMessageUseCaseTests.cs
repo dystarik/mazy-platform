@@ -1,14 +1,13 @@
 namespace MazyPlatform.Scenario.Tests.Platforms.Vk;
 
 using System.Net;
-using System.Net.Http;
 using System.Web;
 
+using MazyPlatform.Scenario.Abstractions.Actions;
 using MazyPlatform.Scenario.Abstractions.Data;
 using MazyPlatform.Scenario.Tests.Helpers;
 using MazyPlatform.Scenario.Vk.Api;
 using MazyPlatform.Scenario.Vk.Configuration;
-using MazyPlatform.Scenario.Vk.Nodes;
 using MazyPlatform.Scenario.Vk.UseCases;
 
 using Microsoft.Extensions.Options;
@@ -17,57 +16,24 @@ using NSubstitute;
 
 using ExecutionContext = MazyPlatform.Scenario.Abstractions.Execution.ExecutionContext;
 
-public class VkRemoveKeyboardNodeTests
+public class VkSendMessageUseCaseTests
 {
     [Test]
-    public async Task ExecuteAsync_WithMessageIdVariable_ApiReturnsNumber_SavesIdToSession()
+    public async Task ExecuteAsync_UsesPeerIdAndReturnsMessageId()
     {
-        var (useCase, _) = CreateUseCase("""{"response": 99999}""");
-        var node = new VkRemoveKeyboardNode(
-            Guid.NewGuid(),
-            "Готово",
-            useCase,
-            messageIdVariable: "lastMsgId");
-        var context = CreateContext();
+        var (useCase, capture) = CreateUseCase("""{"response": 12345}""");
 
-        await node.ExecuteAsync(context);
-
-        await Assert.That(context.Session.Variables["lastMsgId"]).IsEqualTo("vk:mid:99999");
-    }
-
-    [Test]
-    public async Task ExecuteAsync_WithoutMessageIdVariable_DoesNotWriteAnything()
-    {
-        var (useCase, _) = CreateUseCase("""{"response": 77777}""");
-        var node = new VkRemoveKeyboardNode(
-            Guid.NewGuid(),
-            "Готово",
-            useCase);
-        var context = CreateContext();
-
-        await node.ExecuteAsync(context);
-
-        await Assert.That(context.Session.Variables.Count).IsEqualTo(0);
-    }
-
-    [Test]
-    public async Task ExecuteAsync_ResolvesTextVariables()
-    {
-        var (useCase, capture) = CreateUseCase("""{"response": 1}""");
-        var node = new VkRemoveKeyboardNode(
-            Guid.NewGuid(),
-            "Готово, {name}",
-            useCase);
-        var context = CreateContext();
-        context.Session.Variables["name"] = "Иван";
-
-        await node.ExecuteAsync(context);
+        var result = await useCase.ExecuteAsync(CreateContext(), "Привет");
 
         var form = HttpUtility.ParseQueryString(capture.Body!);
-        await Assert.That(form["message"]).IsEqualTo("Готово, Иван");
+        await Assert.That(form["peer_id"]).IsEqualTo("test_chat");
+        await Assert.That(form["peer_ids"]).IsNull();
+        await Assert.That(form["message"]).IsEqualTo("Привет");
+        await Assert.That(result.MessageId).IsEqualTo("vk:mid:12345");
+        await Assert.That(result.Action).IsTypeOf<SendTextAction>();
     }
 
-    private static (VkRemoveKeyboardUseCase UseCase, RequestCapture Capture) CreateUseCase(string vkResponseJson)
+    private static (VkSendMessageUseCase UseCase, RequestCapture Capture) CreateUseCase(string vkResponseJson)
     {
         var capture = new RequestCapture();
         var handler = new CapturingHandler(HttpStatusCode.OK, vkResponseJson, capture);
@@ -76,7 +42,7 @@ public class VkRemoveKeyboardNodeTests
         factory.CreateClient(Arg.Any<string>()).Returns(client);
 
         var apiClient = new VkApiClient(factory, Options.Create(new VkOptions()));
-        return (new VkRemoveKeyboardUseCase(apiClient), capture);
+        return (new VkSendMessageUseCase(apiClient), capture);
     }
 
     private static ExecutionContext CreateContext() =>

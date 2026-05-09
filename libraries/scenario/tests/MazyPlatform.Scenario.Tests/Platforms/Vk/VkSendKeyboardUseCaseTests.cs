@@ -24,19 +24,23 @@ public class VkSendKeyboardUseCaseTests
     {
         var (useCase, capture) = CreateUseCase("""{"response": 1}""");
 
-        await useCase.ExecuteAsync(
+        var result = await useCase.ExecuteAsync(
             CreateContext(),
             "Выберите действие",
             [[new VkButtonInfo("Да", "yes")]],
             oneTime: true);
 
+        var form = HttpUtility.ParseQueryString(capture.Body!);
         using var keyboard = ParseKeyboard(capture.Body);
+        await Assert.That(form["peer_id"]).IsEqualTo("test_chat");
+        await Assert.That(form["peer_ids"]).IsNull();
+        await Assert.That(result.MessageId).IsEqualTo("vk:mid:1");
         await Assert.That(keyboard.RootElement.GetProperty("inline").GetBoolean()).IsFalse();
         await Assert.That(keyboard.RootElement.GetProperty("one_time").GetBoolean()).IsTrue();
         await Assert.That(keyboard.RootElement.GetProperty("buttons")[0][0].GetProperty("action").GetProperty("type").GetString())
             .IsEqualTo("callback");
         await Assert.That(keyboard.RootElement.GetProperty("buttons")[0][0].GetProperty("action").GetProperty("payload").GetString())
-            .IsEqualTo("yes");
+            .IsEqualTo("\"yes\"");
     }
 
     [Test]
@@ -56,7 +60,7 @@ public class VkSendKeyboardUseCaseTests
         await Assert.That(keyboard.RootElement.GetProperty("buttons")[0][0].GetProperty("action").GetProperty("type").GetString())
             .IsEqualTo("callback");
         await Assert.That(keyboard.RootElement.GetProperty("buttons")[0][0].GetProperty("action").GetProperty("payload").GetString())
-            .IsEqualTo("yes");
+            .IsEqualTo("\"yes\"");
     }
 
     private static JsonDocument ParseKeyboard(string? requestBody)

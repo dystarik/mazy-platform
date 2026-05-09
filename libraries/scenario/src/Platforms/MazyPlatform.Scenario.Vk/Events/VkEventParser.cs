@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Text.Json;
 
 using MazyPlatform.Scenario.Abstractions.Events;
+using MazyPlatform.Scenario.Vk;
 
 /// <summary>
 /// Парсер входящих событий VK Callback API.
@@ -32,9 +33,7 @@ public static class VkEventParser
         var peerId = message.GetProperty("peer_id").GetInt64();
         var fromId = message.GetProperty("from_id").GetInt64();
         var text = message.TryGetProperty("text", out var textProp) ? textProp.GetString() : null;
-        var messageId = message.TryGetProperty("id", out var idProp)
-            ? idProp.GetInt64().ToString(CultureInfo.InvariantCulture)
-            : null;
+        var messageId = ReadMessageId(message);
 
         var (eventType, payload, imageUrl, imageCaption) = DetermineEventDetails(message);
 
@@ -59,7 +58,7 @@ public static class VkEventParser
         var peerId = eventObject.GetProperty("peer_id").GetInt64();
         var userId = eventObject.GetProperty("user_id").GetInt64();
         var messageId = eventObject.TryGetProperty("conversation_message_id", out var conversationMessageId)
-            ? conversationMessageId.GetInt64().ToString(CultureInfo.InvariantCulture)
+            ? VkMessageId.FromConversationMessageId(conversationMessageId.GetInt64())
             : null;
 
         return new VkIncomingEvent
@@ -96,9 +95,41 @@ public static class VkEventParser
     private static string? ReadPayload(JsonElement eventObject) =>
         eventObject.TryGetProperty("payload", out var payloadElement)
             ? payloadElement.ValueKind == JsonValueKind.String
-                ? payloadElement.GetString()
+                ? ReadStringPayload(payloadElement.GetString())
                 : payloadElement.GetRawText()
             : null;
+
+    private static string? ReadStringPayload(string? payload)
+    {
+        if (payload is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(payload);
+            return document.RootElement.ValueKind == JsonValueKind.String
+                ? document.RootElement.GetString()
+                : payload;
+        }
+        catch (JsonException)
+        {
+            return payload;
+        }
+    }
+
+    private static string? ReadMessageId(JsonElement message)
+    {
+        if (message.TryGetProperty("conversation_message_id", out var conversationMessageId))
+        {
+            return VkMessageId.FromConversationMessageId(conversationMessageId.GetInt64());
+        }
+
+        return message.TryGetProperty("id", out var id)
+            ? VkMessageId.FromMessageId(id.GetInt64())
+            : null;
+    }
 
     private static bool TryExtractPhoto(JsonElement message, out string? imageUrl)
     {
