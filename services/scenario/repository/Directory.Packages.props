@@ -12,7 +12,7 @@
     <PackageVersion Include="MazyPlatform.Scenario.Telegram" Version="0.3.14-preview" />
     <PackageVersion Include="MazyPlatform.Scenario.Vk" Version="0.3.14-preview" />
     <PackageVersion Include="MazyPlatform.SharedKernel.Api" Version="0.6.3-preview" />
-    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.75" />
+    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.77" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.7" />
     <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
     <PackageVersion Include="Roslynator.Analyzers" Version="4.15.0" />

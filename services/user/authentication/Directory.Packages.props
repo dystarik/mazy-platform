@@ -14,7 +14,7 @@
     <PackageVersion Include="MazyPlatform.SharedKernel.Application" Version="0.6.3-preview" />
     <PackageVersion Include="MazyPlatform.SharedKernel.Domain" Version="0.6.3-preview" />
     <PackageVersion Include="MazyPlatform.SharedKernel.Infrastructure" Version="0.6.3-preview" />
-    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.75" />
+    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.77" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.7" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Abstractions" Version="10.0.7" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7" />
@@ -45,6 +45,6 @@
     <PackageVersion Include="Serilog.Sinks.Grafana.Loki" Version="8.3.2" />
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.18.0" />
-    <PackageVersion Include="TUnit" Version="1.43.11" />
+    <PackageVersion Include="TUnit" Version="1.43.41" />
   </ItemGroup>
 </Project>
