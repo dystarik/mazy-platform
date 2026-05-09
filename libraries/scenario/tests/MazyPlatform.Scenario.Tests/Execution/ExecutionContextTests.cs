@@ -55,6 +55,43 @@ public class ExecutionContextTests
     }
 
     [Test]
+    public async Task ResolveVariables_DictionaryPath_ReplacesWithNestedField()
+    {
+        var context = CreateContext(
+            new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["record"] = new Dictionary<string, object?>(StringComparer.Ordinal)
+                {
+                    ["phone"] = "+79991234567",
+                },
+            });
+
+        var result = context.ResolveVariables("Телефон: {record.phone}");
+
+        await Assert.That(result).IsEqualTo("Телефон: +79991234567");
+    }
+
+    [Test]
+    public async Task ResolveVariables_ListPath_ReplacesWithIndexedNestedField()
+    {
+        var context = CreateContext(
+            new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["records"] = new List<object?>
+                {
+                    new Dictionary<string, object?>(StringComparer.Ordinal)
+                    {
+                        ["name"] = "Первый",
+                    },
+                },
+            });
+
+        var result = context.ResolveVariables("Запись: {records.0.name}");
+
+        await Assert.That(result).IsEqualTo("Запись: Первый");
+    }
+
+    [Test]
     public async Task ResolveVariables_WithoutVariables_ReturnsOriginalText()
     {
         var context = CreateContext(new Dictionary<string, object?>(StringComparer.Ordinal));

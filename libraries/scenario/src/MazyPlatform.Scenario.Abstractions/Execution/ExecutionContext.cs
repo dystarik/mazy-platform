@@ -100,6 +100,24 @@ public sealed partial class ExecutionContext
                 return readOnlyDictionary.TryGetValue(key, out value);
             case IDictionary<string, object?> dictionary:
                 return dictionary.TryGetValue(key, out value);
+            case IReadOnlyList<object?> readOnlyList when int.TryParse(key, NumberStyles.Integer, CultureInfo.InvariantCulture, out var index):
+                if (index < 0 || index >= readOnlyList.Count)
+                {
+                    value = null;
+                    return false;
+                }
+
+                value = readOnlyList[index];
+                return true;
+            case IList list when int.TryParse(key, NumberStyles.Integer, CultureInfo.InvariantCulture, out var index):
+                if (index < 0 || index >= list.Count)
+                {
+                    value = null;
+                    return false;
+                }
+
+                value = list[index];
+                return true;
             default:
                 value = null;
                 return false;
