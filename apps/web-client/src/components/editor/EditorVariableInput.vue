@@ -42,14 +42,18 @@
       >
         <button
           v-for="(suggestion, index) in visibleSuggestions"
-          :key="suggestion"
+          :key="suggestion.value"
           class="editor-variable-input__suggestion"
           :class="{ 'editor-variable-input__suggestion--active': index === activeSuggestionIndex }"
           type="button"
           @mouseenter="activeSuggestionIndex = index"
           @click.stop="insertVariable(suggestion)"
         >
-          {{ suggestion }}
+          <span class="editor-variable-input__suggestion-value">{{ suggestion.value }}</span>
+          <span
+            v-if="suggestion.detail"
+            class="editor-variable-input__suggestion-detail"
+          >{{ suggestion.detail }}</span>
         </button>
       </div>
     </Teleport>
@@ -62,10 +66,12 @@ import InputText from 'primevue/inputtext'
 import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
 import {
   buildVariableHighlightSegments,
-  variableSuggestions,
+  variableSuggestionItems,
+  type VariableSuggestion,
   type VariableScope,
 } from '@/components/editor/variableHighlight'
 import { getTextControlCaretPosition } from '@/components/editor/caretPosition'
+import { useTextInputHistory } from '@/components/editor/textInputHistory'
 
 const props = withDefaults(defineProps<{
   modelValue: string
@@ -95,23 +101,27 @@ const variableQuery = ref<string | null>(null)
 const suggestionsStyle = ref<CSSProperties>({})
 const activeSuggestionIndex = ref(0)
 const currentScope = computed(() => props.variableScope ?? props.knownVariables)
-const suggestionVariables = computed(() => variableSuggestions(currentScope.value))
 const suggestionsOpen = computed(() => visibleSuggestions.value.length > 0)
 const visibleSuggestions = computed(() => {
   if (props.readonly || props.disabled || variableQuery.value === null) return []
-  const query = variableQuery.value.toLowerCase()
-  return suggestionVariables.value
-    .filter(variable => variable.toLowerCase().includes(query))
+  return variableSuggestionItems(currentScope.value, variableQuery.value)
     .slice(0, 8)
 })
+const { handleHistoryKeydown, rememberHistoryValue } = useTextInputHistory(
+  () => props.modelValue,
+  getInputElement,
+  value => emit('update:modelValue', value),
+)
 
 function handleInput(event: Event): void {
   const input = event.target as HTMLInputElement
+  rememberHistoryValue(input)
   emit('update:modelValue', input.value)
   void nextTick(refreshSuggestions)
 }
 
 function handleKeydown(event: KeyboardEvent): void {
+  if (handleHistoryKeydown(event)) return
   if (!suggestionsOpen.value) return
   if (event.key === 'Escape') {
     variableQuery.value = null
@@ -161,7 +171,7 @@ function closeSuggestionsLater(): void {
   }, 120)
 }
 
-function insertVariable(variable: string): void {
+function insertVariable(suggestion: VariableSuggestion): void {
   const input = getInputElement()
   if (!input) return
 
@@ -169,14 +179,19 @@ function insertVariable(variable: string): void {
   const openBraceIndex = input.value.lastIndexOf('{', cursor - 1)
   if (openBraceIndex < 0) return
 
-  const nextValue = `${input.value.slice(0, openBraceIndex)}{${variable}}${input.value.slice(cursor)}`
-  const nextCursor = openBraceIndex + variable.length + 2
+  const insertValue = suggestion.insertValue ?? suggestion.value
+  const suffix = suggestion.closeBrace === false ? '' : '}'
+  const nextValue = `${input.value.slice(0, openBraceIndex)}{${insertValue}${suffix}${input.value.slice(cursor)}`
+  const nextCursor = openBraceIndex + insertValue.length + 1 + suffix.length
   emit('update:modelValue', nextValue)
-  variableQuery.value = null
+  variableQuery.value = suggestion.closeBrace === false ? insertValue : null
   void nextTick(() => {
     const nextInput = getInputElement()
     nextInput?.focus()
     nextInput?.setSelectionRange(nextCursor, nextCursor)
+    if (suggestion.closeBrace === false) {
+      refreshSuggestions()
+    }
   })
 }
 
@@ -267,17 +282,14 @@ function getInputElement(): HTMLInputElement | null {
 
 .editor-variable-input__segment--known {
   color: var(--color-primary);
-  font-weight: 600;
 }
 
 .editor-variable-input__segment--future {
   color: #b7791f;
-  font-weight: 600;
 }
 
 .editor-variable-input__segment--missing {
   color: var(--color-danger);
-  font-weight: 600;
 }
 
 .editor-variable-input__suggestions {
@@ -294,7 +306,10 @@ function getInputElement(): HTMLInputElement | null {
 }
 
 .editor-variable-input__suggestion {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   width: 100%;
   border: 0;
   background: transparent;
@@ -303,6 +318,22 @@ function getInputElement(): HTMLInputElement | null {
   font: inherit;
   padding: 5px 10px;
   text-align: left;
+}
+
+.editor-variable-input__suggestion-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.editor-variable-input__suggestion-detail {
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  line-height: 14px;
+  padding: 1px 6px;
 }
 
 .editor-variable-input__suggestion:hover,

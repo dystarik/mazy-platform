@@ -47,14 +47,18 @@
       >
         <button
           v-for="(suggestion, index) in visibleSuggestions"
-          :key="suggestion"
+          :key="suggestion.value"
           class="editor-grid-textarea__suggestion"
           :class="{ 'editor-grid-textarea__suggestion--active': index === activeSuggestionIndex }"
           type="button"
           @mouseenter="activeSuggestionIndex = index"
           @click.stop="insertVariable(suggestion)"
         >
-          {{ suggestion }}
+          <span class="editor-grid-textarea__suggestion-value">{{ suggestion.value }}</span>
+          <span
+            v-if="suggestion.detail"
+            class="editor-grid-textarea__suggestion-detail"
+          >{{ suggestion.detail }}</span>
         </button>
       </div>
     </Teleport>
@@ -75,10 +79,12 @@ import Textarea from 'primevue/textarea'
 import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
 import {
   buildVariableHighlightSegments,
-  variableSuggestions,
+  variableSuggestionItems,
+  type VariableSuggestion,
   type VariableScope,
 } from '@/components/editor/variableHighlight'
 import { getTextControlCaretPosition } from '@/components/editor/caretPosition'
+import { useTextInputHistory } from '@/components/editor/textInputHistory'
 
 const GRID_SIZE = 12
 
@@ -115,15 +121,17 @@ const highlightSegments = computed(() =>
 const variableQuery = ref<string | null>(null)
 const suggestionsStyle = ref<CSSProperties>({})
 const activeSuggestionIndex = ref(0)
-const suggestionVariables = computed(() => variableSuggestions(currentScope.value))
 const suggestionsOpen = computed(() => visibleSuggestions.value.length > 0)
 const visibleSuggestions = computed(() => {
   if (props.readonly || props.disabled || variableQuery.value === null) return []
-  const query = variableQuery.value.toLowerCase()
-  return suggestionVariables.value
-    .filter(variable => variable.toLowerCase().includes(query))
+  return variableSuggestionItems(currentScope.value, variableQuery.value)
     .slice(0, 8)
 })
+const { handleHistoryKeydown, rememberHistoryValue } = useTextInputHistory(
+  () => props.modelValue,
+  getTextareaElement,
+  value => emit('update:modelValue', value),
+)
 let resizeStartY = 0
 let resizeStartHeight = 0
 let isResizing = false
@@ -139,11 +147,13 @@ onBeforeUnmount(() => {
 
 function handleInput(event: Event): void {
   const textarea = event.target as HTMLTextAreaElement
+  rememberHistoryValue(textarea)
   emit('update:modelValue', textarea.value)
   void nextTick(refreshSuggestions)
 }
 
 function handleKeydown(event: KeyboardEvent): void {
+  if (handleHistoryKeydown(event)) return
   if (!suggestionsOpen.value) return
   if (event.key === 'Escape') {
     variableQuery.value = null
@@ -193,7 +203,7 @@ function closeSuggestionsLater(): void {
   }, 120)
 }
 
-function insertVariable(variable: string): void {
+function insertVariable(suggestion: VariableSuggestion): void {
   const textarea = getTextareaElement()
   if (!textarea) return
 
@@ -201,14 +211,19 @@ function insertVariable(variable: string): void {
   const openBraceIndex = textarea.value.lastIndexOf('{', cursor - 1)
   if (openBraceIndex < 0) return
 
-  const nextValue = `${textarea.value.slice(0, openBraceIndex)}{${variable}}${textarea.value.slice(cursor)}`
-  const nextCursor = openBraceIndex + variable.length + 2
+  const insertValue = suggestion.insertValue ?? suggestion.value
+  const suffix = suggestion.closeBrace === false ? '' : '}'
+  const nextValue = `${textarea.value.slice(0, openBraceIndex)}{${insertValue}${suffix}${textarea.value.slice(cursor)}`
+  const nextCursor = openBraceIndex + insertValue.length + 1 + suffix.length
   emit('update:modelValue', nextValue)
-  variableQuery.value = null
+  variableQuery.value = suggestion.closeBrace === false ? insertValue : null
   void nextTick(() => {
     const nextTextarea = getTextareaElement()
     nextTextarea?.focus()
     nextTextarea?.setSelectionRange(nextCursor, nextCursor)
+    if (suggestion.closeBrace === false) {
+      refreshSuggestions()
+    }
   })
 }
 
@@ -337,17 +352,14 @@ function getTextareaElement(): HTMLTextAreaElement | null {
 
 .editor-grid-textarea__segment--known {
   color: var(--color-primary);
-  font-weight: 600;
 }
 
 .editor-grid-textarea__segment--future {
   color: #b7791f;
-  font-weight: 600;
 }
 
 .editor-grid-textarea__segment--missing {
   color: var(--color-danger);
-  font-weight: 600;
 }
 
 .editor-grid-textarea :deep(.editor-grid-textarea__control::placeholder) {
@@ -396,7 +408,10 @@ function getTextareaElement(): HTMLTextAreaElement | null {
 }
 
 .editor-grid-textarea__suggestion {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   width: 100%;
   border: 0;
   background: transparent;
@@ -405,6 +420,22 @@ function getTextareaElement(): HTMLTextAreaElement | null {
   font: inherit;
   padding: 5px 10px;
   text-align: left;
+}
+
+.editor-grid-textarea__suggestion-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.editor-grid-textarea__suggestion-detail {
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  line-height: 14px;
+  padding: 1px 6px;
 }
 
 .editor-grid-textarea__suggestion:hover,

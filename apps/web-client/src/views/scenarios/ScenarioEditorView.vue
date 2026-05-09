@@ -3775,12 +3775,18 @@ function variableScopeForNode(nodeId: string): VariableScope {
   if (!targetNode) return allVariableScope.value
 
   const available = new Set<string>()
-  const upstreamNodeIds = collectUpstreamNodeIds(nodeId)
-
-  for (const node of nodes.value) {
-    if (!upstreamNodeIds.has(node.id)) continue
-    collectVariablesFromFlowNode(node, available)
+  const context = createVariableCollectionContext()
+  if (activeGroupSession.value) {
+    collectAvailableVariablesForNode(
+      activeGroupSession.value.groupId,
+      activeGroupSession.value.rootNodes,
+      activeGroupSession.value.rootEdges,
+      available,
+      context,
+    )
   }
+
+  collectAvailableVariablesForNode(nodeId, nodes.value, edges.value, available, context)
 
   const future = knownVariables.value.filter(variable => !available.has(variable))
 
@@ -3790,11 +3796,27 @@ function variableScopeForNode(nodeId: string): VariableScope {
   }
 }
 
-function collectUpstreamNodeIds(nodeId: string): Set<string> {
+function collectAvailableVariablesForNode(
+  nodeId: string,
+  sourceNodes: EditorFlowNode[],
+  sourceEdges: Edge[],
+  target: Set<string>,
+  context: VariableCollectionContext = createVariableCollectionContext(),
+): void {
+  const upstreamNodeIds = collectUpstreamNodeIds(nodeId, sourceEdges)
+  collectVariableCollectionContext(sourceNodes, upstreamNodeIds, context)
+
+  for (const node of sourceNodes) {
+    if (!upstreamNodeIds.has(node.id)) continue
+    collectVariablesFromFlowNode(node, target, context)
+  }
+}
+
+function collectUpstreamNodeIds(nodeId: string, sourceEdges: Edge[] = edges.value): Set<string> {
   const upstream = new Set<string>()
   const reverse = new Map<string, string[]>()
 
-  for (const edge of edges.value) {
+  for (const edge of sourceEdges) {
     if (!edge.source || !edge.target) continue
     const sources = reverse.get(edge.target) ?? []
     sources.push(edge.source)
@@ -3812,13 +3834,46 @@ function collectUpstreamNodeIds(nodeId: string): Set<string> {
   return upstream
 }
 
-function collectVariablesFromFlowNode(node: EditorFlowNode, target: Set<string>): void {
-  collectVariablesFromNodeParams(node.data.type, node.data.params, target)
+interface VariableCollectionContext {
+  recordIdSchemas: Map<string, GetEntitySchemaResponse>
+}
+
+function createVariableCollectionContext(
+): VariableCollectionContext {
+  return {
+    recordIdSchemas: new Map<string, GetEntitySchemaResponse>(),
+  }
+}
+
+function collectVariableCollectionContext(
+  sourceNodes: EditorFlowNode[],
+  nodeIds: Set<string>,
+  context: VariableCollectionContext,
+): void {
+  for (const node of sourceNodes) {
+    if (!nodeIds.has(node.id)) continue
+    collectRecordIdSchemaFromNodeParams(node.data.type, node.data.params, context)
+
+    if (node.data.type === GROUP_NODE_TYPE) {
+      const subgraph = readEditorSubgraph(node.data.params.subgraph)
+      if (subgraph) {
+        collectRecordIdSchemasFromRuntimeNodes(subgraph.nodes, context)
+      }
+    }
+  }
+}
+
+function collectVariablesFromFlowNode(
+  node: EditorFlowNode,
+  target: Set<string>,
+  context?: VariableCollectionContext,
+): void {
+  collectVariablesFromNodeParams(node.data.type, node.data.params, target, context)
 
   if (node.data.type === GROUP_NODE_TYPE) {
     const subgraph = readEditorSubgraph(node.data.params.subgraph)
     if (subgraph) {
-      collectVariablesFromRuntimeNodes(subgraph.nodes, target)
+      collectVariablesFromRuntimeNodes(subgraph.nodes, target, context)
     }
   }
 }
@@ -3829,14 +3884,38 @@ function collectVariablesFromFlowNodes(sourceNodes: EditorFlowNode[], target: Se
   }
 }
 
-function collectVariablesFromRuntimeNodes(sourceNodes: RuntimeNode[], target: Set<string>): void {
+function collectVariablesFromRuntimeNodes(
+  sourceNodes: RuntimeNode[],
+  target: Set<string>,
+  context?: VariableCollectionContext,
+): void {
+  if (context) {
+    collectRecordIdSchemasFromRuntimeNodes(sourceNodes, context)
+  }
+
   for (const node of sourceNodes) {
-    collectVariablesFromNodeParams(node.type, node.params ?? {}, target)
+    collectVariablesFromNodeParams(node.type, node.params ?? {}, target, context)
 
     if (node.type === GROUP_NODE_TYPE) {
       const subgraph = readEditorSubgraph(node.params?.subgraph)
       if (subgraph) {
-        collectVariablesFromRuntimeNodes(subgraph.nodes, target)
+        collectVariablesFromRuntimeNodes(subgraph.nodes, target, context)
+      }
+    }
+  }
+}
+
+function collectRecordIdSchemasFromRuntimeNodes(
+  sourceNodes: RuntimeNode[],
+  context: VariableCollectionContext,
+): void {
+  for (const node of sourceNodes) {
+    collectRecordIdSchemaFromNodeParams(node.type, node.params ?? {}, context)
+
+    if (node.type === GROUP_NODE_TYPE) {
+      const subgraph = readEditorSubgraph(node.params?.subgraph)
+      if (subgraph) {
+        collectRecordIdSchemasFromRuntimeNodes(subgraph.nodes, context)
       }
     }
   }
@@ -3846,6 +3925,7 @@ function collectVariablesFromNodeParams(
   nodeType: string,
   params: Record<string, unknown>,
   target: Set<string>,
+  context?: VariableCollectionContext,
 ): void {
   addVariableName(target, params.messageIdVariable)
   addVariableName(target, params.buttonPayloadVariable)
@@ -3859,6 +3939,7 @@ function collectVariablesFromNodeParams(
   addVariableName(target, params.countVariable)
   addVariableName(target, params.responseBodyVariable)
   addVariableName(target, params.responseStatusVariable)
+  addDataFieldVariableNames(target, nodeType, params, context)
 
   if (nodeType === 'get_user_info') {
     const prefix = readString(params.prefix) || 'user'
@@ -3867,6 +3948,88 @@ function collectVariablesFromNodeParams(
     addVariableName(target, `${prefix}_username`)
     addVariableName(target, `${prefix}_avatar_url`)
   }
+}
+
+function collectRecordIdSchemaFromNodeParams(
+  nodeType: string,
+  params: Record<string, unknown>,
+  context: VariableCollectionContext,
+): void {
+  const backendNodeType = nodeType === DATA_NODE_TYPE
+    ? backendNodeTypeFromDataAction(params.action)
+    : nodeType
+  if (backendNodeType !== 'create_record') return
+
+  const recordIdVariable = readString(params.recordIdVariable)
+  if (!recordIdVariable) return
+
+  const schema = findProjectDataSchema(readString(params.entityName))
+  if (schema) {
+    context.recordIdSchemas.set(recordIdVariable, schema)
+  }
+}
+
+function addDataFieldVariableNames(
+  target: Set<string>,
+  nodeType: string,
+  params: Record<string, unknown>,
+  context?: VariableCollectionContext,
+): void {
+  const backendNodeType = nodeType === DATA_NODE_TYPE
+    ? backendNodeTypeFromDataAction(params.action)
+    : nodeType
+  if (backendNodeType !== 'get_record' && backendNodeType !== 'query_records') return
+
+  const schema = findProjectDataSchema(readString(params.entityName))
+    ?? findProjectDataSchemaByRecordIdVariable(params.recordIdVariable, context)
+    ?? findOnlyProjectDataSchema()
+  if (!schema) return
+
+  if (backendNodeType === 'get_record') {
+    addDataFieldPaths(target, params.recordVariable, schema.fields ?? [], false)
+    return
+  }
+
+  addDataFieldPaths(target, params.recordsVariable, schema.fields ?? [], true)
+}
+
+function findProjectDataSchemaByRecordIdVariable(
+  recordIdVariable: unknown,
+  context?: VariableCollectionContext,
+): GetEntitySchemaResponse | null {
+  const variableName = readString(recordIdVariable)
+  if (!variableName) return null
+  return context?.recordIdSchemas.get(variableName) ?? null
+}
+
+function addDataFieldPaths(
+  target: Set<string>,
+  variable: unknown,
+  fields: NonNullable<GetEntitySchemaResponse['fields']>,
+  isList: boolean,
+): void {
+  const variableName = readString(variable)
+  if (!variableName) return
+
+  for (const field of fields) {
+    const fieldName = readString(field.name)
+    if (!fieldName) continue
+
+    target.add(isList
+      ? `${variableName}.0.${fieldName}`
+      : `${variableName}.${fieldName}`)
+  }
+}
+
+function findProjectDataSchema(entityName: string | null): GetEntitySchemaResponse | null {
+  if (!entityName) return null
+  return projectSchemaDetails.value.find(schema => schema.name === entityName) ?? null
+}
+
+function findOnlyProjectDataSchema(): GetEntitySchemaResponse | null {
+  return projectSchemaDetails.value.length === 1
+    ? projectSchemaDetails.value[0] ?? null
+    : null
 }
 
 function addVariableName(target: Set<string>, value: unknown): void {
@@ -3918,7 +4081,7 @@ function normalizeDataNodeParams(
 ): Record<string, unknown> {
   const next: Record<string, unknown> = {}
 
-  if (['create_record', 'query_records'].includes(backendNodeType)) {
+  if (['create_record', 'get_record', 'query_records'].includes(backendNodeType)) {
     next.entityName = params.entityName
   }
 
