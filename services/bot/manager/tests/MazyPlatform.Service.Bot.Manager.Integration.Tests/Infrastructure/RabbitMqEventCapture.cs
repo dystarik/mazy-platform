@@ -103,6 +103,33 @@ public sealed class RabbitMqEventCapture : IAsyncDisposable
             cancellationToken);
     }
 
+    public async Task AssertNoBotEventAsync(
+        string routingKey,
+        Guid botInstanceId,
+        int afterCount,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        var timeoutAt = DateTimeOffset.UtcNow.Add(timeout ?? TimeSpan.FromMilliseconds(750));
+        while (DateTimeOffset.UtcNow < timeoutAt)
+        {
+            var match = _events.ToArray()
+                .Skip(afterCount)
+                .FirstOrDefault(e => string.Equals(e.RoutingKey, routingKey, StringComparison.Ordinal) && e.BotInstanceId == botInstanceId);
+
+            if (match is not null)
+                throw new InvalidOperationException($"Unexpected event '{routingKey}' for bot '{botInstanceId}' was captured. Payload: {match.Json}");
+
+            var remaining = timeoutAt - DateTimeOffset.UtcNow;
+            if (remaining <= TimeSpan.Zero)
+                break;
+
+            await _eventArrived.WaitAsync(
+                remaining < TimeSpan.FromMilliseconds(100) ? remaining : TimeSpan.FromMilliseconds(100),
+                cancellationToken);
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (_channel is not null)
