@@ -39,6 +39,9 @@ internal sealed partial class ResendConfirmationCodeHandler(
 
         var now = timeProvider.GetUtcNow();
 
+        var currentOtp = await otpRepository.GetLatestUnverifiedByUserAccountIdAsync(userAccount.Id, OtpType.EmailConfirmation, cancellationToken);
+        currentOtp?.Invalidate(now);
+
         var newOtp = OneTimePassword.Create(userAccount.Id, OtpType.EmailConfirmation, codeHasher, now);
         otpRepository.Add(newOtp);
 

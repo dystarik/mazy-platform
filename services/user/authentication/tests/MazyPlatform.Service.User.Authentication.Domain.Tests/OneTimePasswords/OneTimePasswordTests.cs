@@ -2,6 +2,7 @@ namespace MazyPlatform.Service.User.Authentication.Domain.Tests.OneTimePasswords
 
 using MazyPlatform.Service.User.Authentication.Domain.OneTimePasswords;
 using MazyPlatform.Service.User.Authentication.Domain.OneTimePasswords.Enums;
+using MazyPlatform.Service.User.Authentication.Domain.Shared;
 using MazyPlatform.Service.User.Authentication.Domain.Shared.Hashing;
 
 using NSubstitute;
@@ -67,6 +68,49 @@ public class OneTimePasswordTests
     }
 
     [Test]
+    public async Task Verify_Should_ReturnAlreadyUsedError_When_CodeWasAlreadyVerified()
+    {
+        // Arrange
+        var userAccountId = Guid.NewGuid();
+        var codeHasher = Substitute.For<ICodeHasher>();
+        codeHasher.Hash(Arg.Any<string>()).Returns("hashed_code");
+        codeHasher.Verify(code: "123456", hashedCode: "hashed_code").Returns(returnThis: true);
+        var now = DateTimeOffset.UtcNow;
+        var otp = OneTimePassword.Create(userAccountId, OtpType.EmailConfirmation, codeHasher, now);
+
+        _ = otp.Verify(codeHasher, code: "123456", now);
+
+        // Act
+        var result = otp.Verify(codeHasher, code: "123456", now.AddSeconds(1));
+
+        // Assert
+        await Assert.That(result.IsSuccess).IsFalse();
+        await Assert.That(result.Errors!.First().Code).IsEqualTo(ErrorCodes.Auth.OneTimePassword.AlreadyUsed);
+    }
+
+    [Test]
+    public async Task Verify_Should_ReturnInvalidatedError_When_OtpWasInvalidated()
+    {
+        // Arrange
+        var userAccountId = Guid.NewGuid();
+        var codeHasher = Substitute.For<ICodeHasher>();
+        codeHasher.Hash(Arg.Any<string>()).Returns("hashed_code");
+        codeHasher.Verify(code: "123456", hashedCode: "hashed_code").Returns(returnThis: true);
+        var now = DateTimeOffset.UtcNow;
+        var otp = OneTimePassword.Create(userAccountId, OtpType.EmailConfirmation, codeHasher, now);
+
+        otp.Invalidate(now);
+
+        // Act
+        var result = otp.Verify(codeHasher, code: "123456", now.AddSeconds(1));
+
+        // Assert
+        await Assert.That(result.IsSuccess).IsFalse();
+        await Assert.That(result.Errors!.First().Code).IsEqualTo(ErrorCodes.Auth.OneTimePassword.Invalidated);
+        await Assert.That(otp.IsVerified).IsFalse();
+    }
+
+    [Test]
     public async Task Verify_Should_ReturnError_When_TooManyAttempts()
     {
         // Arrange
@@ -108,6 +152,7 @@ public class OneTimePasswordTests
 
         // Assert
         await Assert.That(result.IsSuccess).IsFalse();
+        await Assert.That(result.Errors!.First().Code).IsEqualTo(ErrorCodes.Auth.OneTimePassword.Expired);
     }
 
     [Test]

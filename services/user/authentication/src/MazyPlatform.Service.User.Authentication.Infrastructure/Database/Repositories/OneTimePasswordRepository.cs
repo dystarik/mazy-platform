@@ -20,7 +20,10 @@ internal sealed class OneTimePasswordRepository(ApplicationDbContext context) : 
             throw new ArgumentException("Идентификатор учетной записи пользователя не может быть пустым.", nameof(userAccountId));
 
         return _context.OneTimePasswords
-            .Where(otp => otp.UserAccountId == userAccountId && otp.Type == type && otp.VerifiedAt == null)
+            .Where(otp => otp.UserAccountId == userAccountId
+                && otp.Type == type
+                && otp.VerifiedAt == null
+                && otp.InvalidatedAt == null)
             .OrderByDescending(otp => otp.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken);
     }
