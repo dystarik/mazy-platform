@@ -14,7 +14,10 @@ internal sealed partial class GetScenarioDraftHandler(
         var ownerAccountId = Guid.Parse(query.OwnerAccountId);
 
         var graph = await dbContext.ScenarioGraphs
-            .SingleOrDefaultAsync(x => x.ProjectId == projectId, cancellationToken);
+            .SingleOrDefaultAsync(
+                x => x.ProjectId == projectId
+                    && dbContext.Projects.Any(project => project.Id == x.ProjectId && project.OwnerAccountId == ownerAccountId),
+                cancellationToken);
 
         if (graph is not null)
             return new GetScenarioDraftResult(graph.Id, graph.DraftJson, Version: 0);

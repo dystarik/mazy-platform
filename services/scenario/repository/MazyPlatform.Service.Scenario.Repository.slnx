@@ -5,4 +5,7 @@
     <Project Path="src/MazyPlatform.Service.Scenario.Repository.Domain/MazyPlatform.Service.Scenario.Repository.Domain.csproj" />
     <Project Path="src/MazyPlatform.Service.Scenario.Repository.Infrastructure/MazyPlatform.Service.Scenario.Repository.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MazyPlatform.Service.Scenario.Repository.Integration.Tests/MazyPlatform.Service.Scenario.Repository.Integration.Tests.csproj" />
+  </Folder>
 </Solution>

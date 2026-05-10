@@ -11,9 +11,13 @@ internal sealed partial class GetVersionHistoryHandler(
     public async Task<Result<GetVersionHistoryResult>> HandleAsync(GetVersionHistoryQuery query, CancellationToken cancellationToken = default)
     {
         var projectId = Guid.Parse(query.ProjectId);
+        var ownerAccountId = Guid.Parse(query.OwnerAccountId);
 
         var graph = await dbContext.ScenarioGraphs
-            .SingleOrDefaultAsync(x => x.ProjectId == projectId, cancellationToken);
+            .SingleOrDefaultAsync(
+                x => x.ProjectId == projectId
+                    && dbContext.Projects.Any(project => project.Id == x.ProjectId && project.OwnerAccountId == ownerAccountId),
+                cancellationToken);
 
         if (graph is null)
         {

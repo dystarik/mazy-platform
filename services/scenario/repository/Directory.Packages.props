@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="MazyPlatform.Contracts.Bot.Grpc" Version="0.6.16-preview" />
+    <PackageVersion Include="MazyPlatform.Contracts.Core" Version="0.6.16-preview" />
     <PackageVersion Include="MazyPlatform.Contracts.Scenario" Version="0.6.16-preview" />
     <PackageVersion Include="MazyPlatform.Contracts.Scenario.Grpc" Version="0.6.16-preview" />
     <PackageVersion Include="MazyPlatform.Contracts.User" Version="0.6.16-preview" />
@@ -35,6 +36,7 @@
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.7" />
     <PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.7" />
     <PackageVersion Include="Grpc.AspNetCore" Version="2.80.0" />
+    <PackageVersion Include="Grpc.Net.Client" Version="2.80.0" />
     <PackageVersion Include="prometheus-net.AspNetCore" Version="8.2.1" />
     <PackageVersion Include="prometheus-net.AspNetCore.Grpc" Version="8.2.1" />
     <PackageVersion Include="Serilog" Version="4.3.1" />
@@ -45,5 +47,9 @@
     <PackageVersion Include="Serilog.Sinks.Async" Version="2.1.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageVersion Include="Serilog.Sinks.Grafana.Loki" Version="8.3.2" />
+    <PackageVersion Include="Testcontainers" Version="4.11.0" />
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.11.0" />
+    <PackageVersion Include="Testcontainers.RabbitMq" Version="4.11.0" />
+    <PackageVersion Include="TUnit" Version="1.43.41" />
   </ItemGroup>
 </Project>
