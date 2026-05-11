@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Grpc.AspNetCore" />
+        <PackageReference Include="MazyPlatform.Contracts.Bot" />
+        <PackageReference Include="MazyPlatform.Contracts.Bot.Grpc" />
+        <PackageReference Include="MazyPlatform.Contracts.Core" />
+        <PackageReference Include="RabbitMQ.Client" />
+        <PackageReference Include="SharpCompress" />
+        <PackageReference Include="Snappier" />
+        <PackageReference Include="Testcontainers" />
+        <PackageReference Include="Testcontainers.RabbitMq" />
+        <PackageReference Include="TUnit" />
+    </ItemGroup>
+
+</Project>
