@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/MazyPlatform.Service.Scenario.Engine/MazyPlatform.Service.Scenario.Engine.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MazyPlatform.Service.Scenario.Engine.Integration.Tests/MazyPlatform.Service.Scenario.Engine.Integration.Tests.csproj" />
+  </Folder>
 </Solution>
