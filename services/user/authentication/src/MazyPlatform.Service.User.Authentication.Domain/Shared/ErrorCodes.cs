@@ -116,6 +116,12 @@ public sealed class ErrorCodes
             /// <summary>Введён неверный код.</summary>
             public const string InvalidCode = "AUTH.ONE_TIME_PASSWORD.INVALID_CODE";
 
+            /// <summary>Одноразовый пароль уже был использован.</summary>
+            public const string AlreadyUsed = "AUTH.ONE_TIME_PASSWORD.ALREADY_USED";
+
+            /// <summary>Одноразовый пароль был аннулирован.</summary>
+            public const string Invalidated = "AUTH.ONE_TIME_PASSWORD.INVALIDATED";
+
             /// <summary>Превышено максимальное число попыток (<see cref="Domain.OneTimePasswords.OneTimePassword.MaxAttempts"/>).</summary>
             public const string TooManyAttempts = "AUTH.ONE_TIME_PASSWORD.TOO_MANY_ATTEMPTS";
         }

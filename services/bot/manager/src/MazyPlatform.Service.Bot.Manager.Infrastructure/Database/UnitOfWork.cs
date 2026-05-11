@@ -9,7 +9,7 @@ using MazyPlatform.SharedKernel.Domain.Primitives;
 /// до тех пор, пока обработчики не перестают порождать новые события.
 /// </summary>
 /// <remarks>
-/// После каждого вызова <see cref="ApplicationDbContext.SaveChangesAsync"/> извлекаются и очищаются
+/// Перед каждым вызовом <see cref="ApplicationDbContext.SaveChangesAsync"/> извлекаются и очищаются
 /// доменные события всех отслеживаемых агрегатов (<see cref="AggregateRoot"/>).
 /// Цикл продолжается, пока обработчики событий не вызовут изменений, сами порождающих новые события.
 /// </remarks>
@@ -18,18 +18,16 @@ internal class UnitOfWork(ApplicationDbContext context, IDomainEventDispatcher d
     /// <inheritdoc />
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await context.SaveChangesAsync(cancellationToken);
-
         IDomainEvent[] domainEvents;
         do
         {
             // TODO: Добавить сохранение доменных событий в базу данных, чтобы не потерять их при сбое
             domainEvents = [.. context.ChangeTracker.Entries<AggregateRoot>().SelectMany(x => x.Entity.GetAndClearDomainEvents())];
 
-            if (domainEvents.Length is 0) continue;
-
-            await dispatcher.DispatchAsync(domainEvents, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
+
+            if (domainEvents.Length > 0)
+                await dispatcher.DispatchAsync(domainEvents, cancellationToken);
         } while (domainEvents.Length is not 0);
     }
 }

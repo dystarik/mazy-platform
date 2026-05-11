@@ -7,5 +7,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/MazyPlatform.Service.User.Authentication.Domain.Tests/MazyPlatform.Service.User.Authentication.Domain.Tests.csproj" />
+    <Project Path="tests/MazyPlatform.Service.User.Authentication.Integration.Tests/MazyPlatform.Service.User.Authentication.Integration.Tests.csproj" />
   </Folder>
 </Solution>

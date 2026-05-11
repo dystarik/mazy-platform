@@ -123,7 +123,9 @@ public sealed class OneTimePassword : AggregateRoot
     /// <param name="code">Открытый числовой код, введённый пользователем.</param>
     /// <param name="now">Текущая временная метка UTC, передаётся для тестируемости.</param>
     /// <returns>
-    /// <see cref="Result"/> с успехом, если код верен или уже был верифицирован ранее;
+    /// <see cref="Result"/> с успехом, если код верен и ещё не был использован;
+    /// сбой с кодом <see cref="ErrorCodes.Auth.OneTimePassword.AlreadyUsed"/>, если OTP уже был верифицирован;
+    /// сбой с кодом <see cref="ErrorCodes.Auth.OneTimePassword.Invalidated"/>, если OTP был аннулирован;
     /// сбой с кодом <see cref="ErrorCodes.Auth.OneTimePassword.TooManyAttempts"/>, если превышен лимит попыток (<see cref="MaxAttempts"/>);
     /// сбой с кодом <see cref="ErrorCodes.Auth.OneTimePassword.Expired"/>, если срок действия истёк;
     /// сбой с кодом <see cref="ErrorCodes.Auth.OneTimePassword.InvalidCode"/>, если код неверен (счётчик попыток увеличивается).
@@ -133,7 +135,10 @@ public sealed class OneTimePassword : AggregateRoot
         ArgumentNullException.ThrowIfNull(hasher);
 
         if (IsVerified)
-            return Result.Success();
+            return Error.Unauthorized(ErrorCodes.Auth.OneTimePassword.AlreadyUsed, "Одноразовый пароль уже был использован.");
+
+        if (IsInvalidated)
+            return Error.Unauthorized(ErrorCodes.Auth.OneTimePassword.Invalidated, "Одноразовый пароль был аннулирован.");
 
         if (FailedAttempts >= MaxAttempts)
             return Error.Validation(ErrorCodes.Auth.OneTimePassword.TooManyAttempts, "Превышено максимальное количество попыток ввода кода.");

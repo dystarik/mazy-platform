@@ -7,5 +7,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/MazyPlatform.Service.Bot.Manager.Domain.Tests/MazyPlatform.Service.Bot.Manager.Domain.Tests.csproj" />
+    <Project Path="tests/MazyPlatform.Service.Bot.Manager.Integration.Tests/MazyPlatform.Service.Bot.Manager.Integration.Tests.csproj" />
   </Folder>
 </Solution>

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Grpc.Net.Client" />
+        <PackageReference Include="MazyPlatform.Contracts.User" />
+        <PackageReference Include="MazyPlatform.Contracts.User.Grpc" />
+        <PackageReference Include="Otp.NET" />
+        <PackageReference Include="RabbitMQ.Client" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+        <PackageReference Include="Testcontainers" />
+        <PackageReference Include="Testcontainers.PostgreSql" />
+        <PackageReference Include="Testcontainers.RabbitMq" />
+        <PackageReference Include="TUnit" />
+    </ItemGroup>
+
+</Project>

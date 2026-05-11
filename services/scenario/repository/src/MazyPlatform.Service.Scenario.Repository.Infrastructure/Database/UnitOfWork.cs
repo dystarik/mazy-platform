@@ -19,18 +19,18 @@ internal class UnitOfWork(ApplicationDbContext context, IDomainEventDispatcher d
     /// <inheritdoc />
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await context.SaveChangesAsync(cancellationToken);
-
         IDomainEvent[] domainEvents;
         do
         {
             // TODO: Добавить сохранение доменных событий в базу данных, чтобы не потерять их при сбое
             domainEvents = [.. context.ChangeTracker.Entries<AggregateRoot>().SelectMany(x => x.Entity.GetAndClearDomainEvents())];
 
-            if (domainEvents.Length is 0) continue;
+            await context.SaveChangesAsync(cancellationToken);
+
+            if (domainEvents.Length is 0)
+                continue;
 
             await dispatcher.DispatchAsync(domainEvents, cancellationToken);
-            await context.SaveChangesAsync(cancellationToken);
         } while (domainEvents.Length is not 0);
     }
 }

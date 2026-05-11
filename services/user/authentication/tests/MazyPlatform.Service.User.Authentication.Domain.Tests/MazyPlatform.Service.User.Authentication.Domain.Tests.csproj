@@ -1,12 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <PackageReference Include="NSubstitute" />
-    <PackageReference Include="TUnit" />
-  </ItemGroup>
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\MazyPlatform.Service.User.Authentication.Domain\MazyPlatform.Service.User.Authentication.Domain.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="NSubstitute" />
+        <PackageReference Include="TUnit" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\MazyPlatform.Service.User.Authentication.Domain\MazyPlatform.Service.User.Authentication.Domain.csproj" />
+    </ItemGroup>
 
 </Project>
