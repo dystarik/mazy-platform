@@ -9,7 +9,10 @@
     :is-pick-target="isPickTarget"
     :is-related="isRelated"
     :accent-color="accentColor"
+    :style="nodeLayoutStyle"
     :has-output="false"
+    :has-output-ports="ports.length > 0"
+    :output-ports="ports"
     :input-style="mainPortStyle"
     @set-start="emit('set-start')"
     @delete="emit('delete')"
@@ -52,33 +55,29 @@
       </div>
     </div>
 
-    <template #ports>
-      <div class="condition-node__ports">
-        <div
-          v-for="port in ports"
-          :key="port.id"
-          class="condition-node__port"
-        >
-          <span class="condition-node__port-label">{{ port.label }}</span>
-          <Handle
-            :id="port.id"
-            type="source"
-            :position="Position.Right"
-            class="condition-node__handle"
-          />
-        </div>
+    <div class="condition-node__ports">
+      <div
+        v-for="port in ports"
+        :key="port.id"
+        class="condition-node__port"
+        :style="portLabelStyle(port)"
+      >
+        <span class="condition-node__port-label">{{ port.label }}</span>
       </div>
-    </template>
+    </div>
   </BaseNode>
 </template>
 
 <script setup lang="ts">
 import { computed, type CSSProperties } from 'vue'
-import { Handle, Position } from '@vue-flow/core'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import type { NodeParamItem } from '@/types/api'
 import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
+import {
+  describeEditorNodeLayout,
+  type EditorNodeLayoutPort,
+} from '@/components/editor/editorNodeLayoutContract'
 import type { VariableScope } from '@/components/editor/variableHighlight'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import BaseNode from './BaseNode.vue'
@@ -104,11 +103,14 @@ const emit = defineEmits<{
   delete: []
 }>()
 
-const mainPortStyle: CSSProperties = { top: '60px' }
-const ports = [
-  { id: 'true', label: 'true' },
-  { id: 'false', label: 'false' },
-]
+const layoutContract = computed(() => describeEditorNodeLayout({ type: props.nodeType, params: props.params }))
+const mainPortStyle = computed<CSSProperties>(() => ({ top: `${layoutContract.value.inputPortY}px` }))
+const nodeLayoutStyle = computed<CSSProperties>(() => ({
+  '--node-width': `${layoutContract.value.width}px`,
+  '--node-wide-width': `${layoutContract.value.width}px`,
+  '--node-min-height': `${layoutContract.value.height}px`,
+}) as CSSProperties)
+const ports = computed(() => layoutContract.value.outputPorts)
 const operatorOptions = [
   { label: '=', value: '==' },
   { label: '!=', value: '!=' },
@@ -129,6 +131,12 @@ function updateParam(key: string, value: string): void {
   emit('update-param', key, value)
 }
 
+function portLabelStyle(port: EditorNodeLayoutPort): CSSProperties {
+  return {
+    top: `${port.y}px`,
+  }
+}
+
 function stringValue(value: unknown, fallback = ''): string {
   if (typeof value === 'number' || typeof value === 'boolean') return String(value)
   return typeof value === 'string' ? value : fallback
@@ -136,14 +144,8 @@ function stringValue(value: unknown, fallback = ''): string {
 </script>
 
 <style scoped>
-.condition-node {
-  width: 348px;
-  min-width: 348px;
-  max-width: 348px;
-}
-
 .condition-node :deep(.bn__body) {
-  min-height: 72px;
+  min-height: 48px;
 }
 
 .condition-node__body {
@@ -195,18 +197,22 @@ function stringValue(value: unknown, fallback = ''): string {
 
 .condition-node__ports {
   position: absolute;
-  top: 48px;
-  right: 12px;
+  top: 0;
+  right: 0;
+  bottom: 0;
   width: 36px;
   pointer-events: none;
 }
 
 .condition-node__port {
-  position: relative;
+  position: absolute;
+  right: 12px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   height: 24px;
+  width: 36px;
+  transform: translateY(-50%);
 }
 
 .condition-node__port-label {
@@ -217,19 +223,5 @@ function stringValue(value: unknown, fallback = ''): string {
   font-family: var(--font-mono, monospace);
   font-size: 10px;
   white-space: nowrap;
-}
-
-.condition-node__handle {
-  box-sizing: border-box;
-  position: absolute !important;
-  right: -16px;
-  top: 50%;
-  width: 8px;
-  height: 8px;
-  transform: translateY(-50%) !important;
-  background: var(--color-primary);
-  border: 1px solid var(--color-bg-card);
-  border-radius: 50%;
-  pointer-events: auto;
 }
 </style>

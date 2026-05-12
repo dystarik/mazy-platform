@@ -242,9 +242,10 @@ function getInputElement(): HTMLInputElement | null {
   border: 1px solid var(--color-border-input);
   border-radius: 5px;
   font: inherit;
+  font-family: var(--font-mono, monospace);
   font-size: 11px;
-  line-height: 16px;
-  padding: 3px 8px;
+  line-height: 18px;
+  padding: 2px 8px;
 }
 
 .editor-variable-input__highlight {

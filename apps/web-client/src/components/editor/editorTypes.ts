@@ -8,6 +8,8 @@ export const GOTO_NODE_TYPE = 'goto_node'
 export const GROUP_NODE_TYPE = 'group_node'
 export const GROUP_ENTRY_NODE_TYPE = 'group_entry_marker'
 export const GROUP_EXIT_NODE_TYPE = 'group_exit_marker'
+export const VK_SEND_KEYBOARD_NODE_TYPE = 'vk_send_keyboard'
+export const VK_SEND_CAROUSEL_NODE_TYPE = 'vk_send_carousel'
 
 export interface EditorNodeUiState {
   textHeight?: number
@@ -125,7 +127,7 @@ export function getNodeOutputPorts(
   params: Record<string, unknown>,
 ): NodeOutputPort[] {
   if (isSmartButtonBranchingNodeType(nodeType)) {
-    const ports = flattenButtonBranchingRows(readButtonBranchingButtonRows(params.buttons)).map(button => ({
+    const ports = readSmartButtonBranchingButtons(nodeType, params).map(button => ({
       id: button.payload,
       label: button.label,
     }))
@@ -172,7 +174,24 @@ export function isSmartButtonBranchingNodeType(nodeType: string): boolean {
     BUTTON_BRANCHING_NODE_TYPE,
     MESSAGE_NODE_TYPE,
     EDIT_MESSAGE_NODE_TYPE,
+    VK_SEND_KEYBOARD_NODE_TYPE,
+    VK_SEND_CAROUSEL_NODE_TYPE,
   ].includes(nodeType)
+}
+
+export function readSmartButtonBranchingButtons(
+  nodeType: string,
+  params: Record<string, unknown>,
+): ButtonBranchingButton[] {
+  if (nodeType === VK_SEND_KEYBOARD_NODE_TYPE) {
+    return readVkKeyboardButtons(params.buttons)
+  }
+
+  if (nodeType === VK_SEND_CAROUSEL_NODE_TYPE) {
+    return readVkCarouselButtons(params.cards)
+  }
+
+  return readButtonBranchingButtons(params.buttons)
 }
 
 export function readButtonBranchingButtons(value: unknown): ButtonBranchingButton[] {
@@ -238,6 +257,70 @@ function isButtonMatrix(value: unknown[]): value is unknown[][] {
   return value.every(item => Array.isArray(item))
 }
 
+function readVkKeyboardButtons(value: unknown): ButtonBranchingButton[] {
+  if (!Array.isArray(value)) return []
+
+  const usedPayloads = new Set<string>()
+  const rawRows = isButtonMatrix(value) ? value : value.map(item => [item])
+  const rows: ButtonBranchingButtonRow[] = []
+  let buttonIndex = 0
+
+  for (const row of rawRows) {
+    const nextRow: ButtonBranchingButtonRow = []
+    for (const item of row) {
+      if (!isRecord(item)) continue
+      const label = rawStringValue(item.label) || stringValue(item.payload)
+      if (!label) continue
+
+      const existingPayload = stringValue(item.payload)
+      const payload = existingPayload
+        ? reserveUniqueButtonPayload(existingPayload, usedPayloads)
+        : createUniqueButtonPayload(label, buttonIndex, usedPayloads)
+
+      nextRow.push({ label, payload })
+      buttonIndex += 1
+    }
+
+    if (nextRow.length) rows.push(nextRow)
+  }
+
+  return flattenButtonBranchingRows(rows)
+}
+
+function readVkCarouselButtons(value: unknown): ButtonBranchingButton[] {
+  if (!Array.isArray(value)) return []
+
+  const usedPayloads = new Set<string>()
+  const buttons: ButtonBranchingButton[] = []
+  let buttonIndex = 0
+
+  for (const card of value) {
+    if (!isRecord(card) || !Array.isArray(card.buttons)) continue
+
+    for (const item of card.buttons) {
+      if (!isRecord(item)) continue
+      if (stringValue(item.link)) continue
+
+      const label = rawStringValue(item.label) || stringValue(item.payload) || stringValue(item.link)
+      const payload = stringValue(item.payload)
+      if (!label) continue
+
+      const stablePayload = payload
+        ? reserveUniqueButtonPayload(payload, usedPayloads)
+        : createUniqueButtonPayload(label, buttonIndex, usedPayloads)
+
+      buttons.push({
+        label,
+        payload: stablePayload,
+        ...(isButtonStyleValue(item.style) ? { style: item.style } : {}),
+      })
+      buttonIndex += 1
+    }
+  }
+
+  return buttons
+}
+
 function createUniqueButtonPayload(label: string, index: number, usedPayloads: Set<string>): string {
   const base = createButtonPayload(label, index)
   let candidate = base
@@ -245,6 +328,19 @@ function createUniqueButtonPayload(label: string, index: number, usedPayloads: S
 
   while (usedPayloads.has(candidate)) {
     candidate = `${base}_${suffix}`
+    suffix += 1
+  }
+
+  usedPayloads.add(candidate)
+  return candidate
+}
+
+function reserveUniqueButtonPayload(payload: string, usedPayloads: Set<string>): string {
+  let candidate = payload
+  let suffix = 2
+
+  while (usedPayloads.has(candidate)) {
+    candidate = `${payload}_${suffix}`
     suffix += 1
   }
 

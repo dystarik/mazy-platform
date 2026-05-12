@@ -6,11 +6,11 @@ import {
   GOTO_NODE_TYPE,
   GROUP_NODE_TYPE,
   MESSAGE_NODE_TYPE,
+  VK_SEND_CAROUSEL_NODE_TYPE,
+  VK_SEND_KEYBOARD_NODE_TYPE,
   isSmartButtonBranchingNodeType,
-  flattenButtonBranchingRows,
   normalizeButtonBranchingButtonRows,
-  readButtonBranchingButtons,
-  readButtonBranchingButtonRows,
+  readSmartButtonBranchingButtons,
   type EditorFlowNode,
   type EditorNodeData,
 } from '@/components/editor/editorTypes'
@@ -33,6 +33,8 @@ import type {
   RuntimeScenario,
   ScenarioPosition,
 } from './editorScenario.types'
+
+const DEFAULT_VK_REMOVE_KEYBOARD_TEXT = 'Действие выполнено'
 
 export function editorToRuntimeScenario(options: EditorToRuntimeOptions): RuntimeScenario {
   const expandedGroups = expandGroupNodes(options)
@@ -69,7 +71,7 @@ export function editorToRuntimeScenario(options: EditorToRuntimeOptions): Runtim
       editorBlocks.push({
         id: node.id,
         type: BUTTON_BRANCHING_NODE_TYPE,
-        sourceType: nodeData.type === EDIT_MESSAGE_NODE_TYPE ? EDIT_MESSAGE_NODE_TYPE : MESSAGE_NODE_TYPE,
+        sourceType: editorBlockSourceType(nodeData.type),
         position: options.snapPosition(node.position),
         ...(nodeData.type === EDIT_MESSAGE_NODE_TYPE && typeof nodeData.params.targetMessageNodeId === 'string'
           ? { targetMessageNodeId: nodeData.params.targetMessageNodeId }
@@ -130,6 +132,8 @@ export function editorToRuntimeScenario(options: EditorToRuntimeOptions): Runtim
       ? resolveSmartButtonConnectionBranch(edge, options.nodes)
       : edge.sourceHandle
 
+    if (sourceMacro && edge.sourceHandle && branch === null) continue
+
     if (gotoTarget) {
       const from = sourceMacro?.switch ?? deleteAfterReceiveNodeId ?? edge.source
       const incoming = gotoIncomingConnections.get(edge.target) ?? []
@@ -161,6 +165,17 @@ export function editorToRuntimeScenario(options: EditorToRuntimeOptions): Runtim
       connections.push(
         { from: compiledNodeIds.receiveButtonPress, to: compiledNodeIds.deleteMessage },
         { from: compiledNodeIds.deleteMessage, to: compiledNodeIds.switch },
+      )
+    } else if (compiledNodeIds.removeKeyboard && compiledNodeIds.removeKeyboardDeleteMessage) {
+      connections.push(
+        { from: compiledNodeIds.receiveButtonPress, to: compiledNodeIds.removeKeyboard },
+        { from: compiledNodeIds.removeKeyboard, to: compiledNodeIds.removeKeyboardDeleteMessage },
+        { from: compiledNodeIds.removeKeyboardDeleteMessage, to: compiledNodeIds.switch },
+      )
+    } else if (compiledNodeIds.removeKeyboard) {
+      connections.push(
+        { from: compiledNodeIds.receiveButtonPress, to: compiledNodeIds.removeKeyboard },
+        { from: compiledNodeIds.removeKeyboard, to: compiledNodeIds.switch },
       )
     } else {
       connections.push({ from: compiledNodeIds.receiveButtonPress, to: compiledNodeIds.switch })
@@ -194,7 +209,8 @@ function compileReceiveMessageNode(
   backendNodeType: string,
   options: EditorToRuntimeOptions,
 ): { nodes: RuntimeNode[]; deleteMessageNodeId?: string } {
-  const deleteAfterReceive = readBoolean(node.data.params.deleteAfterReceive)
+  const deleteAfterReceive = options.capabilities.canDeleteIncomingUserMessage
+    && readBoolean(node.data.params.deleteAfterReceive)
   const explicitMessageIdVariable = readString(node.data.params.messageIdVariable)
   const shouldCaptureMessageId = deleteAfterReceive || Boolean(explicitMessageIdVariable)
   const messageIdVariable = explicitMessageIdVariable ?? createReceiveMessageIdVariable(node.id)
@@ -439,29 +455,29 @@ function compileButtonBranchingNodes(
 ): RuntimeNode[] {
   const params = node.data.params
   const buttonRows = normalizeButtonBranchingButtonRows(params.buttons)
-  const buttons = flattenButtonBranchingRows(buttonRows)
+  const buttons = readSmartButtonBranchingButtons(node.data.type, params)
   const buttonPayloadVariable = readString(params.buttonPayloadVariable) ?? createButtonPayloadVariable(node.id)
   const basePosition = options.snapPosition(node.position)
   const isEditNode = node.data.type === EDIT_MESSAGE_NODE_TYPE
-  const deleteAfterButtonPress = readBoolean(params.deleteAfterButtonPress)
-  const deleteMessageNodeId = deleteAfterButtonPress ? compiledNodeIds.deleteMessage : undefined
+  const isVkKeyboardNode = node.data.type === VK_SEND_KEYBOARD_NODE_TYPE
+  const shouldHideAfterButtonPress = readBoolean(params.deleteAfterButtonPress)
+  const removeKeyboardNodeId = shouldHideAfterButtonPress && isVkKeyboardNode
+    ? compiledNodeIds.removeKeyboard
+    : undefined
+  const removeKeyboardDeleteMessageNodeId = removeKeyboardNodeId
+    ? compiledNodeIds.removeKeyboardDeleteMessage
+    : undefined
+  const deleteMessageNodeId = shouldHideAfterButtonPress && !removeKeyboardNodeId
+    ? compiledNodeIds.deleteMessage
+    : undefined
+  const primaryNodeType = primaryRuntimeNodeType(node.data.type)
+  const primaryParams = primaryRuntimeParamsForButtonBranchingNode(node, buttonRows, options)
 
   const nodes: RuntimeNode[] = [
     {
       id: compiledNodeIds.sendButtons,
-      type: isEditNode ? EDIT_MESSAGE_NODE_TYPE : 'send_buttons',
-      params: options.normalizeParamsForNode(isEditNode ? EDIT_MESSAGE_NODE_TYPE : 'send_buttons', {
-        ...(isEditNode
-          ? {
-              newText: params.newText,
-              messageIdVariable: options.resolveEditMessageIdVariable(node),
-            }
-          : {
-              text: params.text,
-              messageIdVariable: params.messageIdVariable,
-            }),
-        buttons: buttonRows,
-      }),
+      type: primaryNodeType,
+      params: options.normalizeParamsForNode(primaryNodeType, primaryParams),
       position: basePosition,
       ...(cloneNodeUi(node.data.ui) ? { ui: cloneNodeUi(node.data.ui) } : {}),
     },
@@ -483,10 +499,36 @@ function compileButtonBranchingNodes(
       params: options.normalizeParamsForNode('delete_message', {
         messageIdVariable: isEditNode
           ? options.resolveEditMessageIdVariable(node)
-          : params.messageIdVariable,
+          : isVkKeyboardNode || node.data.type === MESSAGE_NODE_TYPE || node.data.type === BUTTON_BRANCHING_NODE_TYPE
+            ? params.messageIdVariable
+            : undefined,
       }),
       position: options.snapPosition({ x: basePosition.x + 432, y: basePosition.y }),
     })
+  }
+
+  if (removeKeyboardNodeId) {
+    const removeKeyboardMessageIdVariable = createRemoveKeyboardMessageIdVariable(node.id)
+    nodes.push({
+      id: removeKeyboardNodeId,
+      type: 'vk_remove_keyboard',
+      params: options.normalizeParamsForNode('vk_remove_keyboard', {
+        text: readString(params.removeKeyboardText) ?? DEFAULT_VK_REMOVE_KEYBOARD_TEXT,
+        messageIdVariable: removeKeyboardMessageIdVariable,
+      }),
+      position: options.snapPosition({ x: basePosition.x + 432, y: basePosition.y }),
+    })
+
+    if (removeKeyboardDeleteMessageNodeId) {
+      nodes.push({
+        id: removeKeyboardDeleteMessageNodeId,
+        type: 'delete_message',
+        params: options.normalizeParamsForNode('delete_message', {
+          messageIdVariable: removeKeyboardMessageIdVariable,
+        }),
+        position: options.snapPosition({ x: basePosition.x + 648, y: basePosition.y }),
+      })
+    }
   }
 
   nodes.push({
@@ -499,14 +541,68 @@ function compileButtonBranchingNodes(
           branchKey: button.payload,
         })),
       }),
-      position: options.snapPosition({ x: basePosition.x + (deleteMessageNodeId ? 648 : 432), y: basePosition.y }),
+      position: options.snapPosition({ x: basePosition.x + (removeKeyboardDeleteMessageNodeId ? 864 : deleteMessageNodeId || removeKeyboardNodeId ? 648 : 432), y: basePosition.y }),
     })
 
   if (!deleteMessageNodeId) {
     delete compiledNodeIds.deleteMessage
   }
+  if (!removeKeyboardNodeId) {
+    delete compiledNodeIds.removeKeyboard
+    delete compiledNodeIds.removeKeyboardDeleteMessage
+  }
+  if (removeKeyboardNodeId && !removeKeyboardDeleteMessageNodeId) {
+    delete compiledNodeIds.removeKeyboardDeleteMessage
+  }
 
   return nodes
+}
+
+function primaryRuntimeNodeType(nodeType: string): string {
+  if (nodeType === EDIT_MESSAGE_NODE_TYPE) return EDIT_MESSAGE_NODE_TYPE
+  if (nodeType === VK_SEND_KEYBOARD_NODE_TYPE) return VK_SEND_KEYBOARD_NODE_TYPE
+  if (nodeType === VK_SEND_CAROUSEL_NODE_TYPE) return VK_SEND_CAROUSEL_NODE_TYPE
+  return 'send_buttons'
+}
+
+function editorBlockSourceType(
+  nodeType: string,
+): typeof MESSAGE_NODE_TYPE | typeof EDIT_MESSAGE_NODE_TYPE | typeof BUTTON_BRANCHING_NODE_TYPE | typeof VK_SEND_KEYBOARD_NODE_TYPE | typeof VK_SEND_CAROUSEL_NODE_TYPE {
+  if (nodeType === EDIT_MESSAGE_NODE_TYPE) return EDIT_MESSAGE_NODE_TYPE
+  if (nodeType === VK_SEND_KEYBOARD_NODE_TYPE) return VK_SEND_KEYBOARD_NODE_TYPE
+  if (nodeType === VK_SEND_CAROUSEL_NODE_TYPE) return VK_SEND_CAROUSEL_NODE_TYPE
+  if (nodeType === BUTTON_BRANCHING_NODE_TYPE) return BUTTON_BRANCHING_NODE_TYPE
+  return MESSAGE_NODE_TYPE
+}
+
+function primaryRuntimeParamsForButtonBranchingNode(
+  node: EditorFlowNode,
+  buttonRows: ReturnType<typeof normalizeButtonBranchingButtonRows>,
+  options: EditorToRuntimeOptions,
+): Record<string, unknown> {
+  const params = node.data.params
+
+  if (node.data.type === EDIT_MESSAGE_NODE_TYPE) {
+    return {
+      newText: params.newText,
+      messageIdVariable: options.resolveEditMessageIdVariable(node),
+      buttons: buttonRows,
+    }
+  }
+
+  if (node.data.type === VK_SEND_KEYBOARD_NODE_TYPE) {
+    return pickParams(params, ['text', 'buttons', 'oneTime', 'messageIdVariable'])
+  }
+
+  if (node.data.type === VK_SEND_CAROUSEL_NODE_TYPE) {
+    return pickParams(params, ['text', 'cards', 'messageIdVariable'])
+  }
+
+  return {
+    text: params.text,
+    messageIdVariable: params.messageIdVariable,
+    buttons: buttonRows,
+  }
 }
 
 function cloneNodeUi(value: unknown): { textHeight?: number } | undefined {
@@ -522,36 +618,51 @@ function cloneNodeUi(value: unknown): { textHeight?: number } | undefined {
 
 function shouldCompileButtonBranchingNode(nodeData: EditorNodeData): boolean {
   return isSmartButtonBranchingNodeType(nodeData.type)
-    && flattenButtonBranchingRows(readButtonBranchingButtonRows(nodeData.params.buttons)).length > 0
+    && readSmartButtonBranchingButtons(nodeData.type, nodeData.params).length > 0
 }
 
 function getButtonBranchingCompiledNodeIds(node: EditorFlowNode): ButtonBranchingCompiledNodeIds {
   const existing = normalizeButtonBranchingCompiledNodeIds(node.data.params[BUTTON_BRANCHING_NODE_IDS_PARAM])
   const compiled = existing ?? createButtonBranchingCompiledNodeIds(node.id)
+  const shouldHideAfterButtonPress = readBoolean(node.data.params.deleteAfterButtonPress)
+  const isVkKeyboardNode = node.data.type === VK_SEND_KEYBOARD_NODE_TYPE
 
-  if (readBoolean(node.data.params.deleteAfterButtonPress) && !compiled.deleteMessage) {
+  if (shouldHideAfterButtonPress && isVkKeyboardNode && !compiled.removeKeyboard) {
+    compiled.removeKeyboard = createButtonBranchingCompiledNodeIds(node.id).removeKeyboard
+  }
+
+  if (shouldHideAfterButtonPress && isVkKeyboardNode && !compiled.removeKeyboardDeleteMessage) {
+    compiled.removeKeyboardDeleteMessage = createButtonBranchingCompiledNodeIds(node.id).removeKeyboardDeleteMessage
+  }
+
+  if (shouldHideAfterButtonPress && !isVkKeyboardNode && node.data.type !== VK_SEND_CAROUSEL_NODE_TYPE && !compiled.deleteMessage) {
     compiled.deleteMessage = createButtonBranchingCompiledNodeIds(node.id).deleteMessage
+  }
+
+  if (isVkKeyboardNode || node.data.type === VK_SEND_CAROUSEL_NODE_TYPE) delete compiled.deleteMessage
+  if (!isVkKeyboardNode) {
+    delete compiled.removeKeyboard
+    delete compiled.removeKeyboardDeleteMessage
   }
 
   return compiled
 }
 
-function resolveSmartButtonConnectionBranch(edge: Edge, nodes: EditorFlowNode[]): string | undefined {
+function resolveSmartButtonConnectionBranch(edge: Edge, nodes: EditorFlowNode[]): string | null | undefined {
   const sourceHandle = typeof edge.sourceHandle === 'string' ? edge.sourceHandle : ''
   if (!sourceHandle) return undefined
 
   const sourceNode = nodes.find(node => node.id === edge.source)
   if (!sourceNode || !isSmartButtonBranchingNodeType(sourceNode.data.type)) return sourceHandle
 
-  const buttons = readButtonBranchingButtons(sourceNode.data.params.buttons)
+  const buttons = readSmartButtonBranchingButtons(sourceNode.data.type, sourceNode.data.params)
   if (buttons.some(button => button.payload === sourceHandle)) return sourceHandle
 
   const legacyIndex = readLegacyButtonPayloadIndex(sourceHandle)
   const remappedByIndex = legacyIndex != null ? buttons[legacyIndex]?.payload : undefined
   if (remappedByIndex) return remappedByIndex
 
-  const onlyButton = buttons[0]
-  return buttons.length === 1 && onlyButton ? onlyButton.payload : sourceHandle
+  return null
 }
 
 function readLegacyButtonPayloadIndex(value: string): number | null {
@@ -570,12 +681,24 @@ function createReceiveDeleteNodeId(nodeId: string): string {
   return createDerivedGraphId(nodeId, 'delete_received_message')
 }
 
+function createRemoveKeyboardMessageIdVariable(nodeId: string): string {
+  return `vk_remove_keyboard_${nodeId.replace(/-/g, '').slice(0, 32)}_message_id`
+}
+
 function readString(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null
 }
 
 function readBoolean(value: unknown): boolean {
   return value === true
+}
+
+function pickParams(params: Record<string, unknown>, keys: string[]): Record<string, unknown> {
+  const result: Record<string, unknown> = {}
+  for (const key of keys) {
+    if (params[key] !== undefined) result[key] = params[key]
+  }
+  return result
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

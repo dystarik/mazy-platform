@@ -9,6 +9,7 @@
     :is-pick-target="isPickTarget"
     :is-related="isRelated"
     :accent-color="accentColor"
+    :style="nodeLayoutStyle"
     :has-output="false"
     :input-style="mainPortStyle"
     @set-start="emit('set-start')"
@@ -46,6 +47,7 @@
 import { computed, type CSSProperties } from 'vue'
 import Button from 'primevue/button'
 import type { NodeParamItem } from '@/types/api'
+import { getEditorNodeLayoutMetrics } from '@/components/editor/editorLayoutMetrics'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import BaseNode from './BaseNode.vue'
 
@@ -71,7 +73,12 @@ const emit = defineEmits<{
 }>()
 
 const accentColor = computed(() => getNodeAccentColor(props.nodeType))
-const mainPortStyle: CSSProperties = { top: '72px' }
+const layoutMetrics = computed(() => getEditorNodeLayoutMetrics({ type: props.nodeType, params: props.params }))
+const mainPortStyle = computed<CSSProperties>(() => ({ top: `${layoutMetrics.value.inputPortY}px` }))
+const nodeLayoutStyle = computed<CSSProperties>(() => ({
+  '--node-width': `${layoutMetrics.value.width}px`,
+  '--node-min-height': `${layoutMetrics.value.height}px`,
+}) as CSSProperties)
 const targetNodeId = computed(() => stringValue(props.params.targetNodeId))
 const hasTargetNode = computed(() => Boolean(targetNodeId.value))
 const hasMissingTarget = computed(() => hasTargetNode.value && !props.messageSourceLabel)
@@ -93,12 +100,6 @@ function stringValue(value: unknown): string {
 </script>
 
 <style scoped>
-.goto-node {
-  width: 204px;
-  min-width: 204px;
-  max-width: 204px;
-}
-
 .goto-node__target {
   display: flex;
   flex-direction: column;

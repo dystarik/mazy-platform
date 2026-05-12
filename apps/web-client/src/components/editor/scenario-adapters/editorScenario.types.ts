@@ -1,5 +1,6 @@
 import type { Edge } from '@vue-flow/core'
 import type { EditorFlowNode, EditorNodeUiState } from '@/components/editor/editorTypes'
+import type { EditorPlatformCapabilities } from './editorPlatformCapabilities'
 
 export interface ScenarioPosition {
   x: number
@@ -32,12 +33,14 @@ export interface ButtonBranchingCompiledNodeIds {
   receiveButtonPress: string
   switch: string
   deleteMessage?: string
+  removeKeyboard?: string
+  removeKeyboardDeleteMessage?: string
 }
 
 export interface ButtonBranchingEditorBlock {
   id: string
   type: 'button_branching'
-  sourceType?: 'send_message' | 'edit_message' | 'button_branching'
+  sourceType?: 'send_message' | 'edit_message' | 'button_branching' | 'vk_send_keyboard' | 'vk_send_carousel'
   position?: ScenarioPosition
   ui?: EditorNodeUiState
   targetMessageNodeId?: string
@@ -90,6 +93,7 @@ export interface EditorToRuntimeOptions {
   nodes: EditorFlowNode[]
   edges: Edge[]
   visualStartNodeId: string
+  capabilities: EditorPlatformCapabilities
   snapPosition: (position: ScenarioPosition) => ScenarioPosition
   normalizeParamsForNode: (nodeType: string, params: Record<string, unknown>) => Record<string, unknown>
   normalizeDataNodeParams: (backendNodeType: string, params: Record<string, unknown>) => Record<string, unknown>

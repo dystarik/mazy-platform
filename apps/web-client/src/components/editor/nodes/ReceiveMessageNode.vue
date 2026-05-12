@@ -9,6 +9,7 @@
     :is-pick-target="isPickTarget"
     :is-related="isRelated"
     :accent-color="accentColor"
+    :style="nodeLayoutStyle"
     :input-style="mainPortStyle"
     :output-style="mainPortStyle"
     @set-start="emit('set-start')"
@@ -43,6 +44,7 @@
       </label>
 
       <label
+        v-if="editorCapabilities.canDeleteIncomingUserMessage"
         class="receive-message-node__option nodrag"
         @mousedown.stop
         @pointerdown.stop
@@ -136,6 +138,8 @@ import Select from 'primevue/select'
 import type { NodeParamItem } from '@/types/api'
 import EditorGridTextarea from '@/components/editor/EditorGridTextarea.vue'
 import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
+import { getEditorNodeLayoutMetrics } from '@/components/editor/editorLayoutMetrics'
+import type { EditorPlatformCapabilities } from '@/components/editor/scenario-adapters/editorPlatformCapabilities'
 import type { VariableScope } from '@/components/editor/variableHighlight'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import BaseNode from './BaseNode.vue'
@@ -151,6 +155,7 @@ const props = defineProps<{
   isPickTarget?: boolean
   isRelated?: boolean
   label: string
+  editorCapabilities: EditorPlatformCapabilities
   knownVariables?: string[]
   variableScope?: VariableScope
 }>()
@@ -162,7 +167,13 @@ const emit = defineEmits<{
 }>()
 
 const accentColor = computed(() => getNodeAccentColor(props.nodeType))
-const mainPortStyle: CSSProperties = { top: '72px' }
+const layoutMetrics = computed(() => getEditorNodeLayoutMetrics({ type: props.nodeType, params: props.params }))
+const mainPortStyle = computed<CSSProperties>(() => ({ top: `${layoutMetrics.value.inputPortY}px` }))
+const nodeLayoutStyle = computed<CSSProperties>(() => ({
+  '--node-width': `${layoutMetrics.value.width}px`,
+  '--node-wide-width': `${layoutMetrics.value.width}px`,
+  '--node-min-height': `${layoutMetrics.value.height}px`,
+}) as CSSProperties)
 const noValidatorValue = '__none__'
 const messageTextVariable = computed(() => stringValue(props.params.messageTextVariable))
 const deleteAfterReceive = computed(() => props.params.deleteAfterReceive === true)
@@ -210,12 +221,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 </script>
 
 <style scoped>
-.receive-message-node {
-  width: 192px;
-  min-width: 192px;
-  max-width: 192px;
-}
-
 .receive-message-node__body {
   display: flex;
   flex-direction: column;

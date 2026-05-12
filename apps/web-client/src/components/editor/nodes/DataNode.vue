@@ -9,6 +9,9 @@
     :is-pick-target="isPickTarget"
     :is-related="isRelated"
     :accent-color="accentColor"
+    :style="nodeLayoutStyle"
+    :input-style="mainPortStyle"
+    :output-style="mainPortStyle"
     @set-start="emit('set-start')"
     @delete="emit('delete')"
   >
@@ -188,13 +191,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type CSSProperties } from 'vue'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import type { NodeParamItem } from '@/types/api'
 import type { FieldType, GetEntitySchemaResponse } from '@/types/api/entity-schemas.types'
 import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
+import { getEditorNodeLayoutMetrics } from '@/components/editor/editorLayoutMetrics'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import { DATA_NODE_TYPE } from '@/components/editor/editorTypes'
 import EditorVariableInput from '@/components/editor/EditorVariableInput.vue'
@@ -234,6 +238,13 @@ const actionOptions: Array<{ value: DataAction; label: string }> = [
 ]
 const emptyEntityValue = '__none__'
 const accentColor = computed(() => getNodeAccentColor(DATA_NODE_TYPE))
+const layoutMetrics = computed(() => getEditorNodeLayoutMetrics({ type: DATA_NODE_TYPE, params: props.params }))
+const mainPortStyle = computed<CSSProperties>(() => ({ top: `${layoutMetrics.value.inputPortY}px` }))
+const nodeLayoutStyle = computed<CSSProperties>(() => ({
+  '--node-width': `${layoutMetrics.value.width}px`,
+  '--node-wide-width': `${layoutMetrics.value.width}px`,
+  '--node-min-height': `${layoutMetrics.value.height}px`,
+}) as CSSProperties)
 const action = computed<DataAction>(() => readAction(props.params.action))
 const hasProjectSchemas = computed(() => props.projectSchemaDetails.length > 0)
 const selectedEntityName = computed(() => stringParam('entityName'))
@@ -413,12 +424,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 </script>
 
 <style scoped>
-.data-node {
-  width: 204px;
-  min-width: 204px;
-  max-width: 204px;
-}
-
 .data-node__body {
   display: flex;
   flex-direction: column;

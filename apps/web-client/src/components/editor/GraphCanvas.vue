@@ -60,6 +60,7 @@
           :relation-tone="messageRelationToneForNode(nodeProps.id)"
           :label="getNodeLabel(nodeProps.data.type)"
           :ui-state="nodeProps.data.ui"
+          :editor-capabilities="resolvedEditorCapabilities"
           :known-variables="knownVariables"
           :variable-scope="variableScopeForNode(nodeProps.id)"
           :message-source-label="getMessageSourceLabel(nodeProps.id)"
@@ -101,6 +102,10 @@ import { Controls } from '@vue-flow/controls'
 import type { NodeParamItem } from '@/types/api'
 import type { GetEntitySchemaResponse } from '@/types/api/entity-schemas.types'
 import type { EditorFlowNode, EditorNodeUiState } from '@/components/editor/editorTypes'
+import {
+  getEditorPlatformCapabilities,
+  type EditorPlatformCapabilities,
+} from '@/components/editor/scenario-adapters/editorPlatformCapabilities'
 import type { VariableScope } from '@/components/editor/variableHighlight'
 import RoutedEdge from '@/components/editor/edges/RoutedEdge.vue'
 import { getNodeComponent } from '@/components/editor/nodes/nodeRegistry'
@@ -119,6 +124,7 @@ const props = defineProps<{
   rightSelectionStyle: CSSProperties
   catalogParamsFor: (type: string) => NodeParamItem[]
   projectSchemaDetails: GetEntitySchemaResponse[]
+  editorCapabilities?: EditorPlatformCapabilities
   knownVariables: string[]
   variableScopeForNode?: (nodeId: string) => VariableScope
   isMessagePickableNode: (nodeId: string) => boolean
@@ -158,6 +164,9 @@ function emitNodeUi(nodeId: string, value: EditorNodeUiState): void {
 const defaultEdgeOptions: DefaultEdgeOptions = {
   type: 'routed',
 }
+const resolvedEditorCapabilities = computed(() =>
+  props.editorCapabilities ?? getEditorPlatformCapabilities('PLATFORM_TYPE_UNIVERSAL'),
+)
 
 const nodesModel = computed({
   get: () => props.nodes,

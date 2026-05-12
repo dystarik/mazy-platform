@@ -9,6 +9,9 @@
     :is-pick-target="isPickTarget"
     :is-related="isRelated"
     :accent-color="accentColor"
+    :style="nodeLayoutStyle"
+    :input-style="mainPortStyle"
+    :output-style="mainPortStyle"
     @set-start="emit('set-start')"
     @delete="emit('delete')"
   >
@@ -163,13 +166,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type CSSProperties } from 'vue'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import type { NodeParamItem } from '@/types/api'
 import EditorGridTextarea from '@/components/editor/EditorGridTextarea.vue'
 import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
+import { getEditorNodeLayoutMetrics } from '@/components/editor/editorLayoutMetrics'
 import type { VariableScope } from '@/components/editor/variableHighlight'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import BaseNode from './BaseNode.vue'
@@ -206,6 +210,13 @@ const bodyTypeOptions: Array<{ value: BodyType; label: string; placeholder: stri
 ]
 
 const accentColor = computed(() => getNodeAccentColor(props.nodeType))
+const layoutMetrics = computed(() => getEditorNodeLayoutMetrics({ type: props.nodeType, params: props.params }))
+const mainPortStyle = computed<CSSProperties>(() => ({ top: `${layoutMetrics.value.inputPortY}px` }))
+const nodeLayoutStyle = computed<CSSProperties>(() => ({
+  '--node-width': `${layoutMetrics.value.width}px`,
+  '--node-wide-width': `${layoutMetrics.value.width}px`,
+  '--node-min-height': `${layoutMetrics.value.height}px`,
+}) as CSSProperties)
 const method = computed<HttpMethod>(() => readMethod(props.params.method))
 const url = computed(() => stringParam('url'))
 const body = computed(() => stringParam('body'))
@@ -289,12 +300,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 </script>
 
 <style scoped>
-.http-request-node {
-  width: 300px;
-  min-width: 300px;
-  max-width: 300px;
-}
-
 .http-request-node__body {
   display: flex;
   flex-direction: column;

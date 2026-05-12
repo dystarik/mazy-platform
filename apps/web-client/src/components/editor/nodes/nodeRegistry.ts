@@ -25,6 +25,9 @@ import SetVariableNode from './SetVariableNode.vue'
 import SwitchNode from './SwitchNode.vue'
 import TypingIndicatorNode from './TypingIndicatorNode.vue'
 import UserInfoNode from './UserInfoNode.vue'
+import VkRemoveKeyboardNode from './VkRemoveKeyboardNode.vue'
+import VkSendCarouselNode from './VkSendCarouselNode.vue'
+import VkSendKeyboardNode from './VkSendKeyboardNode.vue'
 
 /**
  * Реестр самостоятельных UI-узлов.
@@ -49,6 +52,9 @@ const NODE_COMPONENTS: Readonly<Record<string, Component>> = {
   typing_indicator: TypingIndicatorNode,
   get_user_info: UserInfoNode,
   http_request: HttpRequestNode,
+  vk_send_keyboard: VkSendKeyboardNode,
+  vk_remove_keyboard: VkRemoveKeyboardNode,
+  vk_send_carousel: VkSendCarouselNode,
 }
 
 export function getNodeComponent(type: string): Component {
