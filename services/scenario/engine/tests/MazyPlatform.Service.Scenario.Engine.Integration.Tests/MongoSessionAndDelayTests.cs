@@ -78,6 +78,7 @@ public sealed class MongoSessionAndDelayTests : IntegrationTestBase
             projectId,
             rawPayload: ScenarioEngineTestData.TelegramMessagePayload("prime", platformUserId: 1001));
         await App.Queues.WaitForQueueDrainedAsync(ScenarioEngineQueues.BotIncoming);
+        await App.WaitForSessionStateAsync(botId, PlatformUserId, "WaitingForEvent");
 
         await App.EventPublisher.PublishIncomingAsync(
             botId,
@@ -86,7 +87,7 @@ public sealed class MongoSessionAndDelayTests : IntegrationTestBase
             rawPayload: ScenarioEngineTestData.TelegramMessagePayload("hello-from-test", platformUserId: 1001, messageId: 3004));
         await App.Queues.WaitForQueueDrainedAsync(ScenarioEngineQueues.BotIncoming);
 
-        await App.WaitForSessionAsync(botId, PlatformUserId);
+        await App.WaitForSessionVariableAsync(botId, PlatformUserId, "message_text", "hello-from-test");
         var session = await App.FindSessionAsync(botId, PlatformUserId);
 
         await Assert.That(session).IsNotNull();

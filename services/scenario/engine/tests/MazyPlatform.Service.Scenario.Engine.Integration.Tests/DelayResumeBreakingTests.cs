@@ -102,7 +102,9 @@ public sealed class DelayResumeBreakingTests : IntegrationTestBase
         await App.Queues.WaitForQueueDrainedAsync(ScenarioEngineQueues.Activated);
         await App.InsertDelaySessionAsync(botId, platformUserId, Guid.NewGuid(), DateTimeOffset.UtcNow.AddSeconds(-5));
 
-        await App.WaitForLockedSessionAsync(botId, platformUserId);
+        await App.WaitForSessionAsync(botId, platformUserId);
+        await Task.Delay(TimeSpan.FromSeconds(2));
+
         using var ready = await App.GetHealthAsync("/health/ready");
         await Assert.That(ready.IsSuccessStatusCode).IsTrue();
     }

@@ -28,6 +28,7 @@ public sealed class CacheConsistencyBreakingTests : IntegrationTestBase
         await App.EventPublisher.PublishIncomingAsync(botId, PlatformType.Telegram, projectId);
 
         await App.ScenarioRepository.WaitForGetScenarioByVersionCallAsync(projectId, 1, beforeRepositoryCalls);
+        await App.Queues.WaitForQueueDrainedAsync(ScenarioEngineQueues.BotIncoming);
     }
 
     [Test]
@@ -54,6 +55,7 @@ public sealed class CacheConsistencyBreakingTests : IntegrationTestBase
         await App.EventPublisher.PublishIncomingAsync(botId, PlatformType.Telegram, secondProjectId, scenarioVersion: 2);
 
         await App.ScenarioRepository.WaitForGetScenarioByVersionCallAsync(secondProjectId, 2, beforeRepositoryCalls);
+        await App.Queues.WaitForQueueDrainedAsync(ScenarioEngineQueues.BotIncoming);
         await Assert.That(App.ScenarioRepository.CountGetScenarioByVersionCalls(firstProjectId, 1, beforeRepositoryCalls)).IsEqualTo(0);
     }
 
@@ -122,6 +124,7 @@ public sealed class CacheConsistencyBreakingTests : IntegrationTestBase
         await App.EventPublisher.PublishIncomingAsync(vkBotId, PlatformType.Vk, projectId, rawPayload: ScenarioEngineTestData.VkMessagePayload());
 
         await WaitForScenarioCallsAsync(projectId, 1, beforeRepositoryCalls, expectedCount: 2);
+        await App.Queues.WaitForQueueDrainedAsync(ScenarioEngineQueues.BotIncoming);
     }
 
     [Test]
@@ -174,6 +177,7 @@ public sealed class CacheConsistencyBreakingTests : IntegrationTestBase
         await App.EventPublisher.PublishIncomingAsync(botId, PlatformType.Telegram, projectId);
 
         await App.ScenarioRepository.WaitForGetScenarioByVersionCallAsync(projectId, 1, beforeRepositoryCalls);
+        await App.Queues.WaitForQueueDrainedAsync(ScenarioEngineQueues.BotIncoming);
     }
 
     [Test]

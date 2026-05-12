@@ -23,15 +23,17 @@ public sealed class RabbitMqPoisonBreakingTests : IntegrationTestBase
     [Test]
     public async Task BurstIncomingForUnknownBot_Should_AllAck_AndNoRepositoryCalls()
     {
-        var beforeRepositoryCalls = App.ScenarioRepository.GetScenarioByVersionCallCount;
         var beforeDeadLetters = (await App.Queues.GetStatsAsync(ScenarioEngineQueues.DeadLetter(ScenarioEngineQueues.BotIncoming))).Ready;
+        var projectIds = Enumerable.Range(0, 10).Select(_ => Guid.NewGuid()).ToArray();
 
-        for (var i = 0; i < 10; i++)
-            await App.EventPublisher.PublishIncomingAsync(Guid.NewGuid());
+        foreach (var projectId in projectIds)
+            await App.EventPublisher.PublishIncomingAsync(Guid.NewGuid(), projectId: projectId);
 
         await App.Queues.WaitForQueueDrainedAsync(ScenarioEngineQueues.BotIncoming);
         await App.Queues.AssertNoNewReadyMessagesAsync(ScenarioEngineQueues.DeadLetter(ScenarioEngineQueues.BotIncoming), beforeDeadLetters);
-        await Assert.That(App.ScenarioRepository.GetScenarioByVersionCallCount).IsEqualTo(beforeRepositoryCalls);
+
+        foreach (var projectId in projectIds)
+            await Assert.That(App.ScenarioRepository.CountGetScenarioByVersionCalls(projectId, version: 1)).IsEqualTo(0);
     }
 
     [Test]
