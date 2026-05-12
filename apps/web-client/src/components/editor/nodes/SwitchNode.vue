@@ -9,7 +9,11 @@
     :is-pick-target="isPickTarget"
     :is-related="isRelated"
     :accent-color="accentColor"
+    :style="nodeLayoutStyle"
     :has-output="false"
+    :has-output-ports="outputPorts.length > 0"
+    :output-ports="outputPorts"
+    :input-style="mainPortStyle"
     @set-start="emit('set-start')"
     @delete="emit('delete')"
   >
@@ -74,33 +78,21 @@
             @click.stop="removeCase(index)"
           />
         </div>
-        <Handle
-          :id="switchCase.key"
-          type="source"
-          :position="Position.Right"
-          class="switch-node__handle"
-        />
       </div>
       <div class="switch-node__branch switch-node__branch--default">
         <span class="switch-node__branch-value">default</span>
-        <Handle
-          id="default"
-          type="source"
-          :position="Position.Right"
-          class="switch-node__handle"
-        />
       </div>
     </div>
   </BaseNode>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { Handle, Position } from '@vue-flow/core'
+import { computed, type CSSProperties } from 'vue'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import type { NodeParamItem } from '@/types/api'
 import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
+import { describeEditorNodeLayout } from '@/components/editor/editorNodeLayoutContract'
 import type { VariableScope } from '@/components/editor/variableHighlight'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import BaseNode from './BaseNode.vue'
@@ -146,6 +138,19 @@ const cases = computed<SwitchCase[]>(() => {
       return { key, value }
     })
 })
+const layoutParams = computed(() => ({
+  ...props.params,
+  cases: cases.value.map(item => ({ value: item.value, branchKey: item.key })),
+}))
+const layoutContract = computed(() => describeEditorNodeLayout({ type: props.nodeType, params: layoutParams.value }))
+const outputPorts = computed(() => layoutContract.value.outputPorts)
+const mainPortStyle = computed<CSSProperties>(() => ({ top: `${layoutContract.value.inputPortY}px` }))
+const nodeLayoutStyle = computed<CSSProperties>(() => ({
+  '--node-width': `${layoutContract.value.width}px`,
+  '--node-wide-width': `${layoutContract.value.width}px`,
+  '--node-min-height': `${layoutContract.value.height}px`,
+}) as CSSProperties)
+
 function updateVariable(value: string): void {
   if (props.isReadOnly) return
   emit('update-param', 'variable', value)
@@ -214,12 +219,6 @@ function slugify(value: string): string {
 </script>
 
 <style scoped>
-.switch-node {
-  width: 204px;
-  min-width: 204px;
-  max-width: 204px;
-}
-
 .switch-node__summary {
   display: flex;
   flex-direction: column;
@@ -270,7 +269,7 @@ function slugify(value: string): string {
   flex-direction: column;
   gap: 0;
   box-shadow: inset 0 1px 0 var(--color-border);
-  padding: 12px 0 0;
+  padding: 6px 0 0;
 }
 
 .switch-node__branches-head {
@@ -382,17 +381,4 @@ function slugify(value: string): string {
   color: var(--color-text-secondary);
 }
 
-.switch-node__handle {
-  box-sizing: border-box;
-  position: absolute !important;
-  right: -16px;
-  top: 50%;
-  transform: translateY(-50%) !important;
-  width: 8px;
-  height: 8px;
-  background: var(--color-primary);
-  border: 1px solid var(--color-bg-card);
-  border-radius: 50%;
-  pointer-events: auto;
-}
 </style>

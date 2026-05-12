@@ -7,8 +7,11 @@
     :is-selected="isSelected"
     :is-read-only="true"
     :accent-color="boundaryKind === 'entry' ? '#2ecc71' : 'var(--color-primary)'"
+    :style="nodeLayoutStyle"
     :has-input="boundaryKind === 'exit'"
     :has-output="boundaryKind === 'entry'"
+    :input-style="mainPortStyle"
+    :output-style="mainPortStyle"
   >
     <div class="gbn__body">
       <span class="gbn__caption">{{ boundaryKind === 'entry' ? 'Внутренний вход' : 'Внутренний выход' }}</span>
@@ -17,7 +20,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type CSSProperties } from 'vue'
+import { getEditorNodeLayoutMetrics } from '@/components/editor/editorLayoutMetrics'
 import BaseNode from './BaseNode.vue'
 
 const props = defineProps<{
@@ -27,13 +31,15 @@ const props = defineProps<{
 }>()
 
 const boundaryKind = computed(() => props.nodeType === 'group_exit_marker' ? 'exit' : 'entry')
+const layoutMetrics = computed(() => getEditorNodeLayoutMetrics({ type: props.nodeType, params: {} }))
+const mainPortStyle = computed<CSSProperties>(() => ({ top: `${layoutMetrics.value.inputPortY}px` }))
+const nodeLayoutStyle = computed<CSSProperties>(() => ({
+  '--node-width': `${layoutMetrics.value.width}px`,
+  '--node-min-height': `${layoutMetrics.value.height}px`,
+}) as CSSProperties)
 </script>
 
 <style scoped>
-.gbn {
-  --node-width: 120px;
-}
-
 .gbn :deep(.bn__header) {
   height: 24px;
 }
@@ -62,7 +68,6 @@ const boundaryKind = computed(() => props.nodeType === 'group_exit_marker' ? 'ex
 
 .gbn--entry :deep(.bn__handle--source),
 .gbn--exit :deep(.bn__handle--target) {
-  top: 36px;
   background: var(--node-accent);
 }
 </style>

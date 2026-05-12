@@ -1,6 +1,6 @@
 <template>
   <BaseNode
-    class="send-image-node"
+    class="vk-remove-keyboard-node"
     :label="label"
     :is-start="isStart"
     :is-selected="isSelected"
@@ -15,34 +15,33 @@
     @set-start="emit('set-start')"
     @delete="emit('delete')"
   >
-    <div class="send-image-node__body">
-      <label class="send-image-node__field nodrag" @mousedown.stop @pointerdown.stop>
-        <span class="send-image-node__label">URL изображения</span>
-        <EditorVariableInput
-          class="send-image-node__variable-input"
-          :model-value="imageUrl"
-          :readonly="isReadOnly"
-          placeholder="https://..."
-          :known-variables="knownVariables"
-          :variable-scope="variableScope"
-          @update:model-value="value => updateParam('imageUrl', stringValue(value))"
-        />
-      </label>
-
-      <label class="send-image-node__field nodrag" @mousedown.stop @pointerdown.stop>
-        <span class="send-image-node__label">Подпись</span>
+    <div class="vk-remove-keyboard-node__body">
+      <label class="vk-remove-keyboard-node__field nodrag" @mousedown.stop @pointerdown.stop>
+        <span class="vk-remove-keyboard-node__label">Текст</span>
         <EditorGridTextarea
-          class="send-image-node__textarea"
-          :model-value="caption"
+          :model-value="text"
           :readonly="isReadOnly"
-          placeholder="Подпись к фото"
+          placeholder="Сообщение вместе с удалением клавиатуры"
           :min-rows="2"
+          :height="textHeight"
           :known-variables="knownVariables"
           :variable-scope="variableScope"
-          @update:model-value="value => updateParam('caption', value)"
+          @update:model-value="value => updateParam('text', value)"
+          @update:height="updateTextHeight"
         />
       </label>
 
+      <label class="vk-remove-keyboard-node__field vk-remove-keyboard-node__field--compact nodrag" @mousedown.stop @pointerdown.stop>
+        <span class="vk-remove-keyboard-node__label">ID сообщения</span>
+        <EditorVariableInput
+          :model-value="messageIdVariable"
+          :readonly="isReadOnly"
+          placeholder="message_id"
+          :known-variables="knownVariables"
+          :variable-scope="variableScope"
+          @update:model-value="value => updateParam('messageIdVariable', stringValue(value))"
+        />
+      </label>
     </div>
   </BaseNode>
 </template>
@@ -50,6 +49,7 @@
 <script setup lang="ts">
 import { computed, type CSSProperties } from 'vue'
 import type { NodeParamItem } from '@/types/api'
+import type { EditorNodeUiState } from '@/components/editor/editorTypes'
 import EditorGridTextarea from '@/components/editor/EditorGridTextarea.vue'
 import EditorVariableInput from '@/components/editor/EditorVariableInput.vue'
 import { getEditorNodeLayoutMetrics } from '@/components/editor/editorLayoutMetrics'
@@ -68,29 +68,41 @@ const props = defineProps<{
   isPickTarget?: boolean
   isRelated?: boolean
   label: string
+  uiState?: EditorNodeUiState
   knownVariables?: string[]
   variableScope?: VariableScope
 }>()
 
 const emit = defineEmits<{
   'update-param': [key: string, value: unknown]
+  'update-ui': [value: EditorNodeUiState]
   'set-start': []
   delete: []
 }>()
 
 const accentColor = computed(() => getNodeAccentColor(props.nodeType))
-const layoutMetrics = computed(() => getEditorNodeLayoutMetrics({ type: props.nodeType, params: props.params }))
+const text = computed(() => stringValue(props.params.text))
+const messageIdVariable = computed(() => stringValue(props.params.messageIdVariable))
+const textHeight = computed(() => props.uiState?.textHeight)
+const layoutMetrics = computed(() => getEditorNodeLayoutMetrics({
+  type: props.nodeType,
+  params: props.params,
+  ui: props.uiState,
+}))
 const mainPortStyle = computed<CSSProperties>(() => ({ top: `${layoutMetrics.value.inputPortY}px` }))
 const nodeLayoutStyle = computed<CSSProperties>(() => ({
   '--node-width': `${layoutMetrics.value.width}px`,
   '--node-min-height': `${layoutMetrics.value.height}px`,
 }) as CSSProperties)
-const imageUrl = computed(() => stringValue(props.params.imageUrl))
-const caption = computed(() => stringValue(props.params.caption))
 
-function updateParam(key: string, value: string): void {
+function updateParam(key: string, value: unknown): void {
   if (props.isReadOnly) return
   emit('update-param', key, value)
+}
+
+function updateTextHeight(value: number): void {
+  if (props.isReadOnly) return
+  emit('update-ui', { ...(props.uiState ?? {}), textHeight: value })
 }
 
 function stringValue(value: unknown): string {
@@ -100,61 +112,28 @@ function stringValue(value: unknown): string {
 </script>
 
 <style scoped>
-.send-image-node__body {
+.vk-remove-keyboard-node__body {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-.send-image-node__field {
+.vk-remove-keyboard-node__field {
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: 0 0 12px;
+  padding: 0 0 8px;
 }
 
-.send-image-node__field:not(:first-child) {
+.vk-remove-keyboard-node__field--compact {
   box-shadow: inset 0 1px 0 var(--color-border);
-  padding-top: 12px;
+  padding-top: 8px;
 }
 
-.send-image-node__label {
+.vk-remove-keyboard-node__label {
   align-self: flex-start;
   color: var(--color-text-secondary);
   font-size: 10px;
   line-height: 12px;
-}
-
-.send-image-node__input {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  border: 1px solid var(--color-border-input);
-  border-radius: 5px;
-  background: var(--color-bg);
-  color: var(--color-text);
-  font: inherit;
-  font-size: 11px;
-  outline: none;
-  padding: 5px 8px;
-}
-
-.send-image-node__input {
-  height: 24px;
-}
-
-.send-image-node__variable-input {
-  width: 100%;
-  min-width: 0;
-}
-
-.send-image-node__textarea {
-  width: 100%;
-  min-width: 0;
-}
-
-.send-image-node__input:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 14%, transparent);
 }
 </style>

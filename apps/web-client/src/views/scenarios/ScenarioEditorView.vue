@@ -68,6 +68,7 @@
         :right-selection-style="rightSelectionStyle"
         :catalog-params-for="getCatalogParams"
         :project-schema-details="projectSchemaDetails"
+        :editor-capabilities="editorCapabilities"
         :known-variables="knownVariables"
         :variable-scope-for-node="variableScopeForNode"
         :is-message-pickable-node="isMessagePickableNode"
@@ -146,6 +147,8 @@ import {
   GROUP_EXIT_NODE_TYPE,
   GROUP_NODE_TYPE,
   MESSAGE_NODE_TYPE,
+  VK_SEND_CAROUSEL_NODE_TYPE,
+  VK_SEND_KEYBOARD_NODE_TYPE,
   canProvideMessageId,
   getNodeOutputPorts,
   getUiParams,
@@ -153,7 +156,7 @@ import {
   messageConsumersFor,
   normalizeButtonBranchingButtonRows,
   normalizeNodeParamType,
-  readButtonBranchingButtons,
+  readSmartButtonBranchingButtons,
   type EditorFlowNode,
   type EditorNodeData,
   type EditorNodeUiState,
@@ -164,10 +167,15 @@ import {
   getNodeLabel,
 } from '@/components/editor/nodes/nodeMeta'
 import {
+  EDITOR_GRID_SIZE,
+  getEditorNodeLayoutMetrics,
+} from '@/components/editor/editorLayoutMetrics'
+import {
   BUTTON_BRANCHING_NODE_IDS_PARAM,
   BUTTON_BRANCHING_PAYLOAD_VARIABLE_DEFAULT,
   EDITOR_NODE_DEFINITIONS,
   GROUP_CATALOG_ITEM,
+  SMART_BUTTON_BRANCHING_EDITOR_NODE_TYPES,
   buildEditorCatalogCategories,
   withEditorCatalogItems,
   createButtonBranchingCompiledNodeIds,
@@ -176,6 +184,7 @@ import {
 } from '@/components/editor/scenario-adapters/editorNodeDefinitions'
 import { runtimeToEditorScenario } from '@/components/editor/scenario-adapters/runtimeToEditorScenario'
 import { editorToRuntimeScenario } from '@/components/editor/scenario-adapters/editorToRuntimeScenario'
+import { getEditorPlatformCapabilities } from '@/components/editor/scenario-adapters/editorPlatformCapabilities'
 import { editorScenarioToFlow } from '@/components/editor/scenario-adapters/editorScenarioToFlow'
 import {
   isAuthoringScenario,
@@ -216,7 +225,6 @@ const canEditCopy = computed(() =>
   && nodes.value.length > 0
   && !activeGroupSession.value,
 )
-const EDITOR_GRID_SIZE = 12
 const GROUP_ENTRY_MARKER_ID = '__group_entry_marker__'
 const GROUP_EXIT_MARKER_ID = '__group_exit_marker__'
 const DATA_NODE_BACKEND_TYPES = new Set([
@@ -268,6 +276,7 @@ let historyCommitTimer: ReturnType<typeof setTimeout> | null = null
 let isApplyingHistory = false
 let currentHistorySignature = ''
 let nodeDragRouteSnapshot: NodeDragRouteSnapshot | null = null
+let editorRouteLoadToken = 0
 
 interface SelectionBox {
   x: number
@@ -357,6 +366,7 @@ const selectedNodes = computed(() => nodes.value.filter((node) => node.selected)
 const catalog = ref<NodeCatalogItem[]>([])
 const catalogLoading = ref(false)
 const projectPlatformType = ref<PlatformType>('PLATFORM_TYPE_VK')
+const editorCapabilities = computed(() => getEditorPlatformCapabilities(projectPlatformType.value))
 
 // ── Схемы данных проекта ─────────────────────────────────────────────────────
 const schemasLoading = ref(false)
@@ -724,6 +734,40 @@ let statusResetTimer: ReturnType<typeof setTimeout> | null = null
 
 // ── Vue Flow utils ────────────────────────────────────────────────────────────
 const { screenToFlowCoordinate, addEdges, fitView, viewport, setViewport } = useVueFlow()
+
+type MeasuredEditorFlowNode = EditorFlowNode & {
+  measured?: { width?: number; height?: number }
+  dimensions?: { width?: number; height?: number }
+  width?: number
+  height?: number
+}
+
+function positiveFiniteDimension(...values: Array<number | undefined>): number | null {
+  return values.find(value => typeof value === 'number' && Number.isFinite(value) && value > 0) ?? null
+}
+
+async function centerViewportOnNode(nodeId: string | null | undefined): Promise<void> {
+  if (!nodeId) return
+
+  await nextTick()
+
+  const node = nodes.value.find(item => item.id === nodeId) as MeasuredEditorFlowNode | undefined
+  const canvas = getCanvasElement()
+  if (!node || !canvas) return
+
+  const bounds = canvas.getBoundingClientRect()
+  const zoom = viewport.value.zoom || 1
+  const width = positiveFiniteDimension(node.measured?.width, node.dimensions?.width, node.width) ?? 240
+  const height = positiveFiniteDimension(node.measured?.height, node.dimensions?.height, node.height) ?? 120
+  const nodeCenterX = node.position.x + width / 2
+  const nodeCenterY = node.position.y + height / 2
+
+  setViewport({
+    x: bounds.width / 2 - nodeCenterX * zoom,
+    y: bounds.height / 2 - nodeCenterY * zoom,
+    zoom,
+  })
+}
 
 // ── Scroll → zoom toward cursor ───────────────────────────────────────────────
 function onCanvasWheel(e: WheelEvent): void {
@@ -1138,17 +1182,13 @@ const filteredCategories = computed(() => {
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 onMounted(async () => {
   window.addEventListener('keydown', onEditorKeyDown, true)
-  await loadProjectPlatformType()
-  await Promise.all([loadCatalog(), loadProjectSchemas(), loadScenarioGraph()])
+  await loadEditorRouteData()
 })
 
 watch(
   () => [route.params.id, route.params.sid],
   () => {
-    isEditingScenarioCopy.value = isReleaseCopyMode.value
-    void loadProjectPlatformType().then(loadCatalog)
-    void loadProjectSchemas()
-    void loadScenarioGraph()
+    void loadEditorRouteData()
   },
 )
 
@@ -1172,25 +1212,44 @@ onUnmounted(() => {
 })
 
 // ── API ───────────────────────────────────────────────────────────────────────
-async function loadCatalog(): Promise<void> {
+async function loadEditorRouteData(): Promise<void> {
+  const loadToken = ++editorRouteLoadToken
+  isEditingScenarioCopy.value = isReleaseCopyMode.value
+  if (!await loadProjectPlatformType(loadToken)) return
+  await Promise.all([loadCatalog(loadToken), loadProjectSchemas(loadToken), loadScenarioGraph(loadToken)])
+}
+
+function isCurrentEditorRouteLoad(loadToken?: number): boolean {
+  return loadToken === undefined || loadToken === editorRouteLoadToken
+}
+
+async function loadCatalog(loadToken?: number): Promise<void> {
   catalogLoading.value = true
   try {
     const res = await nodesApi.getCatalog(projectPlatformType.value)
+    if (!isCurrentEditorRouteLoad(loadToken)) return
     catalog.value = withEditorCatalogItems(res.nodes ?? [])
   } catch {
+    if (!isCurrentEditorRouteLoad(loadToken)) return
     catalog.value = withEditorCatalogItems([])
   } finally {
-    catalogLoading.value = false
+    if (isCurrentEditorRouteLoad(loadToken)) {
+      catalogLoading.value = false
+    }
   }
 }
 
-async function loadProjectPlatformType(): Promise<void> {
+async function loadProjectPlatformType(loadToken?: number): Promise<boolean> {
   try {
     const project = await projectsApi.get(projectId.value)
+    if (!isCurrentEditorRouteLoad(loadToken)) return false
     projectPlatformType.value = normalizeProjectPlatform(project.platformType)
   } catch {
+    if (!isCurrentEditorRouteLoad(loadToken)) return false
     projectPlatformType.value = 'PLATFORM_TYPE_VK'
   }
+
+  return true
 }
 
 function normalizeProjectPlatform(platformType?: PlatformType): PlatformType {
@@ -1201,7 +1260,7 @@ function normalizeProjectPlatform(platformType?: PlatformType): PlatformType {
   return platformType
 }
 
-async function loadProjectSchemas(): Promise<void> {
+async function loadProjectSchemas(loadToken?: number): Promise<void> {
   schemasLoading.value = true
   try {
     const response = await entitySchemasApi.list(projectId.value)
@@ -1211,34 +1270,42 @@ async function loadProjectSchemas(): Promise<void> {
         .filter(item => Boolean(item.schemaId))
         .map(item => entitySchemasApi.get(item.schemaId!)),
     )
+    if (!isCurrentEditorRouteLoad(loadToken)) return
     projectSchemaDetails.value = details
   } catch {
+    if (!isCurrentEditorRouteLoad(loadToken)) return
     projectSchemaDetails.value = []
   } finally {
-    schemasLoading.value = false
+    if (isCurrentEditorRouteLoad(loadToken)) {
+      schemasLoading.value = false
+    }
   }
 }
 
-async function loadScenarioGraph(): Promise<void> {
+async function loadScenarioGraph(loadToken?: number): Promise<void> {
+  if (!isCurrentEditorRouteLoad(loadToken)) return
   clearGraph()
   isEditingScenarioCopy.value = isReleaseCopyMode.value
 
   if (scenarioId.value === 'draft') {
-    await loadDraft()
+    await loadDraft(loadToken)
+    if (!isCurrentEditorRouteLoad(loadToken)) return
     resetEditorHistory()
     return
   }
 
   if (scenarioId.value === 'release' || isReleaseCopyMode.value) {
-    await loadRelease()
+    await loadRelease(loadToken)
+    if (!isCurrentEditorRouteLoad(loadToken)) return
     resetEditorHistory()
     return
   }
 
   const version = scenarioVersion.value
   if (version != null) {
-    await loadVersion(version)
+    await loadVersion(version, loadToken)
   }
+  if (!isCurrentEditorRouteLoad(loadToken)) return
   resetEditorHistory()
 }
 
@@ -1250,9 +1317,10 @@ function enableReleaseCopyEditing(): void {
   setEditorStatus('idle')
 }
 
-async function loadDraft(): Promise<void> {
+async function loadDraft(loadToken?: number): Promise<void> {
   try {
     const draft = await scenarioApi.getDraft(projectId.value)
+    if (!isCurrentEditorRouteLoad(loadToken)) return
     if (draft.graphJson) {
       graphData.value = JSON.parse(draft.graphJson) as GraphData
       applyGraphData(graphData.value)
@@ -1260,9 +1328,10 @@ async function loadDraft(): Promise<void> {
   } catch { /* нет черновика */ }
 }
 
-async function loadRelease(): Promise<void> {
+async function loadRelease(loadToken?: number): Promise<void> {
   try {
     const release = await scenarioApi.getRelease(projectId.value)
+    if (!isCurrentEditorRouteLoad(loadToken)) return
     if (release.graphJson) {
       graphData.value = JSON.parse(release.graphJson) as GraphData
       applyGraphData(graphData.value)
@@ -1270,9 +1339,10 @@ async function loadRelease(): Promise<void> {
   } catch { /* нет релиза */ }
 }
 
-async function loadVersion(version: number): Promise<void> {
+async function loadVersion(version: number, loadToken?: number): Promise<void> {
   try {
     const scenario = await scenarioApi.getByVersion(projectId.value, version)
+    if (!isCurrentEditorRouteLoad(loadToken)) return
     if (scenario.graphJson) {
       graphData.value = JSON.parse(scenario.graphJson) as GraphData
       applyGraphData(graphData.value)
@@ -1294,7 +1364,7 @@ function clearGraph(): void {
 
 function applyGraphData(data: GraphData): void {
   nodeDragRouteSnapshot = null
-  const editorData = normalizeEditorScenarioGroups(runtimeToEditorScenario(data))
+  const editorData = normalizeEditorScenarioGroups(runtimeToEditorScenario(data, { capabilities: editorCapabilities.value }))
   graphData.value = editorData
   const shouldAutoLayout = editorData.nodes.some(node => !node.position)
 
@@ -1319,6 +1389,7 @@ function buildGraphJson(): string {
     nodes: source.nodes,
     edges: source.edges,
     visualStartNodeId: source.startNodeId,
+    capabilities: editorCapabilities.value,
     snapPosition: snapEditorPosition,
     normalizeParamsForNode,
     normalizeDataNodeParams,
@@ -1403,6 +1474,11 @@ function buildAuthoringSchemaJson(): string {
     format: 'mazy-editor-node-schema',
     formatVersion: 1,
     scenarioFormat: 'mazy-editor-scenario',
+    platform: {
+      platformType: projectPlatformType.value,
+      platformKey: editorCapabilities.value.platformKey,
+      capabilities: editorCapabilities.value,
+    },
     scenarioShape: {
       startNodeId: 'string',
       nodes: [
@@ -1435,10 +1511,117 @@ function buildAuthoringSchemaJson(): string {
         outputs: describeAuthoringNodeOutputs(type, defaultParams),
       }
     }),
+    syntacticSugar: buildAuthoringSyntacticSugarGuide(),
+    authoringGuidelines: buildAuthoringGuidelines(),
+    entitySchemaGuidance: buildEntitySchemaGuidance(),
+    existingEntitySchemas: projectSchemaDetails.value,
     dataSchemas: projectSchemaDetails.value,
   }
 
   return JSON.stringify(data)
+}
+
+function buildAuthoringSyntacticSugarGuide() {
+  return {
+    deleteAfterReceive: {
+      available: editorCapabilities.value.canDeleteIncomingUserMessage,
+      platformRestriction: 'Only Telegram can use hidden deleteAfterReceive for incoming user messages.',
+      editorNodeTypes: ['receive_message'],
+      expandsTo: ['receive_message', 'delete_message'],
+      runtimeField: 'deleteAfterReceive is editor-only and is removed before runtime JSON is saved.',
+    },
+    buttonBranching: {
+      editorNodeTypes: [...SMART_BUTTON_BRANCHING_EDITOR_NODE_TYPES],
+      available: true,
+      activatesWhen: 'The editor node has at least one button with a payload.',
+      expandsTo: ['primary message node', 'receive_button_press', 'switch'],
+      primaryRuntimeNodeByEditorType: {
+        send_message: 'send_buttons',
+        button_branching: 'send_buttons',
+        edit_message: 'edit_message',
+        vk_send_keyboard: 'vk_send_keyboard',
+        vk_send_carousel: 'vk_send_carousel',
+      },
+      vkBehavior: 'VK keyboard and carousel nodes are editor sugar too when they have buttons; compilation keeps the VK runtime node and adds hidden receive_button_press plus switch nodes.',
+      branchRule: 'Outgoing branches from these editor nodes must match button payload values.',
+      payloadSources: {
+        send_message: 'params.buttons[][].payload',
+        button_branching: 'params.buttons[][].payload',
+        edit_message: 'params.buttons[][].payload',
+        vk_send_keyboard: 'params.buttons[][].payload',
+        vk_send_carousel: 'params.cards[].buttons[].payload',
+      },
+    },
+    dataRecord: {
+      editorNodeType: DATA_NODE_TYPE,
+      expandsTo: [...DATA_NODE_BACKEND_TYPES],
+      selectionField: 'params.action selects the runtime node type.',
+    },
+    gotoNode: {
+      editorNodeType: GOTO_NODE_TYPE,
+      runtimeBehavior: 'Editor-only shortcut. Compilation rewrites incoming edges to targetNodeId.',
+    },
+    groupNode: {
+      editorNodeType: GROUP_NODE_TYPE,
+      runtimeBehavior: 'Editor-only organization block. Compilation expands its subgraph into runtime nodes.',
+    },
+  }
+}
+
+function buildAuthoringGuidelines() {
+  return [
+    'Generate stable UUID strings for every node id.',
+    'Use startNodeId to point to the first node the scenario should execute.',
+    'Omit branch for ordinary default-output connections.',
+    'Use branches "true" and "false" for condition nodes.',
+    'Use switch case branchKey values as outgoing branch names for switch nodes; use branch "default" only for the switch default output.',
+    'Use button payload values as outgoing branch names for smart button branching editor nodes.',
+    'Do not add non-default branches to runtime nodes that do not expose named output ports.',
+    'Keep editor-only params out of runtime JSON unless the export format is mazy-editor-scenario.',
+    'Prefer explicit entity schemas before using data_record nodes that read or write records.',
+  ]
+}
+
+function buildEntitySchemaGuidance() {
+  return {
+    purpose: 'Entity schemas describe project data records that scenario data nodes can create, query, update, and delete.',
+    whenToCreate: [
+      'Create an entity schema when the scenario needs to remember structured user or business data.',
+      'Create fields before generating data_record nodes that reference entityName and field names.',
+      'Use clear singular entity names such as Order, Lead, Booking, or CustomerProfile.',
+    ],
+    apiShape: {
+      schema: {
+        schemaId: 'string, optional in API responses',
+        name: 'string',
+        fields: 'EntityFieldItem[]',
+      },
+      field: {
+        fieldId: 'string, optional in API responses',
+        name: 'string',
+        fieldType: 'FieldType',
+        isRequired: 'boolean',
+        defaultValue: 'string, optional',
+      },
+    },
+    fieldTypes: [
+      'FIELD_TYPE_STRING',
+      'FIELD_TYPE_NUMBER',
+      'FIELD_TYPE_BOOLEAN',
+      'FIELD_TYPE_DATE_TIME',
+      'FIELD_TYPE_REFERENCE',
+      'FIELD_TYPE_ENUM',
+    ],
+    nodeReferences: {
+      entityName: 'Must match an existing or proposed entity schema name.',
+      fields: 'Must use field names from that entity schema.',
+      filter: 'For query actions, keys should be field names from the selected entity schema.',
+      recordIdVariable: 'Use this variable to pass a created or selected record id between nodes.',
+      recordVariable: 'Stores one record returned by get_record.',
+      recordsVariable: 'Stores the list returned by query_records.',
+    },
+    existingEntitySchemasField: 'The export includes existingEntitySchemas and the legacy-compatible dataSchemas with the same API response shape.',
+  }
 }
 
 function stripAuthoringParams(params: Record<string, unknown>): Record<string, unknown> {
@@ -1473,11 +1656,20 @@ function normalizeAuthoringNodeParams(nodeType: string, params: Record<string, u
 
 function describeAuthoringNodeOutputs(type: string, params: Record<string, unknown>) {
   if (isSmartButtonBranchingNodeType(type)) {
+    const source = type === VK_SEND_CAROUSEL_NODE_TYPE
+      ? 'params.cards[].buttons[].payload'
+      : 'params.buttons[][].payload'
+    const labelSource = type === VK_SEND_CAROUSEL_NODE_TYPE
+      ? 'params.cards[].buttons[].label'
+      : 'params.buttons[][].label'
+
     return {
       kind: 'dynamic',
-      source: 'params.buttons[][].payload',
-      labelSource: 'params.buttons[][].label',
-      note: 'Create one connection per button branch. Buttons are stored as rows, top-to-bottom and left-to-right.',
+      source,
+      labelSource,
+      note: type === VK_SEND_CAROUSEL_NODE_TYPE
+        ? 'Create one connection per carousel button branch. Carousel buttons require payloads.'
+        : 'Create one connection per button branch. Buttons are stored as rows, top-to-bottom and left-to-right.',
     }
   }
 
@@ -1933,6 +2125,27 @@ function createDefaultParamsForNode(type: string, nodeId: string): Record<string
     }
   }
 
+  if (type === VK_SEND_KEYBOARD_NODE_TYPE) {
+    return {
+      text: '',
+      buttons: [],
+      oneTime: false,
+      messageIdVariable: `message_${shortNodeId(nodeId)}_id`,
+      buttonPayloadVariable: createButtonPayloadVariable(nodeId),
+      [BUTTON_BRANCHING_NODE_IDS_PARAM]: createButtonBranchingCompiledNodeIds(nodeId),
+    }
+  }
+
+  if (type === VK_SEND_CAROUSEL_NODE_TYPE) {
+    return {
+      text: '',
+      cards: [],
+      messageIdVariable: `message_${shortNodeId(nodeId)}_id`,
+      buttonPayloadVariable: createButtonPayloadVariable(nodeId),
+      [BUTTON_BRANCHING_NODE_IDS_PARAM]: createButtonBranchingCompiledNodeIds(nodeId),
+    }
+  }
+
   if (type === 'delete_message') {
     return {
       messageIdVariable: '',
@@ -2227,6 +2440,7 @@ function openGroupNode(groupId: string): void {
   selectedNodeId.value = null
   isInspectorOpen.value = false
   contextMenu.value = null
+  void centerViewportOnNode(boundaryNodeIds.entryNodeId || subgraph.startNodeId)
 }
 
 function exitActiveGroup(): void {
@@ -2242,6 +2456,7 @@ function exitActiveGroup(): void {
   isInspectorOpen.value = true
   contextMenu.value = null
   resetEditorHistory()
+  void centerViewportOnNode(session.groupId)
 }
 
 function buildRootStateWithCurrentGroup(session: GroupEditSession): { nodes: EditorFlowNode[]; edges: Edge[] } {
@@ -3082,16 +3297,7 @@ const AUTO_LAYOUT_BAND_GAP = 280
 const AUTO_LAYOUT_LEFT = 80
 const AUTO_LAYOUT_TOP = 80
 const AUTO_LAYOUT_FIT_OPTIONS = { padding: 0.16, minZoom: 0.65, maxZoom: 1.15, duration: 260 }
-const AUTO_LAYOUT_DEFAULT_NODE_WIDTH = 204
-const AUTO_LAYOUT_DEFAULT_NODE_HEIGHT = 92
-const AUTO_LAYOUT_PORT_NODE_WIDTH = 432
-const AUTO_LAYOUT_PORT_NODE_MIN_HEIGHT = 132
-const AUTO_LAYOUT_PORT_ROW_HEIGHT = 24
-const AUTO_LAYOUT_PORT_BASE_Y = 48
 const AUTO_LAYOUT_PORT_SIZE = 8
-const AUTO_LAYOUT_SWITCH_NODE_WIDTH = 276
-const AUTO_LAYOUT_SWITCH_PORT_BASE_Y = 84
-const AUTO_LAYOUT_SWITCH_PORT_ROW_HEIGHT = 24
 const ELK_DEFAULT_OUTPUT_PORT = '__default'
 let elkInstance: ELK | null = null
 
@@ -3250,18 +3456,12 @@ function createElkNode(
     if (!outputPortIds.includes(handle)) outputPortIds.push(handle)
   }
 
-  const size = estimateElkNodeSize(nodeData.type, outputPortIds.length)
-  const outputPortBaseY = nodeData.type === 'switch'
-    ? AUTO_LAYOUT_SWITCH_PORT_BASE_Y
-    : AUTO_LAYOUT_PORT_BASE_Y
-  const outputPortRowHeight = nodeData.type === 'switch'
-    ? AUTO_LAYOUT_SWITCH_PORT_ROW_HEIGHT
-    : AUTO_LAYOUT_PORT_ROW_HEIGHT
+  const metrics = getEditorNodeLayoutMetrics(nodeData)
 
   return {
     id: node.id,
-    width: size.width,
-    height: size.height,
+    width: metrics.width,
+    height: metrics.height,
     layoutOptions: {
       'org.eclipse.elk.portConstraints': 'FIXED_POS',
       'org.eclipse.elk.nodeLabels.placement': 'INSIDE V_CENTER H_CENTER',
@@ -3275,7 +3475,7 @@ function createElkNode(
         width: 8,
         height: 8,
         x: -AUTO_LAYOUT_PORT_SIZE / 2,
-        y: AUTO_LAYOUT_PORT_BASE_Y - AUTO_LAYOUT_PORT_SIZE / 2,
+        y: metrics.inputPortY - AUTO_LAYOUT_PORT_SIZE / 2,
         layoutOptions: {
           'org.eclipse.elk.port.side': 'WEST',
           'org.eclipse.elk.port.index': '0',
@@ -3285,8 +3485,8 @@ function createElkNode(
         id: elkOutputPortId(node.id, portId),
         width: 8,
         height: 8,
-        x: size.width - AUTO_LAYOUT_PORT_SIZE / 2,
-        y: outputPortBaseY + index * outputPortRowHeight - AUTO_LAYOUT_PORT_SIZE / 2,
+        x: metrics.width - AUTO_LAYOUT_PORT_SIZE / 2,
+        y: outputPortYAt(metrics.outputPortYs, index, metrics.inputPortY) - AUTO_LAYOUT_PORT_SIZE / 2,
         layoutOptions: {
           'org.eclipse.elk.port.side': 'EAST',
           'org.eclipse.elk.port.index': String(index),
@@ -3312,33 +3512,15 @@ function createElkEdges(layoutEdges: Edge[], nodeIds: Set<string>): ElkExtendedE
   return result
 }
 
-function estimateElkNodeSize(nodeType: string, outputPortCount: number): { width: number; height: number } {
-  if (outputPortCount <= 1) {
-    return {
-      width: AUTO_LAYOUT_DEFAULT_NODE_WIDTH,
-      height: AUTO_LAYOUT_DEFAULT_NODE_HEIGHT,
-    }
-  }
+function outputPortYAt(outputPortYs: number[], index: number, fallbackY: number): number {
+  const y = outputPortYs[index]
+  if (typeof y === 'number') return y
 
-  if (nodeType === 'switch') {
-    return {
-      width: AUTO_LAYOUT_SWITCH_NODE_WIDTH,
-      height: Math.max(
-        156,
-        AUTO_LAYOUT_SWITCH_PORT_BASE_Y
-          + Math.max(0, outputPortCount - 1) * AUTO_LAYOUT_SWITCH_PORT_ROW_HEIGHT
-          + 28,
-      ),
-    }
-  }
+  if (outputPortYs.length === 0) return fallbackY + index * EDITOR_GRID_SIZE * 2
 
-  return {
-    width: AUTO_LAYOUT_PORT_NODE_WIDTH,
-    height: Math.max(
-      AUTO_LAYOUT_PORT_NODE_MIN_HEIGHT,
-      72 + outputPortCount * AUTO_LAYOUT_PORT_ROW_HEIGHT,
-    ),
-  }
+  const lastY = outputPortYs.at(-1) ?? fallbackY
+  const overflowIndex = Math.max(0, index - outputPortYs.length + 1)
+  return lastY + overflowIndex * EDITOR_GRID_SIZE * 2
 }
 
 function elkInputPortId(nodeId: string): string {
@@ -4143,16 +4325,24 @@ function normalizePlatformSpecificParams(
     }
   }
 
+  if (nodeType === VK_SEND_KEYBOARD_NODE_TYPE) {
+    next.buttons = normalizeVkKeyboardButtonRows(next.buttons)
+    delete next.buttonPayloadVariable
+    delete next[BUTTON_BRANCHING_NODE_IDS_PARAM]
+  }
+
+  if (nodeType === VK_SEND_CAROUSEL_NODE_TYPE) {
+    next.cards = normalizeVkCarouselCards(next.cards)
+    delete next.buttonPayloadVariable
+    delete next[BUTTON_BRANCHING_NODE_IDS_PARAM]
+  }
+
   if (nodeType === 'delete_message') {
     delete next.targetMessageNodeId
   }
 
   if (nodeType === 'http_request') {
     normalizeHttpRequestParams(next)
-  }
-
-  if (nodeType === 'vk_send_keyboard') {
-    delete next.inline
   }
 
   return next
@@ -4304,9 +4494,28 @@ function updateParamById(nodeId: string, key: string, value: unknown): void {
       }
     }
 
-    if (isSmartButtonBranchingNodeType(nodeData.type) && key === 'buttons') {
+    if (
+      [BUTTON_BRANCHING_NODE_TYPE, MESSAGE_NODE_TYPE, EDIT_MESSAGE_NODE_TYPE].includes(nodeData.type)
+      && key === 'buttons'
+    ) {
       nextParams.buttons = normalizeButtonBranchingButtonParams(value)
-      const remap = createButtonBranchingPayloadRemap(previousParams.buttons, nextParams.buttons)
+      const remap = createSmartButtonPayloadRemap(nodeData.type, previousParams, nextParams)
+      if (remap.size) {
+        remapOutputConnections(nodeId, remap)
+      }
+    }
+
+    if (nodeData.type === VK_SEND_KEYBOARD_NODE_TYPE && key === 'buttons') {
+      nextParams.buttons = normalizeVkKeyboardButtonRows(value)
+      const remap = createSmartButtonPayloadRemap(nodeData.type, previousParams, nextParams)
+      if (remap.size) {
+        remapOutputConnections(nodeId, remap)
+      }
+    }
+
+    if (nodeData.type === VK_SEND_CAROUSEL_NODE_TYPE && key === 'cards') {
+      nextParams.cards = normalizeVkCarouselCards(value)
+      const remap = createSmartButtonPayloadRemap(nodeData.type, previousParams, nextParams)
       if (remap.size) {
         remapOutputConnections(nodeId, remap)
       }
@@ -4377,12 +4586,13 @@ function remapOutputConnections(nodeId: string, remap: Map<string, string>): voi
   })
 }
 
-function createButtonBranchingPayloadRemap(
-  previousButtonsValue: unknown,
-  nextButtonsValue: unknown,
+function createSmartButtonPayloadRemap(
+  nodeType: string,
+  previousParams: Record<string, unknown>,
+  nextParams: Record<string, unknown>,
 ): Map<string, string> {
-  const previousButtons = readButtonBranchingButtons(previousButtonsValue)
-  const nextButtons = readButtonBranchingButtons(nextButtonsValue)
+  const previousButtons = readSmartButtonBranchingButtons(nodeType, previousParams)
+  const nextButtons = readSmartButtonBranchingButtons(nodeType, nextParams)
   const remap = new Map<string, string>()
 
   nextButtons.forEach((button, index) => {
@@ -4399,6 +4609,113 @@ function normalizeButtonBranchingButtonParams(
   value: unknown,
 ): Array<Array<{ label: string; payload: string; style?: string }>> {
   return normalizeButtonBranchingButtonRows(value)
+}
+
+function normalizeVkKeyboardButtonRows(
+  value: unknown,
+): Array<Array<{ label: string; payload: string; color?: string }>> {
+  if (!Array.isArray(value)) return []
+
+  const usedPayloads = new Set<string>()
+  let buttonIndex = 0
+  const rawRows = value.every(item => Array.isArray(item)) ? value : value.map(item => [item])
+  return rawRows
+    .map(row => Array.isArray(row) ? row : [])
+    .map(row => row
+      .filter((item): item is Record<string, unknown> => isRecord(item))
+      .map((item) => {
+        const payload = readString(item.payload)
+        const label = rawStringValue(item.label) || payload || ''
+        const normalized = {
+          label,
+          payload: payload
+            ? reserveUniquePayload(payload, usedPayloads)
+            : createUniqueStableCarouselPayload(label, buttonIndex, usedPayloads),
+          ...(isVkKeyboardColor(item.color) ? { color: item.color } : {}),
+        }
+        buttonIndex += 1
+        return normalized
+      })
+      .filter(button => button.label && button.payload))
+    .filter(row => row.length > 0)
+}
+
+function normalizeVkCarouselCards(
+  value: unknown,
+): Array<{
+  title: string
+  description: string
+  photoId?: string
+  buttons: Array<{ label: string; payload: string; style?: string; link?: string }>
+}> {
+  if (!Array.isArray(value)) return []
+
+  const usedPayloads = new Set<string>()
+  return value
+    .filter((item): item is Record<string, unknown> => isRecord(item))
+    .map(item => ({
+      title: rawStringValue(item.title),
+      description: rawStringValue(item.description),
+      ...(readString(item.photoId) ? { photoId: readString(item.photoId)! } : {}),
+      buttons: normalizeVkCarouselButtons(item.buttons, usedPayloads),
+    }))
+}
+
+function normalizeVkCarouselButtons(
+  value: unknown,
+  usedPayloads: Set<string>,
+): Array<{ label: string; payload: string; style?: string; link?: string }> {
+  if (!Array.isArray(value)) return []
+
+  return value
+    .filter((item): item is Record<string, unknown> => isRecord(item))
+    .map((item) => {
+      const payload = readString(item.payload)
+      const link = readString(item.link)
+      const label = rawStringValue(item.label) || payload || link || ''
+      return {
+        label,
+        payload: payload
+          ? reserveUniquePayload(payload, usedPayloads)
+          : createUniqueStableCarouselPayload(label || link || '', usedPayloads.size, usedPayloads),
+        ...(isButtonStyle(item.style) ? { style: item.style } : {}),
+        ...(link ? { link } : {}),
+      }
+    })
+    .filter(button => Boolean(button.label) && Boolean(button.payload))
+}
+
+function reserveUniquePayload(payload: string, usedPayloads: Set<string>): string {
+  let candidate = payload
+  let suffix = 2
+
+  while (usedPayloads.has(candidate)) {
+    candidate = `${payload}_${suffix}`
+    suffix += 1
+  }
+
+  usedPayloads.add(candidate)
+  return candidate
+}
+
+function createUniqueStableCarouselPayload(label: string, index: number, usedPayloads: Set<string>): string {
+  const base = label.trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^\p{L}\p{N}_-]+/gu, '_')
+    .replace(/^_+|_+$/g, '')
+    || `button_${index + 1}`
+
+  let candidate = base
+  let suffix = 2
+
+  while (usedPayloads.has(candidate)) {
+    candidate = `${base}_${suffix}`
+    suffix += 1
+  }
+
+  usedPayloads.add(candidate)
+  return candidate
 }
 
 function readSwitchCases(value: unknown): Array<{
@@ -4425,6 +4742,14 @@ function stringValue(value: unknown): string {
 function rawStringValue(value: unknown): string {
   if (typeof value === 'number' || typeof value === 'boolean') return String(value)
   return typeof value === 'string' ? value : ''
+}
+
+function isButtonStyle(value: unknown): value is string {
+  return ['primary', 'secondary', 'success', 'danger'].includes(stringValue(value))
+}
+
+function isVkKeyboardColor(value: unknown): value is string {
+  return ['primary', 'secondary', 'negative', 'positive'].includes(stringValue(value))
 }
 
 function createSwitchBranchKey(value: string, index: number, usedKeys: Set<string>): string {

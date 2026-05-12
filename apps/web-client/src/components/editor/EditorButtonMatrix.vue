@@ -36,7 +36,7 @@
       </div>
 
       <div class="button-matrix__grid">
-        <div
+        <EditorButtonPortRow
           v-for="(button, buttonIndex) in row"
           :key="`${button.payload}-${buttonIndex}`"
           class="button-matrix__item"
@@ -76,13 +76,7 @@
               @click.stop="removeButton(rowIndex, buttonIndex)"
             />
           </div>
-          <Handle
-            :id="button.payload"
-            type="source"
-            :position="Position.Right"
-            class="button-matrix__handle"
-          />
-        </div>
+        </EditorButtonPortRow>
       </div>
     </div>
 
@@ -103,7 +97,6 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Handle, Position } from '@vue-flow/core'
 import Button from 'primevue/button'
 import Select from 'primevue/select'
 import type { NodeParamItem } from '@/types/api'
@@ -118,6 +111,7 @@ import {
   type ButtonBranchingButtonRow,
 } from '@/components/editor/editorTypes'
 import type { VariableScope } from '@/components/editor/variableHighlight'
+import EditorButtonPortRow from '@/components/editor/EditorButtonPortRow.vue'
 import EditorVariableInput from '@/components/editor/EditorVariableInput.vue'
 
 const DEFAULT_BUTTON_STYLE = 'primary'
@@ -356,12 +350,6 @@ function stringValue(value: unknown): string {
 }
 
 .button-matrix__item {
-  position: relative;
-  display: flex;
-  align-items: center;
-  height: var(--button-row-height);
-  min-height: var(--button-row-height);
-  max-height: var(--button-row-height);
   min-width: 0;
 }
 
@@ -418,9 +406,9 @@ function stringValue(value: unknown): string {
   border: 0;
   border-radius: 0;
   background: transparent !important;
-  line-height: 16px;
-  padding-bottom: 4px;
-  padding-top: 4px;
+  line-height: 18px;
+  padding-bottom: 3px;
+  padding-top: 3px;
   box-shadow: none !important;
 }
 
@@ -544,17 +532,4 @@ function stringValue(value: unknown): string {
   text-align: left;
 }
 
-.button-matrix__handle {
-  box-sizing: border-box;
-  position: absolute !important;
-  right: -16px;
-  top: 50%;
-  width: 8px !important;
-  height: 8px !important;
-  transform: translateY(-50%) !important;
-  background: var(--color-primary) !important;
-  border: 1px solid var(--color-bg-card) !important;
-  border-radius: 50%;
-  pointer-events: auto;
-}
 </style>

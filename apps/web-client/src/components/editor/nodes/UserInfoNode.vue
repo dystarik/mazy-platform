@@ -9,6 +9,7 @@
     :is-pick-target="isPickTarget"
     :is-related="isRelated"
     :accent-color="accentColor"
+    :style="nodeLayoutStyle"
     :input-style="mainPortStyle"
     :output-style="mainPortStyle"
     @set-start="emit('set-start')"
@@ -53,6 +54,7 @@ import { computed, type CSSProperties } from 'vue'
 import InputText from 'primevue/inputtext'
 import type { NodeParamItem } from '@/types/api'
 import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
+import { getEditorNodeLayoutMetrics } from '@/components/editor/editorLayoutMetrics'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import BaseNode from './BaseNode.vue'
 
@@ -83,7 +85,12 @@ const variables = computed(() => [
   `${prefix.value}_username`,
   `${prefix.value}_avatar_url`,
 ])
-const mainPortStyle: CSSProperties = { top: '72px' }
+const layoutMetrics = computed(() => getEditorNodeLayoutMetrics({ type: props.nodeType, params: props.params }))
+const mainPortStyle = computed<CSSProperties>(() => ({ top: `${layoutMetrics.value.inputPortY}px` }))
+const nodeLayoutStyle = computed<CSSProperties>(() => ({
+  '--node-width': `${layoutMetrics.value.width}px`,
+  '--node-min-height': `${layoutMetrics.value.height}px`,
+}) as CSSProperties)
 
 function updatePrefix(value: string): void {
   if (props.isReadOnly) return
@@ -97,12 +104,6 @@ function stringValue(value: unknown): string {
 </script>
 
 <style scoped>
-.user-info-node {
-  width: 204px;
-  min-width: 204px;
-  max-width: 204px;
-}
-
 .user-info-node__body {
   display: flex;
   flex-direction: column;
@@ -119,6 +120,7 @@ function stringValue(value: unknown): string {
 
 .user-info-node__variables {
   box-shadow: inset 0 1px 0 var(--color-border);
+  padding-bottom: 0;
   padding-top: 12px;
 }
 

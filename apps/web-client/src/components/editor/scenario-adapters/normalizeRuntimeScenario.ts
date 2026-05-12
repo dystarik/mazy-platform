@@ -4,6 +4,8 @@ import {
   GOTO_NODE_TYPE,
   GROUP_NODE_TYPE,
   MESSAGE_NODE_TYPE,
+  VK_SEND_CAROUSEL_NODE_TYPE,
+  VK_SEND_KEYBOARD_NODE_TYPE,
 } from '@/components/editor/editorTypes'
 import { normalizeButtonBranchingCompiledNodeIds } from './editorNodeDefinitions'
 import type {
@@ -217,8 +219,10 @@ function normalizeGotoIncomingConnections(value: unknown): GotoIncomingConnectio
   return connections.length ? connections : undefined
 }
 
-function normalizeEditorBlockSourceType(value: unknown): 'send_message' | 'edit_message' | undefined {
+function normalizeEditorBlockSourceType(value: unknown): 'send_message' | 'edit_message' | 'vk_send_keyboard' | 'vk_send_carousel' | undefined {
   if (value === EDIT_MESSAGE_NODE_TYPE) return EDIT_MESSAGE_NODE_TYPE
+  if (value === VK_SEND_KEYBOARD_NODE_TYPE) return VK_SEND_KEYBOARD_NODE_TYPE
+  if (value === VK_SEND_CAROUSEL_NODE_TYPE) return VK_SEND_CAROUSEL_NODE_TYPE
   if (value === MESSAGE_NODE_TYPE || value === BUTTON_BRANCHING_NODE_TYPE) return MESSAGE_NODE_TYPE
   return undefined
 }

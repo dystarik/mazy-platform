@@ -5,6 +5,8 @@ import {
   GOTO_NODE_TYPE,
   GROUP_NODE_TYPE,
   MESSAGE_NODE_TYPE,
+  VK_SEND_CAROUSEL_NODE_TYPE,
+  VK_SEND_KEYBOARD_NODE_TYPE,
 } from '@/components/editor/editorTypes'
 import {
   BUTTON_BRANCHING_NODE_IDS_PARAM,
@@ -21,10 +23,19 @@ import type {
   RuntimeNode,
   RuntimeScenario,
 } from './editorScenario.types'
+import type { EditorPlatformCapabilities } from './editorPlatformCapabilities'
 
-export function runtimeToEditorScenario(data: RuntimeScenario): EditorScenario {
+const DEFAULT_VK_REMOVE_KEYBOARD_TEXT = 'Действие выполнено'
+
+export interface RuntimeToEditorScenarioOptions {
+  capabilities: EditorPlatformCapabilities
+}
+
+export function runtimeToEditorScenario(data: RuntimeScenario, options?: RuntimeToEditorScenarioOptions): EditorScenario {
   const nodesById = new Map(data.nodes.map(node => [node.id, node]))
-  const deleteAfterReceiveNodes = inferDeleteAfterReceiveNodes(data.connections, nodesById)
+  const deleteAfterReceiveNodes = options?.capabilities.canDeleteIncomingUserMessage === true
+    ? inferDeleteAfterReceiveNodes(data.connections, nodesById)
+    : new Map<string, string>()
   const hiddenDeleteAfterReceiveNodeIds = new Set(deleteAfterReceiveNodes.values())
   const editorConnections = collapseDeleteAfterReceiveConnections(data.connections, deleteAfterReceiveNodes)
   const buttonBlocks = (data.editorBlocks ?? [])
@@ -58,23 +69,40 @@ export function runtimeToEditorScenario(data: RuntimeScenario): EditorScenario {
       ...(!block.nodes.deleteMessage
         ? inferDeleteAfterPressNodeId(data.connections, nodesById, block.nodes)
         : {}),
+      ...(!block.nodes.removeKeyboard
+        ? inferRemoveKeyboardAfterPressNodeIds(data.connections, nodesById, block.nodes)
+        : {}),
+    }
+    if (compiledNodes.removeKeyboard && !compiledNodes.removeKeyboardDeleteMessage) {
+      Object.assign(
+        compiledNodes,
+        inferRemoveKeyboardDeleteMessageAfterPressNodeId(data.connections, nodesById, compiledNodes),
+      )
     }
 
     hiddenNodeIds.add(primaryNode.id)
     hiddenNodeIds.add(receiveNode.id)
     hiddenNodeIds.add(switchNode.id)
     if (compiledNodes.deleteMessage) hiddenNodeIds.add(compiledNodes.deleteMessage)
+    if (compiledNodes.removeKeyboard) hiddenNodeIds.add(compiledNodes.removeKeyboard)
+    if (compiledNodes.removeKeyboardDeleteMessage) hiddenNodeIds.add(compiledNodes.removeKeyboardDeleteMessage)
     childToBlock.set(primaryNode.id, { blockId: block.id, nodes: compiledNodes })
     childToBlock.set(receiveNode.id, { blockId: block.id, nodes: compiledNodes })
     childToBlock.set(switchNode.id, { blockId: block.id, nodes: compiledNodes })
     if (compiledNodes.deleteMessage) {
       childToBlock.set(compiledNodes.deleteMessage, { blockId: block.id, nodes: compiledNodes })
     }
+    if (compiledNodes.removeKeyboard) {
+      childToBlock.set(compiledNodes.removeKeyboard, { blockId: block.id, nodes: compiledNodes })
+    }
+    if (compiledNodes.removeKeyboardDeleteMessage) {
+      childToBlock.set(compiledNodes.removeKeyboardDeleteMessage, { blockId: block.id, nodes: compiledNodes })
+    }
 
     visualNodesBySendId.set(primaryNode.id, {
       id: block.id,
       type: resolveEditorBlockSourceType(block, primaryNode),
-      params: createButtonBranchingParamsFromCompiledNodes(primaryNode, receiveNode, {
+      params: createButtonBranchingParamsFromCompiledNodes(primaryNode, receiveNode, nodesById.get(compiledNodes.removeKeyboard ?? ''), {
         ...block,
         nodes: compiledNodes,
       }),
@@ -222,21 +250,36 @@ function toEditorNode(node: RuntimeNode, deleteAfterReceiveNodes?: Map<string, s
 function createButtonBranchingParamsFromCompiledNodes(
   primaryNode: RuntimeNode,
   receiveNode: RuntimeNode,
+  removeKeyboardNode: RuntimeNode | undefined,
   block: ButtonBranchingEditorBlock,
 ): Record<string, unknown> {
-  const isEditNode = resolveEditorBlockSourceType(block, primaryNode) === EDIT_MESSAGE_NODE_TYPE
+  const sourceType = resolveEditorBlockSourceType(block, primaryNode)
   const params: Record<string, unknown> = {
     messageIdVariable: primaryNode.params.messageIdVariable,
     buttonPayloadVariable: receiveNode.params.buttonPayloadVariable ?? 'button_payload',
-    buttons: normalizeButtonParams(primaryNode.params.buttons),
     [BUTTON_BRANCHING_NODE_IDS_PARAM]: block.nodes,
   }
-  if (block.nodes.deleteMessage) params.deleteAfterButtonPress = true
+  if (sourceType !== VK_SEND_CAROUSEL_NODE_TYPE && block.nodes.deleteMessage) {
+    params.deleteAfterButtonPress = true
+  }
+  if (sourceType === VK_SEND_KEYBOARD_NODE_TYPE && block.nodes.removeKeyboard) {
+    params.deleteAfterButtonPress = true
+    params.removeKeyboardText = stringValue(removeKeyboardNode?.params.text) || DEFAULT_VK_REMOVE_KEYBOARD_TEXT
+  }
 
-  if (isEditNode) {
+  if (sourceType === EDIT_MESSAGE_NODE_TYPE) {
+    params.buttons = normalizeButtonParams(primaryNode.params.buttons)
     params.newText = primaryNode.params.newText
     if (block.targetMessageNodeId) params.targetMessageNodeId = block.targetMessageNodeId
+  } else if (sourceType === VK_SEND_KEYBOARD_NODE_TYPE) {
+    params.text = primaryNode.params.text
+    params.buttons = normalizeVkKeyboardButtonRows(primaryNode.params.buttons)
+    params.oneTime = primaryNode.params.oneTime === true
+  } else if (sourceType === VK_SEND_CAROUSEL_NODE_TYPE) {
+    params.text = primaryNode.params.text
+    params.cards = normalizeVkCarouselCards(primaryNode.params.cards)
   } else {
+    params.buttons = normalizeButtonParams(primaryNode.params.buttons)
     params.text = primaryNode.params.text
   }
 
@@ -246,9 +289,17 @@ function createButtonBranchingParamsFromCompiledNodes(
 function resolveEditorBlockSourceType(
   block: ButtonBranchingEditorBlock,
   primaryNode: RuntimeNode,
-): typeof MESSAGE_NODE_TYPE | typeof EDIT_MESSAGE_NODE_TYPE {
+): typeof MESSAGE_NODE_TYPE | typeof EDIT_MESSAGE_NODE_TYPE | typeof VK_SEND_KEYBOARD_NODE_TYPE | typeof VK_SEND_CAROUSEL_NODE_TYPE {
   if (block.sourceType === EDIT_MESSAGE_NODE_TYPE || primaryNode.type === EDIT_MESSAGE_NODE_TYPE) {
     return EDIT_MESSAGE_NODE_TYPE
+  }
+
+  if (block.sourceType === VK_SEND_KEYBOARD_NODE_TYPE || primaryNode.type === VK_SEND_KEYBOARD_NODE_TYPE) {
+    return VK_SEND_KEYBOARD_NODE_TYPE
+  }
+
+  if (block.sourceType === VK_SEND_CAROUSEL_NODE_TYPE || primaryNode.type === VK_SEND_CAROUSEL_NODE_TYPE) {
+    return VK_SEND_CAROUSEL_NODE_TYPE
   }
 
   return MESSAGE_NODE_TYPE
@@ -342,8 +393,116 @@ function normalizeButtonParams(value: unknown): Array<Array<{ label: string; pay
     .filter(row => row.length > 0)
 }
 
+function normalizeVkKeyboardButtonRows(value: unknown): Array<Array<{ label: string; payload: string; color?: string }>> {
+  if (!Array.isArray(value)) return []
+
+  const usedPayloads = new Set<string>()
+  let index = 0
+  const rawRows = value.every(item => Array.isArray(item)) ? value : value.map(item => [item])
+  return rawRows
+    .map(row => Array.isArray(row) ? row : [])
+    .map(row => row
+      .filter((item): item is Record<string, unknown> => isRecord(item))
+      .map((item) => {
+        const payload = stringValue(item.payload)
+        const label = stringValue(item.label) || payload
+        const normalized = {
+          label,
+          payload: payload
+            ? reserveUniquePayload(payload, usedPayloads)
+            : createUniqueStableCarouselPayload(label, index, usedPayloads),
+          ...(isVkKeyboardColor(item.color) ? { color: item.color } : {}),
+        }
+        index += 1
+        return normalized
+      })
+      .filter(button => button.label && button.payload))
+    .filter(row => row.length > 0)
+}
+
+function normalizeVkCarouselCards(value: unknown): Array<{
+  title: string
+  description: string
+  photoId?: string
+  buttons?: Array<{ label: string; payload?: string; style?: string; link?: string }>
+}> {
+  if (!Array.isArray(value)) return []
+
+  const usedPayloads = new Set<string>()
+  return value
+    .filter((item): item is Record<string, unknown> => isRecord(item))
+    .map((item) => {
+      const buttons = normalizeVkCarouselButtons(item.buttons, usedPayloads)
+      return {
+        title: stringValue(item.title),
+        description: stringValue(item.description),
+        ...(stringValue(item.photoId) ? { photoId: stringValue(item.photoId) } : {}),
+        ...(buttons.length ? { buttons } : {}),
+      }
+    })
+}
+
+function normalizeVkCarouselButtons(
+  value: unknown,
+  usedPayloads: Set<string>,
+): Array<{ label: string; payload?: string; style?: string; link?: string }> {
+  if (!Array.isArray(value)) return []
+
+  return value
+    .filter((item): item is Record<string, unknown> => isRecord(item))
+    .map((item, index) => {
+      const payload = stringValue(item.payload)
+      const link = stringValue(item.link)
+      const label = stringValue(item.label) || payload || link
+      return {
+        label,
+        ...(!link
+          ? {
+              payload: payload
+                ? reserveUniquePayload(payload, usedPayloads)
+                : createUniqueStableCarouselPayload(label || link, index, usedPayloads),
+            }
+          : payload ? { payload } : {}),
+        ...(isButtonStyle(item.style) ? { style: item.style } : {}),
+        ...(link ? { link } : {}),
+      }
+    })
+    .filter(button => Boolean(button.label) && (Boolean(button.link) || Boolean(button.payload)))
+}
+
+function reserveUniquePayload(payload: string, usedPayloads: Set<string>): string {
+  let candidate = payload
+  let suffix = 2
+
+  while (usedPayloads.has(candidate)) {
+    candidate = `${payload}_${suffix}`
+    suffix += 1
+  }
+
+  usedPayloads.add(candidate)
+  return candidate
+}
+
+function createUniqueStableCarouselPayload(label: string, index: number, usedPayloads: Set<string>): string {
+  const base = createButtonPayload(label, index)
+  let candidate = base
+  let suffix = 2
+
+  while (usedPayloads.has(candidate)) {
+    candidate = `${base}_${suffix}`
+    suffix += 1
+  }
+
+  usedPayloads.add(candidate)
+  return candidate
+}
+
 function isButtonStyle(value: unknown): value is string {
   return ['primary', 'secondary', 'success', 'danger'].includes(stringValue(value))
+}
+
+function isVkKeyboardColor(value: unknown): value is string {
+  return ['primary', 'secondary', 'negative', 'positive'].includes(stringValue(value))
 }
 
 function createButtonPayload(label: string, index: number): string {
@@ -373,6 +532,63 @@ function inferDeleteAfterPressNodeId(
       && connection.to === blockNodes.switch,
     )
     if (reachesSwitch) return { deleteMessage: candidateId }
+  }
+
+  return {}
+}
+
+function inferRemoveKeyboardAfterPressNodeIds(
+  connections: RuntimeConnection[],
+  nodesById: Map<string, RuntimeNode>,
+  blockNodes: ButtonBranchingCompiledNodeIds,
+): Pick<ButtonBranchingCompiledNodeIds, 'removeKeyboard' | 'removeKeyboardDeleteMessage'> | Record<string, never> {
+  const afterReceive = connections
+    .filter(connection => connection.from === blockNodes.receiveButtonPress)
+    .map(connection => connection.to)
+
+  for (const candidateId of afterReceive) {
+    const candidate = nodesById.get(candidateId)
+    if (candidate?.type !== 'vk_remove_keyboard') continue
+
+    const reachesSwitch = connections.some(connection =>
+      connection.from === candidateId
+      && connection.to === blockNodes.switch,
+    )
+    if (reachesSwitch) return { removeKeyboard: candidateId }
+
+    const removeKeyboardDeleteMessage = inferRemoveKeyboardDeleteMessageAfterPressNodeId(
+      connections,
+      nodesById,
+      { ...blockNodes, removeKeyboard: candidateId },
+    )
+    if (removeKeyboardDeleteMessage.removeKeyboardDeleteMessage) {
+      return { removeKeyboard: candidateId, ...removeKeyboardDeleteMessage }
+    }
+  }
+
+  return {}
+}
+
+function inferRemoveKeyboardDeleteMessageAfterPressNodeId(
+  connections: RuntimeConnection[],
+  nodesById: Map<string, RuntimeNode>,
+  blockNodes: ButtonBranchingCompiledNodeIds,
+): Pick<ButtonBranchingCompiledNodeIds, 'removeKeyboardDeleteMessage'> | Record<string, never> {
+  if (!blockNodes.removeKeyboard) return {}
+
+  const afterRemoveKeyboard = connections
+    .filter(connection => connection.from === blockNodes.removeKeyboard)
+    .map(connection => connection.to)
+
+  for (const candidateId of afterRemoveKeyboard) {
+    const candidate = nodesById.get(candidateId)
+    if (candidate?.type !== 'delete_message') continue
+
+    const reachesSwitch = connections.some(connection =>
+      connection.from === candidateId
+      && connection.to === blockNodes.switch,
+    )
+    if (reachesSwitch) return { removeKeyboardDeleteMessage: candidateId }
   }
 
   return {}

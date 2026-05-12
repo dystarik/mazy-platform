@@ -6,7 +6,7 @@
       'bn--selected': isSelected,
       'bn--pickable': isPickable,
       'bn--pick-target': isPickTarget,
-      'bn--with-ports': hasOutputPorts,
+      'bn--with-ports': hasOutputPorts || outputPorts.length > 0,
       'bn--read-only': isReadOnly,
     }, relationClass]"
     :style="baseStyle"
@@ -60,8 +60,12 @@
 
     <!-- Порты: либо стандартный output, либо кастомные через slot -->
     <slot name="ports">
+      <EditorNodePortLayer
+        v-if="outputPorts.length > 0"
+        :ports="outputPorts"
+      />
       <Handle
-        v-if="hasOutput"
+        v-else-if="hasOutput"
         type="source"
         :position="Position.Right"
         :class="['bn__handle', 'bn__handle--source', outputClass]"
@@ -75,6 +79,9 @@
 import { computed, type CSSProperties } from 'vue'
 import { Handle, Position } from '@vue-flow/core'
 import Button from 'primevue/button'
+import EditorNodePortLayer, {
+  type EditorNodePortLayerPort,
+} from '@/components/editor/EditorNodePortLayer.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -93,6 +100,7 @@ const props = withDefaults(
     outputClass?: string
     inputStyle?: CSSProperties
     outputStyle?: CSSProperties
+    outputPorts?: EditorNodePortLayerPort[]
   }>(),
   {
     isReadOnly: false,
@@ -107,6 +115,7 @@ const props = withDefaults(
     outputClass: '',
     inputStyle: undefined,
     outputStyle: undefined,
+    outputPorts: () => [],
   },
 )
 
@@ -147,6 +156,7 @@ const relationClass = computed(() => {
   width: var(--node-width);
   min-width: var(--node-width);
   max-width: var(--node-width);
+  min-height: var(--node-min-height, auto);
   overflow: visible;
   cursor: grab;
   position: relative;
@@ -282,19 +292,25 @@ const relationClass = computed(() => {
   color: var(--color-text);
   font-family: inherit;
   font-size: 11px;
-  line-height: 16px;
+  line-height: 18px;
   outline: none;
   box-shadow: none;
 }
 
+.bn :deep(.p-inputtext),
+.bn :deep(.p-textarea) {
+  font-family: var(--font-mono, monospace);
+  line-height: 18px;
+}
+
 .bn :deep(.p-inputtext) {
   height: var(--node-control-height);
-  padding: 3px 8px;
+  padding: 2px 8px;
 }
 
 .bn :deep(.p-textarea) {
   min-height: var(--node-control-height);
-  padding: 3px 8px;
+  padding: 2px 8px;
 }
 
 .bn :deep(.p-select) {
@@ -303,9 +319,9 @@ const relationClass = computed(() => {
 }
 
 .bn :deep(.p-select-label) {
-  padding: 3px 8px;
+  padding: 2px 8px;
   font-size: 11px;
-  line-height: 16px;
+  line-height: 18px;
   text-align: left;
 }
 

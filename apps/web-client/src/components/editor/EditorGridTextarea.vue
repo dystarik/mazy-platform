@@ -322,11 +322,12 @@ function getTextareaElement(): HTMLTextAreaElement | null {
   caret-color: var(--color-text);
   -webkit-text-fill-color: transparent;
   font: inherit;
+  font-family: var(--font-mono, monospace);
   font-size: 11px;
-  line-height: 16px;
+  line-height: 18px;
   outline: none;
   overflow: hidden !important;
-  padding: 3px 28px 3px 8px !important;
+  padding: 2px 28px 2px 8px !important;
   resize: none !important;
 }
 
@@ -341,9 +342,10 @@ function getTextareaElement(): HTMLTextAreaElement | null {
   background: var(--color-bg-secondary);
   color: var(--color-text);
   font: inherit;
+  font-family: var(--font-mono, monospace);
   font-size: 11px;
-  line-height: 16px;
-  padding: 3px 28px 3px 8px;
+  line-height: 18px;
+  padding: 2px 28px 2px 8px;
   pointer-events: none;
   text-align: left;
   white-space: pre-wrap;

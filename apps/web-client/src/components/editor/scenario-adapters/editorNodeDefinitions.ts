@@ -6,6 +6,8 @@ import {
   GOTO_NODE_TYPE,
   GROUP_NODE_TYPE,
   MESSAGE_NODE_TYPE,
+  VK_SEND_CAROUSEL_NODE_TYPE,
+  VK_SEND_KEYBOARD_NODE_TYPE,
 } from '@/components/editor/editorTypes'
 import { CATEGORIES, NODE_META, type CategoryKey } from '@/components/editor/nodes/nodeMeta'
 
@@ -20,7 +22,17 @@ export const DATA_NODE_BACKEND_TYPES = new Set([
   'delete_record',
 ])
 
-export const HIDDEN_RUNTIME_CATALOG_NODE_TYPES = DATA_NODE_BACKEND_TYPES
+export const HIDDEN_RUNTIME_CATALOG_NODE_TYPES = new Set([
+  ...DATA_NODE_BACKEND_TYPES,
+  'vk_remove_keyboard',
+])
+export const SMART_BUTTON_BRANCHING_EDITOR_NODE_TYPES = [
+  MESSAGE_NODE_TYPE,
+  EDIT_MESSAGE_NODE_TYPE,
+  BUTTON_BRANCHING_NODE_TYPE,
+  VK_SEND_KEYBOARD_NODE_TYPE,
+  VK_SEND_CAROUSEL_NODE_TYPE,
+] as const
 
 export interface EditorNodeDefinition {
   type: string
@@ -290,6 +302,8 @@ export function createButtonBranchingCompiledNodeIds(blockId: string): import('.
     receiveButtonPress: createDerivedGraphId(blockId, 'receive_button_press'),
     switch: createDerivedGraphId(blockId, 'switch'),
     deleteMessage: createDerivedGraphId(blockId, 'delete_message_after_press'),
+    removeKeyboard: createDerivedGraphId(blockId, 'vk_remove_keyboard_after_press'),
+    removeKeyboardDeleteMessage: createDerivedGraphId(blockId, 'delete_vk_remove_keyboard_message_after_press'),
   }
 }
 
@@ -300,6 +314,8 @@ export function normalizeButtonBranchingCompiledNodeIds(value: unknown): import(
   const receiveButtonPress = readString(value.receiveButtonPress)
   const switchNode = readString(value.switch)
   const deleteMessage = readString(value.deleteMessage)
+  const removeKeyboard = readString(value.removeKeyboard)
+  const removeKeyboardDeleteMessage = readString(value.removeKeyboardDeleteMessage)
 
   if (!sendButtons || !receiveButtonPress || !switchNode) return null
 
@@ -308,6 +324,8 @@ export function normalizeButtonBranchingCompiledNodeIds(value: unknown): import(
     receiveButtonPress,
     switch: switchNode,
     ...(deleteMessage ? { deleteMessage } : {}),
+    ...(removeKeyboard ? { removeKeyboard } : {}),
+    ...(removeKeyboardDeleteMessage ? { removeKeyboardDeleteMessage } : {}),
   }
 }
 

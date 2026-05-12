@@ -1,7 +1,7 @@
 <template>
   <BaseNode
     class="edit-message-node"
-    :class="{ 'edit-message-node--branched': buttons.length > 0 }"
+    :class="{ 'edit-message-node--branched': buttonOutputPorts.length > 0 }"
     :label="label"
     :is-start="isStart"
     :is-selected="isSelected"
@@ -10,8 +10,9 @@
     :is-pick-target="isPickTarget"
     :is-related="isRelated"
     :accent-color="accentColor"
-    :has-output="buttons.length === 0"
-    :has-output-ports="false"
+    :has-output="buttonOutputPorts.length === 0"
+    :has-output-ports="buttonOutputPorts.length > 0"
+    :output-ports="buttonOutputPorts"
     :input-style="mainPortStyle"
     :output-style="mainOutputStyle"
     @set-start="emit('set-start')"
@@ -102,6 +103,7 @@ import {
   readButtonBranchingButtonRows,
 } from '@/components/editor/editorTypes'
 import type { VariableScope } from '@/components/editor/variableHighlight'
+import { describeEditorNodeLayout } from '@/components/editor/editorNodeLayoutContract'
 import { BUTTON_BRANCHING_CATALOG_ITEM } from '@/components/editor/scenario-adapters/editorNodeDefinitions'
 import EditorButtonMatrix from '@/components/editor/EditorButtonMatrix.vue'
 import EditorGridTextarea from '@/components/editor/EditorGridTextarea.vue'
@@ -135,6 +137,9 @@ const accentColor = computed(() => getNodeAccentColor(props.nodeType))
 const messageText = computed(() => stringValue(props.params.newText))
 const buttonRows = computed(() => readButtonBranchingButtonRows(props.params.buttons))
 const buttons = computed(() => flattenButtonBranchingRows(buttonRows.value))
+const buttonOutputPorts = computed(() =>
+  describeEditorNodeLayout({ type: props.nodeType, params: props.params }).outputPorts,
+)
 const deleteAfterButtonPress = computed(() => props.params.deleteAfterButtonPress === true)
 const hasMissingTarget = computed(() =>
   Boolean(props.params.targetMessageNodeId) && !props.messageSourceLabel,

@@ -1,7 +1,7 @@
 <template>
   <BaseNode
     :class="nodeClasses"
-    :style="nodeStyle"
+    :style="nodeLayoutStyle"
     :label="label"
     :is-start="isStart"
     :is-selected="isSelected"
@@ -12,6 +12,9 @@
     :accent-color="accentColor"
     :has-output="outputPorts.length === 0"
     :has-output-ports="outputPorts.length > 0"
+    :output-ports="outputPorts"
+    :input-style="mainPortStyle"
+    :output-style="mainPortStyle"
     @set-start="emit('set-start')"
     @delete="emit('delete')"
   >
@@ -43,31 +46,27 @@
       </div>
     </div>
 
-    <template v-if="outputPorts.length > 0" #ports>
-      <div class="gn__ports">
-        <div
-          v-for="port in outputPorts"
-          :key="port.id"
-          class="gn__port"
-        >
-          <span class="gn__port-label">{{ port.label }}</span>
-          <Handle
-            type="source"
-            :position="Position.Right"
-            :id="port.id"
-            class="gn__port-handle"
-          />
-        </div>
+    <div v-if="outputPorts.length > 0" class="gn__ports">
+      <div
+        v-for="port in outputPorts"
+        :key="port.id"
+        class="gn__port"
+        :style="portLabelStyle(port)"
+      >
+        <span class="gn__port-label">{{ port.label }}</span>
       </div>
-    </template>
+    </div>
   </BaseNode>
 </template>
 
 <script setup lang="ts">
 import { computed, type CSSProperties } from 'vue'
-import { Handle, Position } from '@vue-flow/core'
 import type { NodeParamItem } from '@/types/api'
-import { GROUP_NODE_TYPE, getNodeOutputPorts } from '@/components/editor/editorTypes'
+import { GROUP_NODE_TYPE } from '@/components/editor/editorTypes'
+import {
+  describeEditorNodeLayout,
+  type EditorNodeLayoutPort,
+} from '@/components/editor/editorNodeLayoutContract'
 import { getNodePreview } from '@/components/editor/nodes/nodeUi'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import BaseNode from './BaseNode.vue'
@@ -101,7 +100,8 @@ const emit = defineEmits<{
   delete: []
 }>()
 
-const outputPorts = computed(() => getNodeOutputPorts(props.nodeType, props.params))
+const layoutContract = computed(() => describeEditorNodeLayout({ type: props.nodeType, params: props.params }))
+const outputPorts = computed(() => layoutContract.value.outputPorts)
 const preview = computed(() => getNodePreview(props.nodeType, props.params))
 const accentColor = computed(() => getNodeAccentColor(props.nodeType))
 const isSwitchNode = computed(() => props.nodeType === 'switch')
@@ -114,22 +114,12 @@ const nodeClasses = computed(() => ({
   'gn-node--switch': isSwitchNode.value,
   'gn-node--group': isGroupNode.value,
 }))
-const nodeStyle = computed<CSSProperties>(() => {
-  if (!isSwitchNode.value) return {}
-
-  const longestPort = outputPorts.value.reduce(
-    (max, port) => Math.max(max, port.label.length),
-    0,
-  )
-  const rawWidth = Math.min(264, Math.max(216, 192 + Math.min(longestPort, 12) * 4))
-  const width = Math.round(rawWidth / 12) * 12
-
-  return {
-    width: `${width}px`,
-    minWidth: '216px',
-    maxWidth: '264px',
-  }
-})
+const mainPortStyle = computed<CSSProperties>(() => ({ top: `${layoutContract.value.inputPortY}px` }))
+const nodeLayoutStyle = computed<CSSProperties>(() => ({
+  '--node-width': `${layoutContract.value.width}px`,
+  '--node-wide-width': `${layoutContract.value.width}px`,
+  '--node-min-height': `${layoutContract.value.height}px`,
+}) as CSSProperties)
 const portPreviewStyle = computed<CSSProperties>(() => {
   if (outputPorts.value.length === 0) return {}
 
@@ -143,6 +133,12 @@ const portPreviewStyle = computed<CSSProperties>(() => {
     minHeight: `${Math.max(96, outputPorts.value.length * 24 + 24)}px`,
   }
 })
+
+function portLabelStyle(port: EditorNodeLayoutPort): CSSProperties {
+  return {
+    top: `${port.y}px`,
+  }
+}
 
 function updateGroupTitle(event: Event): void {
   const input = event.target as HTMLInputElement | null
@@ -171,11 +167,6 @@ function cleanGroupTitle(value: string): string {
   width: 100%;
   min-width: 0;
   padding-right: 158px;
-}
-.gn-node--switch.bn--with-ports {
-  width: 216px;
-  min-width: 216px;
-  max-width: 264px;
 }
 .gn-node--switch .gn-preview--with-ports {
   padding-right: 64px;
@@ -258,17 +249,12 @@ function cleanGroupTitle(value: string): string {
 
 .gn__ports {
   position: absolute;
-  top: 72px;
-  right: 12px;
+  inset: 0;
   width: 152px;
-  display: flex;
-  flex-direction: column;
   pointer-events: none;
 }
 .gn-node--switch .gn__ports {
-  top: 72px;
   right: 12px;
-  bottom: 12px;
   width: 60px;
 }
 .gn-node--switch .gn__port {
@@ -279,14 +265,20 @@ function cleanGroupTitle(value: string): string {
   padding-right: 16px;
 }
 .gn__port {
-  position: relative;
+  position: absolute;
+  right: 12px;
   height: 24px;
   min-height: 24px;
+  width: 152px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+  transform: translateY(-50%);
   pointer-events: none;
+}
+.gn-node--switch .gn__port {
+  width: 60px;
 }
 .gn__port-label {
   padding-right: 18px;
@@ -297,18 +289,5 @@ function cleanGroupTitle(value: string): string {
   color: var(--color-text-secondary);
   font-family: var(--font-mono, monospace);
   white-space: nowrap;
-}
-.gn__port-handle {
-  box-sizing: border-box;
-  position: absolute !important;
-  right: -16px;
-  top: 50%;
-  transform: translateY(-50%) !important;
-  width: 8px;
-  height: 8px;
-  background: var(--color-text-secondary);
-  border: 1px solid var(--color-bg-card);
-  border-radius: 50%;
-  pointer-events: auto;
 }
 </style>

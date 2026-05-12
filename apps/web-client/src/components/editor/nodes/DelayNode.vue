@@ -9,6 +9,7 @@
     :is-pick-target="isPickTarget"
     :is-related="isRelated"
     :accent-color="accentColor"
+    :style="nodeLayoutStyle"
     :input-style="mainPortStyle"
     :output-style="mainPortStyle"
     @set-start="emit('set-start')"
@@ -40,6 +41,7 @@ import { computed, type CSSProperties } from 'vue'
 import InputText from 'primevue/inputtext'
 import type { NodeParamItem } from '@/types/api'
 import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
+import { getEditorNodeLayoutMetrics } from '@/components/editor/editorLayoutMetrics'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import BaseNode from './BaseNode.vue'
 
@@ -62,8 +64,13 @@ const emit = defineEmits<{
   delete: []
 }>()
 
-const mainPortStyle: CSSProperties = { top: '60px' }
 const accentColor = computed(() => getNodeAccentColor(props.nodeType))
+const layoutMetrics = computed(() => getEditorNodeLayoutMetrics({ type: props.nodeType, params: props.params }))
+const mainPortStyle = computed<CSSProperties>(() => ({ top: `${layoutMetrics.value.inputPortY}px` }))
+const nodeLayoutStyle = computed<CSSProperties>(() => ({
+  '--node-width': `${layoutMetrics.value.width}px`,
+  '--node-min-height': `${layoutMetrics.value.height}px`,
+}) as CSSProperties)
 const seconds = computed(() => {
   const value = props.params.seconds
   if (typeof value === 'number') return value
@@ -79,10 +86,8 @@ function updateSeconds(value: string): void {
 </script>
 
 <style scoped>
-.delay-node {
-  width: 204px;
-  min-width: 204px;
-  max-width: 204px;
+.delay-node :deep(.bn__body) {
+  padding-bottom: 0;
 }
 
 .delay-node__body {

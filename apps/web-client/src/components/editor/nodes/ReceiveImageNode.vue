@@ -9,6 +9,7 @@
     :is-pick-target="isPickTarget"
     :is-related="isRelated"
     :accent-color="accentColor"
+    :style="nodeLayoutStyle"
     :input-style="mainPortStyle"
     :output-style="mainPortStyle"
     @set-start="emit('set-start')"
@@ -49,6 +50,7 @@ import { computed, type CSSProperties } from 'vue'
 import InputText from 'primevue/inputtext'
 import type { NodeParamItem } from '@/types/api'
 import EditorOverflowTooltip from '@/components/editor/EditorOverflowTooltip.vue'
+import { getEditorNodeLayoutMetrics } from '@/components/editor/editorLayoutMetrics'
 import type { VariableScope } from '@/components/editor/variableHighlight'
 import { getNodeAccentColor } from '@/components/editor/nodes/nodeMeta'
 import BaseNode from './BaseNode.vue'
@@ -75,7 +77,12 @@ const emit = defineEmits<{
 }>()
 
 const accentColor = computed(() => getNodeAccentColor(props.nodeType))
-const mainPortStyle: CSSProperties = { top: '72px' }
+const layoutMetrics = computed(() => getEditorNodeLayoutMetrics({ type: props.nodeType, params: props.params }))
+const mainPortStyle = computed<CSSProperties>(() => ({ top: `${layoutMetrics.value.inputPortY}px` }))
+const nodeLayoutStyle = computed<CSSProperties>(() => ({
+  '--node-width': `${layoutMetrics.value.width}px`,
+  '--node-min-height': `${layoutMetrics.value.height}px`,
+}) as CSSProperties)
 const imageUrlVariable = computed(() => stringValue(props.params.imageUrlVariable))
 const captionVariable = computed(() => stringValue(props.params.captionVariable))
 
@@ -91,12 +98,6 @@ function stringValue(value: unknown): string {
 </script>
 
 <style scoped>
-.receive-image-node {
-  width: 204px;
-  min-width: 204px;
-  max-width: 204px;
-}
-
 .receive-image-node__body {
   display: flex;
   flex-direction: column;
