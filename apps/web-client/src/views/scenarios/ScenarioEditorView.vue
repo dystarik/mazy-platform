@@ -1479,24 +1479,31 @@ function buildAuthoringSchemaJson(): string {
       platformKey: editorCapabilities.value.platformKey,
       capabilities: editorCapabilities.value,
     },
+    generationWorkflow: buildAuthoringGenerationWorkflow(),
     scenarioShape: {
-      startNodeId: 'string',
+      description: 'Use this shape when generating a mazy-editor-scenario JSON document.',
+      startNodeId: 'UUID string; must be the id of the first node to execute',
       nodes: [
         {
-          id: 'string',
-          type: 'one of nodes[].type',
-          params: 'object matching the selected node params',
-          position: { x: 'number', y: 'number' },
+          id: 'UUID string generated with the canonical 8-4-4-4-12 format, for example "9f7e6a4a-3e57-4f70-b85f-4c27d2d65a0b"',
+          type: 'one of this schema nodes[].type',
+          params: 'object matching the selected node params schema',
+          position: {
+            x: 'number; editor position on the canvas',
+            y: 'number; editor position on the canvas',
+          },
         },
       ],
       connections: [
         {
-          from: 'source node id',
-          to: 'target node id',
-          branch: 'optional output port id; omit for default output',
+          from: 'source node UUID',
+          to: 'target node UUID',
+          branch: 'optional output port id; omit for the default output',
         },
       ],
     },
+    paramTypes: buildAuthoringParamTypesGuide(),
+    connectionRules: buildAuthoringConnectionRules(),
     nodes: [...visibleNodeTypes].map(type => {
       const definition = EDITOR_NODE_DEFINITIONS[type]
       const defaultParams = stripAuthoringParams(createDefaultParamsForNode(type, `schema-${type}`))
@@ -1521,6 +1528,77 @@ function buildAuthoringSchemaJson(): string {
   return JSON.stringify(data)
 }
 
+function buildAuthoringGenerationWorkflow() {
+  return {
+    purpose: 'Help an AI generate valid Mazy editor scenarios for the current project and platform.',
+    order: [
+      {
+        step: 'understandUserGoal',
+        rule: 'Identify what the user wants the bot to do, what platform is selected, and what data must be remembered between messages.',
+      },
+      {
+        step: 'planEntitySchemasFirst',
+        rule: 'Before writing scenario nodes, decide whether the scenario needs project data schemas.',
+        createSchemasWhen: [
+          'The scenario must store applications, orders, bookings, leads, profiles, tickets, or other structured records.',
+          'The scenario must later search, update, or delete data entered by a user.',
+          'The scenario uses data_record nodes with entityName, fields, filter, recordIdVariable, recordVariable, or recordsVariable.',
+        ],
+        userMessage: 'If required schemas do not exist, tell the user which schemas and fields should be created before the scenario is generated.',
+      },
+      {
+        step: 'writeScenarioAfterSchemas',
+        rule: 'Generate the scenario only after existingEntitySchemas are enough or after proposing the missing schemas.',
+      },
+      {
+        step: 'connectNodes',
+        rule: 'Use connectionRules and each node outputs description. Do not invent branch names that are not exposed by the source node.',
+      },
+      {
+        step: 'validateResult',
+        rule: 'Check that startNodeId points to an existing node, every connection endpoint exists, required params are filled, and data node fields match the chosen entity schema.',
+      },
+    ],
+  }
+}
+
+function buildAuthoringParamTypesGuide() {
+  return {
+    NODE_PARAM_TYPE_STRING: 'String value. Can contain variables such as message_text when the node expects a variable name or templated text when the node sends content.',
+    NODE_PARAM_TYPE_NUMBER: 'Number value.',
+    NODE_PARAM_TYPE_BOOL: 'Boolean value.',
+    NODE_PARAM_TYPE_ENUM: 'String value from enumValues.',
+    NODE_PARAM_TYPE_STRING_LIST: 'Array of strings.',
+    NODE_PARAM_TYPE_STRING_DICTIONARY: 'Object with string keys and string values.',
+    NODE_PARAM_TYPE_OBJECT: 'Nested object matching fields.',
+    NODE_PARAM_TYPE_OBJECT_LIST: 'Array of objects matching fields.',
+    NODE_PARAM_TYPE_OBJECT_MATRIX: 'Array of rows, where each row is an array of objects matching fields.',
+  }
+}
+
+function buildAuthoringConnectionRules() {
+  return {
+    defaultOutput: 'For ordinary nodes, create a connection without branch.',
+    fixedBranches: {
+      condition: 'Use branch "true" for the true output and branch "false" for the false output.',
+      switch: 'Use each case branchKey as branch. Use branch "default" only for the default output.',
+    },
+    buttonBranches: {
+      rule: 'For smart button nodes, branch must equal the internal button payload.',
+      payloadOrder: 'Rows are read top-to-bottom and buttons left-to-right.',
+      telegramAndUniversalButtons: 'Use params.buttons[][].payload.',
+      vkKeyboardButtons: 'Use params.buttons[][].payload.',
+      vkCarouselButtons: 'Use params.cards[].buttons[].payload only for callback buttons.',
+      vkCarouselLinkButtons: 'Buttons with a non-empty link open the link and do not create scenario branches or output ports.',
+    },
+    invalidConnections: [
+      'Do not connect from a branch that the source node does not expose.',
+      'Do not add branch for default-output nodes.',
+      'Do not connect to hidden runtime helper nodes directly in mazy-editor-scenario JSON.',
+    ],
+  }
+}
+
 function buildAuthoringSyntacticSugarGuide() {
   return {
     deleteAfterReceive: {
@@ -1542,15 +1620,22 @@ function buildAuthoringSyntacticSugarGuide() {
         vk_send_keyboard: 'vk_send_keyboard',
         vk_send_carousel: 'vk_send_carousel',
       },
-      vkBehavior: 'VK keyboard and carousel nodes are editor sugar too when they have buttons; compilation keeps the VK runtime node and adds hidden receive_button_press plus switch nodes.',
+      vkBehavior: 'VK keyboard and carousel nodes are editor sugar too when they have callback buttons; compilation keeps the VK runtime node and adds hidden receive_button_press plus switch nodes.',
       branchRule: 'Outgoing branches from these editor nodes must match button payload values.',
       payloadSources: {
         send_message: 'params.buttons[][].payload',
         button_branching: 'params.buttons[][].payload',
         edit_message: 'params.buttons[][].payload',
         vk_send_keyboard: 'params.buttons[][].payload',
-        vk_send_carousel: 'params.cards[].buttons[].payload',
+        vk_send_carousel: 'params.cards[].buttons[].payload for callback buttons; link buttons do not create branches.',
       },
+    },
+    vkHideKeyboardAfterPress: {
+      editorNodeTypes: [VK_SEND_KEYBOARD_NODE_TYPE],
+      available: editorCapabilities.value.platformKey === 'vk',
+      activatesWhen: 'params.hideAfterPress is true.',
+      expandsTo: ['vk_receive_button_press', 'vk_remove_keyboard', 'delete_message', 'switch'],
+      note: 'The editor keeps this as one VK keyboard node. Runtime helper nodes are generated during compilation and should not be authored manually.',
     },
     dataRecord: {
       editorNodeType: DATA_NODE_TYPE,
@@ -1569,22 +1654,45 @@ function buildAuthoringSyntacticSugarGuide() {
 }
 
 function buildAuthoringGuidelines() {
-  return [
-    'Generate stable UUID strings for every node id.',
-    'Use startNodeId to point to the first node the scenario should execute.',
-    'Omit branch for ordinary default-output connections.',
-    'Use branches "true" and "false" for condition nodes.',
-    'Use switch case branchKey values as outgoing branch names for switch nodes; use branch "default" only for the switch default output.',
-    'Use button payload values as outgoing branch names for smart button branching editor nodes.',
-    'Do not add non-default branches to runtime nodes that do not expose named output ports.',
-    'Keep editor-only params out of runtime JSON unless the export format is mazy-editor-scenario.',
-    'Prefer explicit entity schemas before using data_record nodes that read or write records.',
-  ]
+  return {
+    scenario: [
+      'Generate UUID strings for every node id. Use the canonical 8-4-4-4-12 UUID format.',
+      'Do not use Russian words, labels, slugs, node type names, or readable titles as node ids.',
+      'Every connection.from, connection.to, startNodeId, targetNodeId, entryNodeId, and exitNodeId must reference node UUIDs, not labels.',
+      'Use startNodeId to point to the first node the scenario should execute.',
+      'Use only node types listed in nodes[].type.',
+      'Fill required params from the selected node params schema.',
+      'Keep positions readable and separated enough for the editor canvas.',
+    ],
+    connections: [
+      'Follow connectionRules before creating each connection.',
+      'Omit branch for ordinary default-output connections.',
+      'Use branches "true" and "false" for condition nodes.',
+      'Use switch case branchKey values as outgoing branch names for switch nodes; use branch "default" only for the switch default output.',
+      'Use button payload values as outgoing branch names for smart button branching editor nodes.',
+      'Do not add non-default branches to nodes that do not expose named output ports.',
+    ],
+    data: [
+      'Prefer explicit entity schemas before using data_record nodes that read or write records.',
+      'Do not invent entityName or field names if the schema does not exist. Propose the missing schema first.',
+      'When using an existing schema, use exactly its name and field names.',
+    ],
+    platform: [
+      'Respect platform.capabilities and platform-specific node behavior.',
+      'Telegram-only features must not be used for VK scenarios.',
+      'VK carousel link buttons open a link and must not be treated as scenario branches.',
+    ],
+    output: [
+      'If schemas are missing, answer with the schemas that should be created before the scenario JSON.',
+      'If schemas are already present or not needed, answer with a mazy-editor-scenario JSON that follows scenarioShape.',
+    ],
+  }
 }
 
 function buildEntitySchemaGuidance() {
   return {
     purpose: 'Entity schemas describe project data records that scenario data nodes can create, query, update, and delete.',
+    workflowRule: 'Entity schemas are authored before scenarios. A scenario that references data records must use existing schemas or explicitly propose the missing schemas first.',
     whenToCreate: [
       'Create an entity schema when the scenario needs to remember structured user or business data.',
       'Create fields before generating data_record nodes that reference entityName and field names.',
@@ -1619,6 +1727,10 @@ function buildEntitySchemaGuidance() {
       recordIdVariable: 'Use this variable to pass a created or selected record id between nodes.',
       recordVariable: 'Stores one record returned by get_record.',
       recordsVariable: 'Stores the list returned by query_records.',
+    },
+    missingSchemaResponse: {
+      rule: 'If a needed schema is absent from existingEntitySchemas, do not generate data_record nodes that reference it yet.',
+      expectedUserMessage: 'Tell the user which schema name and fields should be created first, then generate the scenario after those schemas exist.',
     },
     existingEntitySchemasField: 'The export includes existingEntitySchemas and the legacy-compatible dataSchemas with the same API response shape.',
   }

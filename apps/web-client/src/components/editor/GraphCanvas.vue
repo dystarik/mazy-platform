@@ -20,14 +20,14 @@
       :connection-line-type="ConnectionLineType.SmoothStep"
       :default-edge-options="defaultEdgeOptions"
       :delete-key-code="isReadOnly ? null : 'Delete'"
-      :pan-on-drag="[0]"
+      :pan-on-drag="panOnDrag"
       :selection-key-code="null"
       :multi-selection-key-code="null"
       :nodes-draggable="!isReadOnly"
       :nodes-connectable="!isReadOnly"
       :edges-updatable="!isReadOnly"
-      :zoom-on-scroll="false"
-      :pan-on-scroll="false"
+      :zoom-on-scroll="zoomOnScroll"
+      :pan-on-scroll="panOnScroll"
       @connect="$emit('connect', $event)"
       @node-click="$emit('nodeClick', $event)"
       @node-context-menu="$emit('nodeContextMenu', $event)"
@@ -125,6 +125,9 @@ const props = defineProps<{
   catalogParamsFor: (type: string) => NodeParamItem[]
   projectSchemaDetails: GetEntitySchemaResponse[]
   editorCapabilities?: EditorPlatformCapabilities
+  panOnDrag?: boolean | number[]
+  zoomOnScroll?: boolean
+  panOnScroll?: boolean
   knownVariables: string[]
   variableScopeForNode?: (nodeId: string) => VariableScope
   isMessagePickableNode: (nodeId: string) => boolean
@@ -164,6 +167,9 @@ function emitNodeUi(nodeId: string, value: EditorNodeUiState): void {
 const defaultEdgeOptions: DefaultEdgeOptions = {
   type: 'routed',
 }
+const panOnDrag = computed(() => props.panOnDrag ?? [0])
+const zoomOnScroll = computed(() => props.zoomOnScroll ?? false)
+const panOnScroll = computed(() => props.panOnScroll ?? false)
 const resolvedEditorCapabilities = computed(() =>
   props.editorCapabilities ?? getEditorPlatformCapabilities('PLATFORM_TYPE_UNIVERSAL'),
 )

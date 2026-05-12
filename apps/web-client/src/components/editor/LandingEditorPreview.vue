@@ -16,6 +16,8 @@
         :right-selection-style="{}"
         :catalog-params-for="catalogParamsFor"
         :project-schema-details="[]"
+        :pan-on-drag="true"
+        :zoom-on-scroll="true"
         :known-variables="knownVariables"
         :variable-scope-for-node="variableScopeForNode"
         :is-message-pickable-node="() => false"
@@ -23,9 +25,6 @@
         :message-relation-tone-for-node="() => null"
         :message-source-label-for="messageSourceLabelFor"
         @drop="noopDrag"
-        @canvas-wheel="noopWheel"
-        @canvas-pointer-down-capture="noopPointer"
-        @canvas-mouse-down-capture="noopMouse"
         @connect="noopConnect"
       />
     </div>
@@ -168,18 +167,6 @@ function noopDrag(event: DragEvent): void {
   event.preventDefault()
 }
 
-function noopWheel(event: WheelEvent): void {
-  event.preventDefault()
-}
-
-function noopPointer(event: PointerEvent): void {
-  event.preventDefault()
-}
-
-function noopMouse(event: MouseEvent): void {
-  event.preventDefault()
-}
-
 function noopConnect(_params: Connection): void {
   // Static release preview.
 }
@@ -232,8 +219,31 @@ function noopConnect(_params: Connection): void {
   display: flex;
 }
 
+.editor-demo :deep(.vue-flow__pane) {
+  cursor: grab;
+}
+
+.editor-demo :deep(.vue-flow__pane:active) {
+  cursor: grabbing;
+}
+
 .editor-demo :deep(.vue-flow__controls) {
-  display: none;
+  display: flex;
+  overflow: hidden;
+  border: 0.5px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg-card);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+.editor-demo :deep(.vue-flow__controls-button) {
+  border-bottom-color: var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-text);
+}
+
+.editor-demo :deep(.vue-flow__controls-button:hover) {
+  background: var(--color-bg-soft);
 }
 
 .editor-demo :deep(.bn) {
