@@ -390,24 +390,28 @@
             <InputText
               v-model="fieldForm.name"
               type="text"
-              placeholder="Например: email"
-              autofocus
+              name="entity-schema-field-name"
+              autocomplete="new-password"
+              autocapitalize="none"
+              autocorrect="off"
+              spellcheck="false"
+              placeholder="Например: почта"
               @keydown.enter="handleAddField"
             />
           </div>
           <div class="field">
             <label>Тип</label>
             <div class="field-type-picker">
-              <Button
+              <button
                 v-for="ft in fieldTypes"
                 :key="ft.value"
                 class="field-type-option"
                 :class="{ 'field-type-option--active': fieldForm.fieldType === ft.value }"
-                :label="ft.label"
-                text
                 type="button"
                 @click="fieldForm.fieldType = ft.value"
-              />
+              >
+                <span class="field-type-option__label">{{ ft.label }}</span>
+              </button>
             </div>
           </div>
           <label class="field-checkbox">
@@ -558,9 +562,9 @@ const fieldTypes: { value: FieldType; label: string }[] = [
   { value: 'FIELD_TYPE_STRING', label: 'Текст' },
   { value: 'FIELD_TYPE_NUMBER', label: 'Число' },
   { value: 'FIELD_TYPE_BOOLEAN', label: 'Да/Нет' },
-  { value: 'FIELD_TYPE_DATE_TIME', label: 'Дата' },
+  { value: 'FIELD_TYPE_DATE_TIME', label: 'Дата и время' },
   { value: 'FIELD_TYPE_REFERENCE', label: 'Ссылка' },
-  { value: 'FIELD_TYPE_ENUM', label: 'Список' },
+  { value: 'FIELD_TYPE_ENUM', label: 'Enum / список' },
 ]
 
 const botUsageByVersion = computed(() => {
@@ -1480,15 +1484,16 @@ async function handleDeleteSchema(): Promise<void> {
 }
 
 .field-type-option {
-  padding: 7px 12px;
+  min-width: 148px;
+  padding: 8px 10px;
   border: 1.5px solid var(--color-border);
   border-radius: 8px;
   background: var(--color-bg-secondary);
   color: var(--color-text-secondary);
   font: inherit;
-  font-size: 12px;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
+  text-align: left;
 }
 
 .field-type-option:hover {
@@ -1500,6 +1505,14 @@ async function handleDeleteSchema(): Promise<void> {
   border-color: var(--color-primary);
   background: color-mix(in srgb, var(--color-primary) 10%, transparent);
   color: var(--color-primary);
+}
+
+.field-type-option__label {
+  display: block;
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .field-checkbox {
