@@ -16,7 +16,7 @@
         :right-selection-style="{}"
         :catalog-params-for="catalogParamsFor"
         :project-schema-details="[]"
-        :pan-on-drag="true"
+        :pan-on-drag="[0]"
         :zoom-on-scroll="true"
         :known-variables="knownVariables"
         :variable-scope-for-node="variableScopeForNode"

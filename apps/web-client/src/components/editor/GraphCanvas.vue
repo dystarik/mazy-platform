@@ -125,7 +125,7 @@ const props = defineProps<{
   catalogParamsFor: (type: string) => NodeParamItem[]
   projectSchemaDetails: GetEntitySchemaResponse[]
   editorCapabilities?: EditorPlatformCapabilities
-  panOnDrag?: boolean | number[]
+  panOnDrag?: number[]
   zoomOnScroll?: boolean
   panOnScroll?: boolean
   knownVariables: string[]
