@@ -1,0 +1,112 @@
+{
+  "title": "Service Health",
+  "uid": "mazy-release-service-health",
+  "tags": [ "release" ],
+  "schemaVersion": 42,
+  "refresh": "10s",
+  "time": { "from": "now-15m", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+        "query": "label_values(probe_success, service)",
+        "definition": "label_values(probe_success, service)",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".+",
+        "current": { "selected": true, "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Live-проверки",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "fieldConfig": { "defaults": { "mappings": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } } ], "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": 0 }, { "color": "green", "value": 1 } ] } } },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": [ "lastNotNull" ], "fields": "", "values": false }, "textMode": "auto", "wideLayout": true },
+      "targets": [ { "expr": "min(probe_success{job=\"blackbox-health-live\",service=~\"${service:regex}\"})", "refId": "A" } ]
+    },
+    {
+      "id": 2,
+      "title": "Ready-проверки",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "fieldConfig": { "defaults": { "mappings": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } } ], "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": 0 }, { "color": "green", "value": 1 } ] } } },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": [ "lastNotNull" ], "fields": "", "values": false }, "textMode": "auto", "wideLayout": true },
+      "targets": [ { "expr": "min(probe_success{job=\"blackbox-health-ready\",service=~\"${service:regex}\"})", "refId": "A" } ]
+    },
+    {
+      "id": 3,
+      "title": "gRPC TCP доступность",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "fieldConfig": { "defaults": { "mappings": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } } ], "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": 0 }, { "color": "green", "value": 1 } ] } } },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": [ "lastNotNull" ], "fields": "", "values": false }, "textMode": "auto", "wideLayout": true },
+      "targets": [ { "expr": "min(probe_success{job=\"blackbox-grpc-tcp\",service=~\"${service:regex}\"})", "refId": "A" } ]
+    },
+    {
+      "id": 4,
+      "title": "Ошибки по сервисам",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "loki", "uid": "loki-mazy" },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": 0 }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 10 } ] } } },
+      "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": [ "lastNotNull" ], "fields": "", "values": false }, "textMode": "value", "wideLayout": true },
+      "targets": [ { "expr": "sum(count_over_time({app=~\"${service:regex}\"} | json | level=~\"(?i)(error|fatal|critical|err|ftl)\" [$__range]))", "refId": "A" } ]
+    },
+    {
+      "id": 5,
+      "title": "HTTP проверки",
+      "type": "state-timeline",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "fieldConfig": { "defaults": { "mappings": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } } ], "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": 0 }, { "color": "green", "value": 1 } ] } } },
+      "options": { "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" }, "mergeValues": true, "showValue": "always", "tooltip": { "mode": "multi", "sort": "none" } },
+      "targets": [
+        { "expr": "probe_success{job=\"blackbox-health-live\",service=~\"${service:regex}\"}", "legendFormat": "{{service}} live", "refId": "A" },
+        { "expr": "probe_success{job=\"blackbox-health-ready\",service=~\"${service:regex}\"}", "legendFormat": "{{service}} ready", "refId": "B" }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "gRPC порты",
+      "type": "state-timeline",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "fieldConfig": { "defaults": { "mappings": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } } ], "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": 0 }, { "color": "green", "value": 1 } ] } } },
+      "options": { "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" }, "mergeValues": true, "showValue": "always", "tooltip": { "mode": "multi", "sort": "none" } },
+      "targets": [ { "expr": "probe_success{job=\"blackbox-grpc-tcp\",service=~\"${service:regex}\"}", "legendFormat": "{{service}} {{endpoint}}", "refId": "A" } ]
+    },
+    {
+      "id": 7,
+      "title": "Время health-проверок",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 3, "showPoints": "never" } } },
+      "options": { "legend": { "showLegend": true, "displayMode": "table", "placement": "bottom", "calcs": [ "lastNotNull", "max" ] }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "expr": "probe_duration_seconds{job=\"blackbox-health-ready\",service=~\"${service:regex}\"}", "legendFormat": "{{service}} ready", "refId": "A" },
+        { "expr": "probe_duration_seconds{job=\"blackbox-health-live\",service=~\"${service:regex}\"}", "legendFormat": "{{service}} live", "refId": "B" }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Логи ошибок по сервисам",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "datasource": { "type": "loki", "uid": "loki-mazy" },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 3, "showPoints": "never" } } },
+      "options": { "legend": { "showLegend": true, "displayMode": "table", "placement": "bottom", "calcs": [ "lastNotNull" ] }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [ { "expr": "sum by (app) (count_over_time({app=~\"${service:regex}\"} | json | level=~\"(?i)(error|fatal|critical|err|ftl)\" [$__interval]))", "legendFormat": "{{app}}", "refId": "A" } ]
+    }
+  ]
+}

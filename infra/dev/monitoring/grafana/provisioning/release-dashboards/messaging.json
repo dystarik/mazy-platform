@@ -1,0 +1,117 @@
+{
+  "title": "Messaging",
+  "uid": "mazy-release-messaging",
+  "tags": [ "release" ],
+  "schemaVersion": 42,
+  "refresh": "10s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Сообщения в очередях",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": 0 }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 100 } ] } } },
+      "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": [ "lastNotNull" ], "fields": "", "values": false }, "textMode": "value", "wideLayout": true },
+      "targets": [ { "expr": "sum(rabbitmq_queue_messages{job=\"rabbitmq-per-object\"})", "refId": "A" } ]
+    },
+    {
+      "id": 2,
+      "title": "Готовы к обработке",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": 0 }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 100 } ] } } },
+      "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": [ "lastNotNull" ], "fields": "", "values": false }, "textMode": "value", "wideLayout": true },
+      "targets": [ { "expr": "sum(rabbitmq_queue_messages_ready{job=\"rabbitmq-per-object\"})", "refId": "A" } ]
+    },
+    {
+      "id": 3,
+      "title": "Не подтверждены",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": 0 }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 50 } ] } } },
+      "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": [ "lastNotNull" ], "fields": "", "values": false }, "textMode": "value", "wideLayout": true },
+      "targets": [ { "expr": "sum(rabbitmq_queue_messages_unacked{job=\"rabbitmq-per-object\"})", "refId": "A" } ]
+    },
+    {
+      "id": 4,
+      "title": "Потребители",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": 0 }, { "color": "green", "value": 1 } ] } } },
+      "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": [ "lastNotNull" ], "fields": "", "values": false }, "textMode": "value", "wideLayout": true },
+      "targets": [ { "expr": "sum(rabbitmq_queue_consumers{job=\"rabbitmq-per-object\"})", "refId": "A" } ]
+    },
+    {
+      "id": 5,
+      "title": "Очереди с backlog",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": 0 }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 100 } ] } } },
+      "options": { "displayMode": "gradient", "maxVizHeight": 300, "minVizHeight": 16, "minVizWidth": 8, "namePlacement": "auto", "orientation": "horizontal", "reduceOptions": { "calcs": [ "lastNotNull" ], "fields": "", "values": false }, "showUnfilled": true, "sizing": "auto", "valueMode": "color" },
+      "targets": [ { "expr": "topk(10, rabbitmq_queue_messages{job=\"rabbitmq-per-object\"})", "legendFormat": "{{queue}}", "refId": "A" } ]
+    },
+    {
+      "id": 6,
+      "title": "Dead-letter очереди",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": 0 }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 10 } ] } } },
+      "options": { "displayMode": "gradient", "maxVizHeight": 300, "minVizHeight": 16, "minVizWidth": 8, "namePlacement": "auto", "orientation": "horizontal", "reduceOptions": { "calcs": [ "lastNotNull" ], "fields": "", "values": false }, "showUnfilled": true, "sizing": "auto", "valueMode": "color" },
+      "targets": [ { "expr": "sort_desc(rabbitmq_queue_messages{job=\"rabbitmq-per-object\",queue=~\".*(\\\\.dlx|dead-letter).*\"})", "legendFormat": "{{queue}}", "refId": "A" } ]
+    },
+    {
+      "id": 7,
+      "title": "Накопление по времени",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 3, "showPoints": "never" } } },
+      "options": { "legend": { "showLegend": true, "displayMode": "table", "placement": "bottom", "calcs": [ "lastNotNull", "max" ] }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "expr": "sum(rabbitmq_queue_messages_ready{job=\"rabbitmq-per-object\"})", "legendFormat": "ready", "refId": "A" },
+        { "expr": "sum(rabbitmq_queue_messages_unacked{job=\"rabbitmq-per-object\"})", "legendFormat": "unacked", "refId": "B" }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Поток сообщений",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "fieldConfig": { "defaults": { "unit": "ops", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 3, "showPoints": "never" } } },
+      "options": { "legend": { "showLegend": true, "displayMode": "table", "placement": "bottom", "calcs": [ "lastNotNull", "max" ] }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "expr": "sum(rate(rabbitmq_global_messages_received_total{job=\"rabbitmq\"}[1m]))", "legendFormat": "published", "refId": "A" },
+        { "expr": "sum(rate(rabbitmq_global_messages_delivered_total{job=\"rabbitmq\"}[1m]))", "legendFormat": "delivered", "refId": "B" },
+        { "expr": "sum(rate(rabbitmq_global_messages_acknowledged_total{job=\"rabbitmq\"}[1m]))", "legendFormat": "acknowledged", "refId": "C" }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Потребители по очередям",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "lineWidth": 2, "pointSize": 3, "showPoints": "never" } } },
+      "options": { "legend": { "showLegend": true, "displayMode": "table", "placement": "bottom", "calcs": [ "lastNotNull", "min" ] }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [ { "expr": "topk(15, rabbitmq_queue_consumers{job=\"rabbitmq-per-object\"})", "legendFormat": "{{queue}}", "refId": "A" } ]
+    },
+    {
+      "id": 10,
+      "title": "Утилизация потребителей",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-mazy" },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 3, "showPoints": "never" } } },
+      "options": { "legend": { "showLegend": true, "displayMode": "table", "placement": "bottom", "calcs": [ "lastNotNull", "min" ] }, "tooltip": { "mode": "multi", "sort": "asc" } },
+      "targets": [ { "expr": "bottomk(15, rabbitmq_queue_consumer_utilisation{job=\"rabbitmq-per-object\"})", "legendFormat": "{{queue}}", "refId": "A" } ]
+    }
+  ]
+}

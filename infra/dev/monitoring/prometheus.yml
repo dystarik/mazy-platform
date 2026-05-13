@@ -34,6 +34,102 @@ scrape_configs:
     static_configs:
       - targets: ['rabbitmq:15692']
 
+  - job_name: 'rabbitmq-per-object'
+    metrics_path: /metrics/per-object
+    static_configs:
+      - targets: ['rabbitmq:15692']
+
   - job_name: 'docker-stats-exporter'
     static_configs:
       - targets: ['docker-stats-exporter:9487']
+
+  - job_name: 'blackbox-health-live'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets: ['http://gateway:8080/health/live']
+        labels:
+          service: gateway
+          check: live
+      - targets: ['http://notification:9090/health/live']
+        labels:
+          service: notification
+          check: live
+      - targets: ['http://scenario-engine:9090/health/live']
+        labels:
+          service: scenario-engine
+          check: live
+      - targets: ['http://bot-integration:9090/health/live']
+        labels:
+          service: bot-integration
+          check: live
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  - job_name: 'blackbox-health-ready'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets: ['http://gateway:8080/health/ready']
+        labels:
+          service: gateway
+          check: ready
+      - targets: ['http://notification:9090/health/ready']
+        labels:
+          service: notification
+          check: ready
+      - targets: ['http://scenario-engine:9090/health/ready']
+        labels:
+          service: scenario-engine
+          check: ready
+      - targets: ['http://bot-integration:9090/health/ready']
+        labels:
+          service: bot-integration
+          check: ready
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  - job_name: 'blackbox-grpc-tcp'
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+    static_configs:
+      - targets: ['authentication:8081']
+        labels:
+          service: authentication
+          endpoint: public
+      - targets: ['scenario-repository:6101']
+        labels:
+          service: scenario-repository
+          endpoint: public
+      - targets: ['scenario-repository:6102']
+        labels:
+          service: scenario-repository
+          endpoint: internal
+      - targets: ['bot-manager:5101']
+        labels:
+          service: bot-manager
+          endpoint: public
+      - targets: ['bot-manager:5102']
+        labels:
+          service: bot-manager
+          endpoint: internal
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115

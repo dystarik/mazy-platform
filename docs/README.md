@@ -9,10 +9,8 @@
 - [local-development.md](local-development.md) - локальный запуск и рабочий цикл разработки.
 - [docker-compose.md](docker-compose.md) - состав `infra/dev`, контейнеры, порты, health и metrics.
 - [observability.md](observability.md) - logs, Loki, Grafana, Prometheus, health checks, readiness и `x-trace-id`.
-- [release-checklist.md](release-checklist.md) - checklist перед v1.0.0.
 - [architecture](architecture/README.md) - сервисы, библиотеки и deployment.
 - [flows](flows/README.md) - end-to-end flow с Mermaid sequence diagrams.
-- [configuration](configuration/README.md) - локальная и production-конфигурация, service settings и secrets.
 
 ## Правило для secrets
 

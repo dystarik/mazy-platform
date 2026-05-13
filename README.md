@@ -39,8 +39,6 @@ Mazy Platform - monorepo для платформы визуального про
 - [Архитектура сервисов](docs/architecture/services.md)
 - [Архитектура библиотек](docs/architecture/libraries.md)
 - [End-to-end flow платформы](docs/flows/README.md)
-- [Конфигурация и secrets](docs/configuration/README.md)
-- [Release checklist](docs/release-checklist.md)
 
 ## Локальная документация компонентов
 
