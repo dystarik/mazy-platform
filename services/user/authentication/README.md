@@ -1,38 +1,31 @@
 # user-authentication
 
-Сервис отвечает за аккаунты пользователей, регистрацию, login, external provider login, sessions, refresh/logout, passwords, Email MFA и TOTP MFA.
+Сервис аккаунтов: registration, login, external provider login, sessions, refresh/logout, password flows, Email MFA и TOTP MFA. Наружу он доступен через gateway, сам публикует user events в RabbitMQ.
 
-## gRPC/HTTP API
+## Где смотреть код
 
-Gateway публикует эти gRPC services как HTTP JSON endpoints:
+- `src/MazyPlatform.Service.User.Authentication.Api` - gRPC services, composition root, appsettings.
+- `src/MazyPlatform.Service.User.Authentication.Application` - commands/handlers/validators для auth, sessions, passwords, MFA.
+- `src/MazyPlatform.Service.User.Authentication.Domain` - user account/session/value objects.
+- `src/MazyPlatform.Service.User.Authentication.Infrastructure` - PostgreSQL, RabbitMQ, JWT, TOTP encryption, external providers.
+- `tests/MazyPlatform.Service.User.Authentication.Domain.Tests` - domain-level инварианты.
+- `tests/MazyPlatform.Service.User.Authentication.Integration.Tests` - gRPC flows, RabbitMQ events, health.
 
-- `RegistrationService` - register, complete registration, resend code.
-- `AuthenticationService` - login by password, login by external provider.
-- `PasswordService` - change, set, reset, confirm reset.
-- `MfaService` - add/confirm/remove factors, backup codes.
-- `MfaSessionService` - start, status, send email code, verify code.
-- `UserSessionService` - refresh, logout, logout all, sessions.
-- `LinkedProviderService` - link/unlink/list providers.
+## Запуск и отладка
 
-## RabbitMQ
+Обычный контур:
 
-Публикует events:
+```powershell
+.\tools\start.cmd
+```
 
-- `user.authentication.registered`
-- `user.authentication.email-confirmed`
-- `user.authentication.mfa-email-code-generated`
-- `user.authentication.password-reset-requested`
+Для локальной отладки выберите `debug.user.authentication.yml`, оставьте PostgreSQL/RabbitMQ в compose и запускайте API из IDE или:
 
-Consumers отсутствуют.
+```powershell
+dotnet run --project services\user\authentication\src\MazyPlatform.Service.User.Authentication.Api\MazyPlatform.Service.User.Authentication.Api.csproj
+```
 
-## Зависимости
-
-- PostgreSQL.
-- RabbitMQ.
-- External provider Yandex.
-- Notification service через RabbitMQ events.
-
-## Env/settings
+Основные настройки по именам:
 
 - `ConnectionStrings__DefaultConnection`
 - `Jwt__SecretKey`, `Jwt__Issuer`, `Jwt__Audience`, `Jwt__ExpirationMinutes`
@@ -41,20 +34,37 @@ Consumers отсутствуют.
 - `Totp__Issuer`, `Totp__VerificationWindowPastSteps`, `Totp__VerificationWindowFutureSteps`
 - `ExternalProviders__Yandex__ClientId`, `ExternalProviders__Yandex__ClientSecret`, `ExternalProviders__Yandex__RedirectUri`
 
-Secret values не писать в README или logs.
-
-## Health/ready/metrics
-
-- `/health/live`
-- `/health/ready`
-- metrics публикуются для Prometheus на настроенном metrics endpoint/port.
-
-## Запуск
-
-Через compose:
+## Что проверять
 
 ```powershell
-.\tools\start.cmd
+dotnet test services\user\authentication\MazyPlatform.Service.User.Authentication.slnx
 ```
 
-Для локальной отладки выберите `debug.user.authentication.yml`, затем запускайте API из IDE или `dotnet run`, оставив PostgreSQL/RabbitMQ в compose.
+После изменений в API также проверьте через gateway:
+
+- registration -> email confirmation event;
+- login by password, refresh, logout, logout all;
+- change/set/reset password;
+- Email MFA и TOTP MFA;
+- external provider login/link/unlink, если трогались provider настройки.
+
+Health endpoints: `/health/live`, `/health/ready`. Metrics собирает Prometheus через настроенный metrics endpoint/port.
+
+## События
+
+Публикует:
+
+- `user.authentication.registered`
+- `user.authentication.email-confirmed`
+- `user.authentication.mfa-email-code-generated`
+- `user.authentication.password-reset-requested`
+
+Сервис не слушает RabbitMQ events. Эти routing keys используют notification, scenario-repository и bot-manager; переименование требует миграции всех подписчиков.
+
+## Рискованные изменения
+
+- JWT claims/issuer/audience и refresh token id: завязаны gateway и frontend sessions.
+- Хеширование/ротация refresh tokens и logout all: ошибки дают незаметные session leaks.
+- TOTP encryption и backup codes: секреты не логировать, формат уже сохраненных данных не ломать.
+- RabbitMQ events registration/email-confirmed: downstream сервисы создают свою проекцию пользователя.
+- Password reset и MFA email codes: проверяйте TTL, повторную отправку и idempotency.

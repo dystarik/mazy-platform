@@ -1,24 +1,41 @@
 # scenario
 
-Библиотека runtime и модели сценариев. Она задает, какие nodes существуют, как они валидируются, как исполняются и как хранят runtime state.
+Библиотека модели, validation и runtime исполнения сценариев. Она определяет node catalog, параметры нод, graph validation, executor, platform adapters и Mongo storage runtime state.
 
-## Используют
+## Где смотреть код
 
-- `services/scenario/repository` - node catalog и validation draft/release.
-- `services/scenario/engine` - исполнение graph по bot incoming events.
-- tests библиотеки - проверка descriptors и runtime behavior.
+- `src/MazyPlatform.Scenario.Abstractions` - interfaces, graph, actions, data, sessions, incoming events.
+- `src/MazyPlatform.Scenario` - builder, executor, node registry/catalog, validation, common nodes.
+- `src/MazyPlatform.Scenario.Storage.Mongo` - session/schema/data stores и BSON serialization.
+- `src/Platforms/MazyPlatform.Scenario.Vk` - VK-specific nodes/actions/adapters.
+- `src/Platforms/MazyPlatform.Scenario.Telegram` - Telegram-specific nodes/actions/adapters.
+- `tests/MazyPlatform.Scenario.Tests` - descriptors, validator, executor, storage-facing behavior helpers.
 
-## Основные модули
+Используют `services/scenario/repository` для catalog/validation и `services/scenario/engine` для исполнения release graph.
 
-- `MazyPlatform.Scenario.Abstractions` - interfaces runtime, context, nodes.
-- `MazyPlatform.Scenario` - core descriptors, validation и execution logic.
-- `MazyPlatform.Scenario.Storage.Mongo` - Mongo storage.
-- `Platforms/MazyPlatform.Scenario.Vk` - VK-specific nodes/actions.
-- `Platforms/MazyPlatform.Scenario.Telegram` - Telegram-specific nodes/actions.
+## Как проверять
 
-## Важно при изменениях
+```powershell
+dotnet test libraries\scenario\MazyPlatform.Scenario.slnx
+```
 
-- Node type и параметры являются частью сохраненных draft/release graphs.
-- Validation должна оставаться согласованной с frontend editor.
-- Runtime changes должны учитывать уже опубликованные версии сценариев.
-- Platform adapters не должны ломать общий runtime contract.
+После изменений runtime или descriptors дополнительно проверьте:
+
+- `services/scenario/repository` integration tests для node catalog и draft/release validation;
+- `services/scenario/engine` integration tests для execution/cache/delay resume;
+- frontend editor: отображение node params, сохранение draft, validate.
+
+## Частые места изменений
+
+- Новая node: descriptor + implementation + registration/scanner expectations + tests.
+- Новый параметр node: schema/default/validation + frontend editor compatibility.
+- Новое outgoing action или incoming event: abstractions + platform adapter + scenario-engine handling.
+- Изменения Mongo storage: serialization, indexes, backward compatibility existing documents.
+
+## Рискованные изменения
+
+- `Node type`, parameter names/types и graph shape уже сохранены в draft/release graphs.
+- Runtime executor должен уметь исполнять опубликованные версии, созданные до изменения.
+- Validation в библиотеке, scenario-repository и frontend editor должна говорить об одном и том же.
+- Delay/session state хранится в MongoDB; изменение формата требует миграционной стратегии.
+- Platform adapters не должны протаскивать platform-specific детали в общие abstractions без необходимости.

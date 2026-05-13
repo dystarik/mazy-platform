@@ -1,61 +1,94 @@
 # Библиотеки
 
-## `contracts`
+Общие библиотеки лежат в `libraries/*`. Они не поставляются как отдельные сервисы, но задают контракты между сервисами, frontend и runtime сценариев. Изменение здесь обычно затрагивает несколько компонентов.
 
-Назначение: общий контрактный слой для gRPC API, HTTP JSON transcoding и RabbitMQ integration events.
+## `libraries/contracts`
 
-Содержит:
+Контрактный слой для gRPC, HTTP JSON transcoding и RabbitMQ events.
 
-- `MazyPlatform.Contracts.User.*` - authentication, registration, sessions, password, MFA, linked providers.
-- `MazyPlatform.Contracts.Scenario.*` - projects, entity schemas, scenario graph, scenario repository internal API, user data.
-- `MazyPlatform.Contracts.Bot.*` - bot manager public/internal API и bot integration events.
-- `MazyPlatform.Contracts.Core` - базовые интерфейсы integration events, dispatcher, handler и атрибут routing key.
+Код:
 
-Используют: gateway, user-authentication, scenario-repository, scenario-engine, bot-manager, bot-integration, notification и web-client через сгенерированные API/types.
+- `libraries/contracts/src/MazyPlatform.Contracts.*.Grpc` - protobuf/gRPC contracts.
+- `libraries/contracts/src/MazyPlatform.Contracts.*` - integration events.
+- `libraries/contracts/src/MazyPlatform.Contracts.Core` - `IntegrationEventTypeAttribute`, dispatcher/handler abstractions.
 
-Что нельзя ломать без учета зависимых сервисов:
+Используют: `edge/gateway`, все backend-сервисы, workers и `apps/web-client` через сгенерированные API/types.
 
-- имена gRPC services/rpc;
-- HTTP annotations `/api/v1/*`;
+Синхронная граница:
+
+- protobuf service/rpc names задают gRPC contract;
+- HTTP annotations в `.proto` задают внешний `/api/v1/*` contract gateway.
+
+Асинхронная граница:
+
+- `[IntegrationEventType("...")]` задает RabbitMQ routing key;
+- event class задает JSON payload.
+
+Нельзя менять без миграционного плана:
+
 - protobuf field numbers;
-- routing keys в `IntegrationEventType`;
-- JSON shape integration events.
+- service/rpc names;
+- HTTP annotations;
+- routing keys;
+- required semantics полей event payload.
 
-## `scenario`
+Риск: старый consumer может получить новый JSON payload или перестать получать событие из-за смены routing key. Старый frontend может продолжить вызывать прежний `/api/v1/*` endpoint.
 
-Назначение: shared runtime и модель сценариев. Библиотека описывает node descriptors, execution abstractions, storage и platform-specific адаптеры.
+## `libraries/scenario`
 
-Содержит:
+Runtime и модель сценариев. Эта библиотека связывает editor, repository validation и engine execution.
 
-- `MazyPlatform.Scenario.Abstractions` - общие interfaces и contracts runtime.
-- `MazyPlatform.Scenario` - core descriptors/validation/execution primitives.
-- `MazyPlatform.Scenario.Storage.Mongo` - MongoDB storage для runtime данных.
-- `MazyPlatform.Scenario.Telegram` и `MazyPlatform.Scenario.Vk` - platform-specific nodes/actions.
-- tests для поведения scenario library.
+Код:
 
-Используют: scenario-repository для validation/catalog, scenario-engine для execution, frontend опирается на совместимые node definitions через API.
+- `libraries/scenario/src/MazyPlatform.Scenario.Abstractions` - runtime interfaces и contracts.
+- `libraries/scenario/src/MazyPlatform.Scenario` - descriptors, validation, execution primitives.
+- `libraries/scenario/src/MazyPlatform.Scenario.Storage.Mongo` - MongoDB storage для runtime данных.
+- `libraries/scenario/src/Platforms/MazyPlatform.Scenario.Telegram` - Telegram nodes/actions.
+- `libraries/scenario/src/Platforms/MazyPlatform.Scenario.Vk` - VK nodes/actions.
+- `libraries/scenario/tests/MazyPlatform.Scenario.Tests` - tests поведения runtime.
 
-Что важно при изменениях:
+Используют:
 
-- изменение node type или параметров влияет на draft graphs и released versions;
-- validation rules должны быть совместимы с editor UX;
-- runtime contract должен учитывать уже опубликованные версии сценариев.
+- `scenario-repository` для catalog/validation draft и release graph;
+- `scenario-engine` для execution;
+- frontend опирается на совместимые node definitions через API.
 
-## `sharedkernel`
+Граница данных:
 
-Назначение: общие primitives для сервисов.
+- draft/release graph хранит `scenario-repository`;
+- execution state хранит `scenario-engine` через Mongo-backed storage;
+- node type и параметры должны читаться как минимум для уже опубликованных versions.
 
-Содержит:
+Ломается при изменении:
 
-- `MazyPlatform.SharedKernel.Api` - API/gateway helpers, trace context и common headers.
-- `MazyPlatform.SharedKernel.Application` - application abstractions.
-- `MazyPlatform.SharedKernel.Domain` - domain primitives.
-- `MazyPlatform.SharedKernel.Infrastructure` - infrastructure helpers.
+- переименование node type;
+- удаление или смена типа параметра node;
+- изменение validation rule без учета editor UX;
+- изменение runtime contract без совместимости с released scenario versions.
+
+Риск: опубликованный сценарий может стать неисполняемым, даже если draft validation для новых графов проходит.
+
+## `libraries/sharedkernel`
+
+Набор общих primitives для backend-сервисов и gateway.
+
+Код:
+
+- `libraries/sharedkernel/src/MazyPlatform.SharedKernel.Api` - API helpers, common headers, trace context.
+- `libraries/sharedkernel/src/MazyPlatform.SharedKernel.Application` - application abstractions.
+- `libraries/sharedkernel/src/MazyPlatform.SharedKernel.Domain` - domain primitives.
+- `libraries/sharedkernel/src/MazyPlatform.SharedKernel.Infrastructure` - infrastructure helpers.
 
 Используют: backend-сервисы и gateway.
 
-Что важно при изменениях:
+Граница:
 
 - `TraceContext.HeaderName` влияет на propagation `x-trace-id`;
-- shared exceptions/results должны оставаться совместимыми с API error handling;
-- infrastructure helpers не должны тащить сервисные зависимости в domain/application слои.
+- common results/exceptions влияют на API error handling;
+- infrastructure helpers не должны протаскивать сервисные зависимости в domain/application projects.
+
+Ломается при изменении:
+
+- header names;
+- exception/result shape, который мапится в gRPC/HTTP ошибки;
+- abstractions, используемых несколькими сервисами.

@@ -1,45 +1,55 @@
 # Структура репозитория
 
-Mazy Platform - monorepo без объединения сервисов в один deployable. Общие контракты и библиотеки лежат рядом с приложениями и сервисами, но каждый сервис имеет собственный проект, Dockerfile, настройки и границы ответственности.
+Репозиторий держит приложения, сервисы, общие библиотеки, инфраструктуру и локальные скрипты рядом. Сервисы собираются и запускаются отдельно; общие контракты и runtime-код лежат в `libraries`.
 
 ## `apps`
 
-Пользовательские приложения. Сейчас основное приложение - `apps/web-client`: Vue 3 + Vite frontend, который работает с gateway через `/api/v1/*`.
+- `apps/web-client` - Vue 3 + Vite frontend. Работает с backend через gateway и `/api/v1/*`.
+- Локальный README: [../apps/web-client/README.md](../apps/web-client/README.md).
 
 ## `edge`
 
-Edge-слой. `edge/gateway` публикует внешний HTTP JSON API, Swagger, health checks и metrics. Внутри gateway проксирует вызовы в backend-сервисы по gRPC и отвечает за JWT validation, CORS, rate limiting и propagation служебных headers.
+- `edge/gateway` - публичная backend-точка. Публикует HTTP JSON API, Swagger, health checks и metrics.
+- Gateway вызывает backend-сервисы по gRPC и прокидывает служебные headers: `x-trace-id`, user id, refresh token id, client IP.
+- Локальный README: [../edge/gateway/README.md](../edge/gateway/README.md).
 
 ## `services`
 
-Backend-сервисы по доменным областям:
+Backend разбит по доменам:
 
-- `services/user/authentication` - аккаунты, login, registration, sessions, password, MFA, external providers.
-- `services/scenario/repository` - проекты, схемы данных, draft/release/history сценариев.
-- `services/scenario/engine` - исполнение опубликованных сценариев по входящим событиям от ботов.
-- `services/bot/manager` - боты, credentials, project binding, activation, scenario version selection.
-- `services/bot/integration` - VK/Telegram polling и публикация входящих bot events.
-- `services/notification` - email-уведомления по integration events.
+- `services/user/authentication` - аккаунты, registration/login, sessions, password, MFA, external providers.
+- `services/scenario/repository` - проекты, entity schemas, draft/release/history сценариев, user data records.
+- `services/scenario/engine` - worker исполнения опубликованных сценариев.
+- `services/bot/manager` - bot instances, encrypted credentials, binding к проекту, activation, scenario version selection.
+- `services/bot/integration` - workers для VK/Telegram polling и публикации входящих bot events.
+- `services/notification` - email-уведомления по RabbitMQ events.
+
+Каждый сервис хранит свой README в собственной директории. Начинайте с него, если меняете конкретный компонент.
 
 ## `libraries`
 
-Общие библиотеки:
+- `libraries/contracts` - protobuf/gRPC contracts, HTTP annotations и RabbitMQ integration events.
+- `libraries/scenario` - descriptors, validation, execution runtime, Mongo storage и platform adapters.
+- `libraries/sharedkernel` - общие API/application/domain/infrastructure primitives.
 
-- `libraries/contracts` - gRPC/protobuf контракты и integration events.
-- `libraries/scenario` - runtime, descriptors, storage и platform-specific части сценариев.
-- `libraries/sharedkernel` - общие API/application/domain/infrastructure примитивы.
+Изменения в `libraries` обычно затрагивают несколько сервисов. Перед правкой проверьте раздел [architecture/libraries.md](architecture/libraries.md).
 
 ## `infra`
 
-Инфраструктура:
-
-- `infra/dev` - docker compose для локальной разработки, `.env`, debug overlays, monitoring.
-- `infra/prod` - место для production-инфраструктуры и deployment manifests.
+- `infra/dev` - Docker Compose для локальной разработки, `.env`, debug overlays и monitoring.
+- `infra/dev/monitoring` - Loki, Prometheus, Grafana provisioning, blackbox exporter и docker stats exporter.
+- `infra/prod` - место для production manifests, если они появятся.
 
 ## `tools`
 
-Скрипты:
-
-- `tools/start.cmd` / `tools/dev/start.ps1` - локальный запуск compose окружения.
-- `tools/cleanup.cmd` / `tools/dev/cleanup.ps1` - очистка dev окружения.
+- `tools/start.cmd` / `tools/dev/start.ps1` - сборка и запуск dev compose.
+- `tools/cleanup.cmd` / `tools/dev/cleanup.ps1` - удаление `bin`, `obj`, `node_modules`, `dist` и других локальных артефактов.
 - `tools/packages/*` - публикация и синхронизация версий NuGet-пакетов.
+
+## Где искать код
+
+- HTTP paths: `libraries/contracts/**/**/*.proto`, затем proxy в `edge/gateway/src`.
+- gRPC implementation: `services/**/src/*Api` или worker `Program.cs`.
+- RabbitMQ routing keys: `libraries/contracts/**/Events` и service `Messaging/RabbitMq*`.
+- Scenario nodes/runtime: `libraries/scenario/src`.
+- Monitoring config: `infra/dev/monitoring`.
