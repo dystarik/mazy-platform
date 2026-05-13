@@ -35,8 +35,11 @@ npm install
 npm run dev
 npm run build
 npm run type-check
+npm run smoke
 npm run lint
 ```
+
+`npm run smoke` выполняет production build, поднимает `vite preview` на `127.0.0.1:4173` и проверяет, что собранный app shell отдается по HTTP.
 
 ## Запуск
 

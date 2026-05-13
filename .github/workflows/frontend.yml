@@ -1,0 +1,48 @@
+name: Frontend CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - ".github/workflows/frontend.yml"
+      - "apps/web-client/**"
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - ".github/workflows/frontend.yml"
+      - "apps/web-client/**"
+
+permissions:
+  contents: read
+
+jobs:
+  web-client:
+    name: web-client type-check, build, smoke
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web-client
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: npm
+          cache-dependency-path: apps/web-client/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test smoke tooling
+        run: npm run test:smoke-script
+
+      - name: Smoke frontend production build
+        run: npm run smoke
