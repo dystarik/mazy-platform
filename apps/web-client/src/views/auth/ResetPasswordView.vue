@@ -1,7 +1,7 @@
 <template>
   <AuthCard title="Сброс пароля">
     <template #subtitle>
-      Введите email — мы пришлём код для сброса пароля
+      Введите email, чтобы начать сброс пароля
     </template>
 
     <form class="auth-card__form" @submit.prevent="handleSubmit">
@@ -16,15 +16,11 @@
           />
         </div>
 
-        <p v-if="success" class="reset__success">
-          Код отправлен на {{ email }}. Проверьте почту.
-        </p>
-
         <FormErrorList :messages="errors" />
 
         <Button
           type="submit"
-          :label="isLoading ? 'Отправляю...' : 'Отправить код'"
+          :label="isLoading ? 'Проверяю...' : 'Продолжить'"
           :loading="isLoading"
           :disabled="!email.trim()"
         />
@@ -42,32 +38,34 @@ import { useRouter } from 'vue-router'
 import AuthCard from '@/components/ui/AuthCard.vue'
 import FormErrorList from '@/components/ui/FormErrorList.vue'
 import { usePasswordStore } from '@/stores/password.store'
+import { useMfaStore } from '@/stores/mfa.store'
 import { parseApiError } from '@/composables/useApiError'
 
 const router = useRouter()
 const passwordStore = usePasswordStore()
+const mfaStore = useMfaStore()
 
 const email = ref('')
 const errors = ref<string[]>([])
 const isLoading = ref(false)
-const success = ref(false)
 
 async function handleSubmit(): Promise<void> {
   errors.value = []
   isLoading.value = true
-  success.value = false
 
   try {
-    const result = await passwordStore.resetPassword(email.value.trim())
+    const normalizedEmail = email.value.trim()
+    const result = await passwordStore.resetPassword(normalizedEmail)
 
     if ('otp' in result) {
       await router.push({
         name: 'password-reset-confirm',
-        query: { otpId: result.otp.otpId, email: email.value.trim() },
+        query: { otpId: result.otp.otpId, email: normalizedEmail },
       })
     } else {
-      // MFA — пока показываем успех, полный флоу можно добавить позже
-      success.value = true
+      mfaStore.startFromChallenge(result.mfa, 'reset_password')
+      mfaStore.pendingEmail = normalizedEmail
+      await router.push({ name: 'mfa-verify' })
     }
   } catch (e) {
     errors.value = parseApiError(e)
@@ -78,12 +76,6 @@ async function handleSubmit(): Promise<void> {
 </script>
 
 <style scoped>
-.reset__success {
-  font-size: 13px;
-  color: var(--color-primary);
-  margin: 0;
-}
-
 .reset__back {
   font-size: 13px;
   color: var(--color-text-secondary);

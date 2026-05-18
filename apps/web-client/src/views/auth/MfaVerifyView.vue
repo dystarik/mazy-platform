@@ -1,7 +1,7 @@
 <template>
-  <AuthCard title="Подтверждение входа">
+  <AuthCard :title="title">
     <template #subtitle>
-      Выберите способ подтверждения
+      {{ subtitle }}
     </template>
 
       <!-- Выбор фактора -->
@@ -42,30 +42,27 @@
             placeholder="ea64b3"
             autocomplete="off"
           />
+          <Button
+            v-if="mfaStore.selectedFactor === 'MFA_FACTOR_TYPE_EMAIL'"
+            type="button"
+            class="mfa__resend"
+            :label="isResending ? 'Отправляю...' : 'Отправить код повторно'"
+            text
+            :disabled="isResending"
+            :loading="isResending"
+            @click="handleResend"
+          />
         </div>
 
         <FormErrorList :messages="errors" />
 
-        <div class="mfa__actions">
-          <Button type="button" label="Назад" severity="secondary" outlined @click="mfaStore.step = 'select_factor'" />
-          <Button type="submit" :label="isLoading ? 'Проверяю...' : 'Подтвердить'" :loading="isLoading" />
-        </div>
-
-        <Button
-          v-if="mfaStore.selectedFactor === 'MFA_FACTOR_TYPE_EMAIL'"
-          type="button"
-          :label="isResending ? 'Отправляю...' : 'Отправить код повторно'"
-          text
-          :disabled="isResending"
-          :loading="isResending"
-          @click="handleResend"
-        />
+        <Button type="submit" :label="isLoading ? 'Проверяю...' : 'Подтвердить'" :loading="isLoading" />
       </form>
   </AuthCard>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import InputOtp from 'primevue/inputotp'
@@ -84,6 +81,20 @@ const code = ref('')
 const errors = ref<string[]>([])
 const isLoading = ref(false)
 const isResending = ref(false)
+
+const title = computed(() => {
+  switch (mfaStore.context) {
+    case 'reset_password': return 'Подтверждение сброса пароля'
+    default: return 'Подтверждение входа'
+  }
+})
+
+const subtitle = computed(() => {
+  switch (mfaStore.context) {
+    case 'reset_password': return 'Выберите способ подтверждения для смены пароля'
+    default: return 'Выберите способ подтверждения'
+  }
+})
 
 function factorLabel(factor: MfaFactorType): string {
   switch (factor) {
@@ -127,6 +138,13 @@ async function handleVerify() {
       )
       mfaStore.reset()
       await router.push({ name: 'projects' })
+    } else if (completed && mfaStore.context === 'reset_password') {
+      const mfaSessionId = mfaStore.mfaSessionId!
+      mfaStore.reset()
+      await router.push({
+        name: 'password-reset-confirm',
+        query: { mfaSessionId },
+      })
     }
   } catch (e) {
     errors.value = parseApiError(e)
@@ -184,9 +202,8 @@ async function handleResend() {
   margin: 0;
 }
 
-.mfa__actions {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 8px;
+.mfa__resend {
+  align-self: center;
+  margin-top: 2px;
 }
 </style>

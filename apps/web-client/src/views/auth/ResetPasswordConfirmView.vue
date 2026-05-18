@@ -1,11 +1,11 @@
 <template>
   <AuthCard title="Новый пароль">
     <template #subtitle>
-      Введите код из письма и задайте новый пароль
+      {{ subtitle }}
     </template>
 
     <form class="auth-card__form" @submit.prevent="handleSubmit">
-        <div class="field">
+        <div v-if="isOtpReset" class="field">
           <label>Код из письма</label>
           <InputText
             v-model="code"
@@ -35,16 +35,16 @@
           type="submit"
           :label="isLoading ? 'Сохраняю...' : 'Сохранить пароль'"
           :loading="isLoading"
-          :disabled="isLoading || !code.trim() || !newPassword.trim()"
+          :disabled="isLoading || !newPassword.trim() || (isOtpReset && !code.trim())"
         />
     </form>
 
-    <RouterLink to="/auth/password/reset" class="confirm__back">← Отправить код повторно</RouterLink>
+    <RouterLink to="/auth/password/reset" class="confirm__back">← Начать сброс заново</RouterLink>
   </AuthCard>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
@@ -63,14 +63,41 @@ const newPassword = ref('')
 const errors = ref<string[]>([])
 const isLoading = ref(false)
 
-const otpId = route.query.otpId as string
+const otpId = computed(() => queryValue(route.query.otpId))
+const mfaSessionId = computed(() => queryValue(route.query.mfaSessionId))
+const isOtpReset = computed(() => Boolean(otpId.value))
+const isMfaReset = computed(() => Boolean(mfaSessionId.value))
+const subtitle = computed(() => (
+  isOtpReset.value
+    ? 'Введите код из письма и задайте новый пароль'
+    : 'Задайте новый пароль после дополнительной проверки'
+))
+
+function queryValue(value: unknown): string {
+  if (Array.isArray(value)) return String(value[0] ?? '')
+  return String(value ?? '')
+}
+
+onMounted(async () => {
+  if (!isOtpReset.value && !isMfaReset.value) {
+    await router.replace({ name: 'password-reset' })
+  }
+})
 
 async function handleSubmit(): Promise<void> {
   errors.value = []
   isLoading.value = true
 
   try {
-    await passwordStore.confirmResetPasswordByOtp(newPassword.value, otpId, code.value)
+    if (isOtpReset.value) {
+      await passwordStore.confirmResetPasswordByOtp(newPassword.value, otpId.value, code.value)
+    } else if (isMfaReset.value) {
+      await passwordStore.confirmResetPasswordByMfa(newPassword.value, mfaSessionId.value)
+    } else {
+      await router.replace({ name: 'password-reset' })
+      return
+    }
+
     await router.push({ name: 'login' })
   } catch (e) {
     errors.value = parseApiError(e)
