@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MazyPlatform.Service.Scenario.Repository.Infrastructure.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260507070820_InitialCreate")]
+    [Migration("20260518170515_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -223,6 +223,15 @@ namespace MazyPlatform.Service.Scenario.Repository.Infrastructure.Database.Migra
                     b.ToTable("user_accounts", (string)null);
                 });
 
+            modelBuilder.Entity("MazyPlatform.Service.Scenario.Repository.Domain.Graphs.ScenarioGraph", b =>
+                {
+                    b.HasOne("MazyPlatform.Service.Scenario.Repository.Domain.Projects.Project", null)
+                        .WithOne()
+                        .HasForeignKey("MazyPlatform.Service.Scenario.Repository.Domain.Graphs.ScenarioGraph", "ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MazyPlatform.Service.Scenario.Repository.Domain.Graphs.ScenarioVersion", b =>
                 {
                     b.HasOne("MazyPlatform.Service.Scenario.Repository.Domain.Graphs.ScenarioGraph", null)
@@ -246,6 +255,15 @@ namespace MazyPlatform.Service.Scenario.Repository.Infrastructure.Database.Migra
                     b.HasOne("MazyPlatform.Service.Scenario.Repository.Domain.Schemas.EntitySchema", null)
                         .WithMany("Fields")
                         .HasForeignKey("SchemaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MazyPlatform.Service.Scenario.Repository.Domain.Schemas.EntitySchema", b =>
+                {
+                    b.HasOne("MazyPlatform.Service.Scenario.Repository.Domain.Projects.Project", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

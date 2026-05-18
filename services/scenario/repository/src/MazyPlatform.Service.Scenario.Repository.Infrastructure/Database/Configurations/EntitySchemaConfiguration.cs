@@ -1,5 +1,6 @@
 namespace MazyPlatform.Service.Scenario.Repository.Infrastructure.Database.Configurations;
 
+using MazyPlatform.Service.Scenario.Repository.Domain.Projects;
 using MazyPlatform.Service.Scenario.Repository.Domain.Schemas;
 
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,11 @@ internal sealed class EntitySchemaConfiguration : IEntityTypeConfiguration<Entit
         builder.Property(x => x.ProjectId)
             .HasColumnName("project_id")
             .IsRequired();
+
+        builder.HasOne<Project>()
+            .WithMany()
+            .HasForeignKey(x => x.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Property(x => x.Name)
             .HasColumnName("name")

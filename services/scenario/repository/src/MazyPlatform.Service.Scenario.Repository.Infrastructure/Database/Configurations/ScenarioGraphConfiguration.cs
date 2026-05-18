@@ -1,6 +1,7 @@
 namespace MazyPlatform.Service.Scenario.Repository.Infrastructure.Database.Configurations;
 
 using MazyPlatform.Service.Scenario.Repository.Domain.Graphs;
+using MazyPlatform.Service.Scenario.Repository.Domain.Projects;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -27,6 +28,11 @@ internal sealed class ScenarioGraphConfiguration : IEntityTypeConfiguration<Scen
         builder.Property(x => x.ProjectId)
             .HasColumnName("project_id")
             .IsRequired();
+
+        builder.HasOne<Project>()
+            .WithOne()
+            .HasForeignKey<ScenarioGraph>(x => x.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(x => x.ProjectId).IsUnique();
 
